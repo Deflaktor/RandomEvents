@@ -1,0 +1,61 @@
+{
+	"strings": 
+    {
+        "ANNOUNCE_EVENT_0": "Get ready for the upcoming event:</style>",
+        "ANNOUNCE_EVENT_1": "Attention - a new event is about to unfold:",
+        "ANNOUNCE_EVENT_2": "The world begins to shift - brace for the next event ahead:",
+        "ANNOUNCE_EVENT_3": "Prepare yourselves - a new event is taking over:",
+        "ANNOUNCE_EVENT_4": "No opting out - the next event is starting:",
+        "ANNOUNCE_EVENT_5": "Every player is swept into the upcoming event:",
+        "ANNOUNCE_EVENT_6": "Hear this announcement: a new event is a about to hit the field:",
+        "ANNOUNCE_EVENT_7": "All players take heed - the world is affected by the next event:",
+        "ANNOUNCE_EVENT_8": "A new event will impact the world:",
+        "ANNOUNCE_EVENT_9": "Are you ready for the upcoming event:",
+
+        "ANNOUNCE_DOUBLE_EVENT_0": "The world warps as two events unfold simultaneously:",
+        "ANNOUNCE_DOUBLE_EVENT_1": "Attention - a rare double event is about to begin:",
+        "ANNOUNCE_DOUBLE_EVENT_2": "Brace yourselves - two events are about to shape the game world:",
+        "ANNOUNCE_DOUBLE_EVENT_3": "Two events collide - brace for combined chaos:",
+        "ANNOUNCE_DOUBLE_EVENT_4": "Twice the change, twice the intensity:",
+
+        "ANNOUNCE_TRIPLE_EVENT_0": "The ancient prophecy unfolds - behold the triple reckoning:",
+        "ANNOUNCE_TRIPLE_EVENT_1": "The sacred triad stirs - the world is trembling:",
+        "ANNOUNCE_TRIPLE_EVENT_2": "From the depths of legend, three ancient forces awaken:",
+
+        "ANNOUNCE_EVENT_CONCLUDE_0": "The world grows quiet once more.",
+        "ANNOUNCE_EVENT_CONCLUDE_1": "The storm calms.",
+        "ANNOUNCE_EVENT_CONCLUDE_2": "Normalcy restored.",
+        "ANNOUNCE_EVENT_CONCLUDE_3": "The chaos fades.",
+        "ANNOUNCE_EVENT_CONCLUDE_4": "The realm steadies.",
+        "ANNOUNCE_EVENT_CONCLUDE_5": "The anomaly stabilizes.",
+        "ANNOUNCE_EVENT_CONCLUDE_6": "The calm returns.",
+        "ANNOUNCE_EVENT_CONCLUDE_7": "The turmoil ceases.",
+        "ANNOUNCE_EVENT_CONCLUDE_8": "The event ends.",
+        "ANNOUNCE_EVENT_CONCLUDE_9": "The disturbance has passed.",
+        "ANNOUNCE_EVENT_CONCLUDE_10": "The unrest settles.",
+        "ANNOUNCE_EVENT_CONCLUDE_11": "The dust settles.",
+
+        "ANNOUNCE_EVENTS_CONJUNCTION": " and ",
+
+        "ANNOUNCE_EVENT_WEAK_ENEMIES": "Horde of the many",
+        "ANNOUNCE_EVENT_STRONG_ENEMIES": "Fear the few",
+        "ANNOUNCE_EVENT_RANDOM_ARTIFACT": "{0}",
+        "ANNOUNCE_EVENT_RANDOM_DOUBLE_ARTIFACT": "{0} and {1}",
+        "ANNOUNCE_EVENT_RANDOM_TRIPLE_ARTIFACT": "{0}, {1} and {2}",
+        "ANNOUNCE_EVENT_EXPLODING_CORPSES": "Exploding corpses",
+        "ANNOUNCE_EVENT_HASTE": "The world accelerates",
+        "ANNOUNCE_EVENT_FALLING_ENEMIES": "Enemies fall down from the heavens",
+        "ANNOUNCE_EVENT_ITEM_ZONE": "Zone fuels your arsenal",
+        "ANNOUNCE_EVENT_CASINO_ITEM": "Ancient relic cycling through its many powers",
+        "ANNOUNCE_EVENT_SKILLS_ONLY": "Primary sealed, skills unleashed",
+        "ANNOUNCE_EVENT_SMALL_ARENA": "Confined space",
+        "ANNOUNCE_EVENT_GHOSTS": "Ghostly apparitions haunt the battlefield",
+        "ANNOUNCE_EVENT_BULLET_HELL": "Projectile density dialed to eleven",
+        "ANNOUNCE_EVENT_ZOMBIES": "The dead refuse to rest",
+        "ANNOUNCE_EVENT_RANDOM_TEAMS": "Enemies turn against each other",
+        "ANNOUNCE_EVENT_EQUIPMENT_ONLY": "Equipment-exclusive combat",
+        "ANNOUNCE_EVENT_FUEL_ARRAY": "Stay above 50% health or face disaster",
+        "ANNOUNCE_EVENT_MONSTER_TRANSFORM": "Players embrace their monstrous forms"
+        
+    }
+}
