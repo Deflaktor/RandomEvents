@@ -18,6 +18,11 @@ namespace RandomEvents
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
+            return GetArtifactCandidates(activeOtherEvents).Count > 0;
+        }
+        // artifacts the event may turn on: not on yet and not blacklisted
+        private static List<ArtifactDef> GetArtifactCandidates(List<AbstractEvent> otherEvents)
+        {
             var enabledArtifacts = RunArtifactManager.enabledArtifactsEnumerable.ToList();
             bool atLeastOneCharacterHasAutoCastEquipment = false;
             foreach (PlayerCharacterMasterController pc in PlayerCharacterMasterController.instances)
@@ -31,7 +36,7 @@ namespace RandomEvents
                 }
             }
             var artifactCandidates = new List<ArtifactDef>(ArtifactCatalog.artifactDefs);
-            var equipmentOnlyActive = activeOtherEvents.Any(e => e.GetEventConfigName().Equals("EquipmentOnly", StringComparison.InvariantCultureIgnoreCase));
+            var equipmentOnlyActive = otherEvents.Any(e => e.GetEventConfigName().Equals("EquipmentOnly", StringComparison.InvariantCultureIgnoreCase));
             if (atLeastOneCharacterHasAutoCastEquipment || equipmentOnlyActive)
             {
                 artifactCandidates.Remove(RoR2Content.Artifacts.Enigma);
@@ -45,8 +50,7 @@ namespace RandomEvents
             artifactCandidates.Remove(CU8Content.Artifacts.Devotion);
             artifactCandidates.Remove(CU8Content.Artifacts.Delusion);
             artifactCandidates.Remove(DLC3Content.Artifacts.Prestige);
-            var notEnabledArtifacts = artifactCandidates.Where(def => !enabledArtifacts.Any(enabled => enabled.artifactIndex == def.artifactIndex)).ToList();
-            return notEnabledArtifacts.Count > 0;
+            return artifactCandidates.Where(def => !enabledArtifacts.Any(enabled => enabled.artifactIndex == def.artifactIndex)).ToList();
         }
         public override string GetEventConfigName()
         {
@@ -92,34 +96,7 @@ namespace RandomEvents
 
         public override void Prepare()
         {
-            var enabledArtifacts = RunArtifactManager.enabledArtifactsEnumerable.ToList();
-            bool atLeastOneCharacterHasAutoCastEquipment = false;
-            foreach (PlayerCharacterMasterController pc in PlayerCharacterMasterController.instances)
-            {
-                if (pc.isConnected)
-                {
-                    if (pc.master?.inventory.GetItemCountEffective(RoR2Content.Items.AutoCastEquipment) > 0)
-                    {
-                        atLeastOneCharacterHasAutoCastEquipment = true;
-                        break;
-                    }
-                }
-            }
-            var artifactCandidates = new List<ArtifactDef>(ArtifactCatalog.artifactDefs);
-            if (atLeastOneCharacterHasAutoCastEquipment)
-            {
-                artifactCandidates.Remove(RoR2Content.Artifacts.Enigma);
-            }
-            artifactCandidates.Remove(RoR2Content.Artifacts.TeamDeath);
-            artifactCandidates.Remove(RoR2Content.Artifacts.ShadowClone);
-            artifactCandidates.Remove(RoR2Content.Artifacts.Sacrifice);
-            artifactCandidates.Remove(RoR2Content.Artifacts.RandomSurvivorOnRespawn);
-            artifactCandidates.Remove(RoR2Content.Artifacts.MonsterTeamGainsItems);
-            artifactCandidates.Remove(DLC2Content.Artifacts.Rebirth);
-            artifactCandidates.Remove(CU8Content.Artifacts.Devotion);
-            artifactCandidates.Remove(CU8Content.Artifacts.Delusion);
-
-            var notEnabledArtifacts = artifactCandidates.Where(def => !enabledArtifacts.Any(enabled => enabled.artifactIndex == def.artifactIndex)).ToList();
+            var notEnabledArtifacts = GetArtifactCandidates(RandomEvents.instance.m_upcomingEvents);
 
             var shuffled = notEnabledArtifacts.OrderBy(x => UnityEngine.Random.Range(0f, 1f)).ToList();
             artifacts = shuffled.Take(UnityEngine.Random.RandomRangeInt(1, 4)).ToList();
