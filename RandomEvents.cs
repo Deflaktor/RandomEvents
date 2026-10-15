@@ -205,6 +205,9 @@ namespace RandomEvents
         }
         private void Run_Start(On.RoR2.Run.orig_Start orig, Run self)
         {
+            // events still going when the last run ended were undone with it
+            m_activeEvents.Clear();
+            m_upcomingEvents.Clear();
             m_eventStartTime = 0;
             m_announcementGiven = false;
             currentEventProbability = ModConfig.EventProbability.Value;
