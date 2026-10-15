@@ -367,6 +367,8 @@ namespace RandomEvents
             {
                 if (pc.master != null && pc.master.TryGetComponent(out MonsterTransformComponent monsterTransformComponent))
                 {
+                    // disabling restores the player's own body prefab now, Destroy would do so only after the respawn
+                    monsterTransformComponent.enabled = false;
                     GameObject.Destroy(monsterTransformComponent);
                     var body = pc.master.GetBody();
                     if (body != null) { 
