@@ -127,6 +127,8 @@ namespace RandomEvents
 
         public override void Start(List<AbstractEvent> activeOtherEvents)
         {
+            // leave out artifacts turned on since Prepare, so Stop doesn't turn them off
+            artifacts.RemoveAll(artifact => RunArtifactManager.instance.IsArtifactEnabled(artifact));
             artifacts.ForEach(artifact => {
                 RunArtifactManager.instance.SetArtifactEnabled(artifact, true);
             });
