@@ -144,6 +144,7 @@ namespace RandomEvents
             On.RoR2.SceneDirector.Start += SceneDirector_Start;
             On.RoR2.Run.Start += Run_Start;
             On.RoR2.Run.OnFixedUpdate += Run_OnFixedUpdate;
+            Stage.onServerStageComplete += Stage_onServerStageComplete;
         }
 
         private void OnDisable()
@@ -156,12 +157,18 @@ namespace RandomEvents
             On.RoR2.SceneDirector.Start -= SceneDirector_Start;
             On.RoR2.Run.Start -= Run_Start;
             On.RoR2.Run.OnFixedUpdate -= Run_OnFixedUpdate;
+            Stage.onServerStageComplete -= Stage_onServerStageComplete;
         }
 
         private void Run_OnFixedUpdate(On.RoR2.Run.orig_OnFixedUpdate orig, Run self)
         {
             orig(self);
             if(!ModConfig.Enabled.Value || Run.instance is InfiniteTowerRun infiniteTowerRun || !NetworkServer.active)
+            {
+                return;
+            }
+            // no events between the end of a stage and the start of the next one
+            if (Stage.instance == null || Stage.instance.completed)
             {
                 return;
             }
@@ -215,6 +222,13 @@ namespace RandomEvents
             StopAllActiveEvents();
             m_eventStartTime = 0;
             m_announcementGiven = false;
+        }
+
+        private void Stage_onServerStageComplete(Stage stage)
+        {
+            // events end with their stage, so nothing they changed (e.g. artifacts or a player's body) carries over into the next stage or ProperSave's save
+            StopAllActiveEvents();
+            m_upcomingEvents.Clear();
         }
 
         private void InfiniteTowerRun_Start(On.RoR2.InfiniteTowerRun.orig_Start orig, InfiniteTowerRun self)

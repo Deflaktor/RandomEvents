@@ -371,7 +371,8 @@ namespace RandomEvents
                     monsterTransformComponent.enabled = false;
                     GameObject.Destroy(monsterTransformComponent);
                     var body = pc.master.GetBody();
-                    if (body != null) { 
+                    // after the stage has ended, the next stage spawns the player's own body
+                    if (body != null && Stage.instance != null && !Stage.instance.completed) {
                         pc.master.Respawn(body.transform.position, body.transform.rotation);
                     }
                 }
