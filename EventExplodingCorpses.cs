@@ -19,6 +19,8 @@ namespace RandomEvents
     {
         private AsyncOperationHandle<GameObject> FusionCellExplosion;
         private AsyncOperationHandle<GameObject> VFXScorchlingBreachExplosion;
+        // bodies the event gave the buff to; others can have it from Predatory Instincts
+        private readonly HashSet<CharacterBody> buffedBodies = new HashSet<CharacterBody>();
 
         public override bool LoadCondition()
         {
@@ -133,10 +135,16 @@ namespace RandomEvents
         {
             if (ModConfig.Enabled.Value && NetworkServer.active && IsActive())
             {
-                if (!body.HasBuff(RoR2Content.Buffs.AttackSpeedOnCrit))
-                {
-                    body.AddBuff(RoR2Content.Buffs.AttackSpeedOnCrit);
-                }
+                AddBuff(body);
+            }
+        }
+
+        private void AddBuff(CharacterBody body)
+        {
+            if (!body.HasBuff(RoR2Content.Buffs.AttackSpeedOnCrit))
+            {
+                body.AddBuff(RoR2Content.Buffs.AttackSpeedOnCrit);
+                buffedBodies.Add(body);
             }
         }
 
@@ -184,30 +192,26 @@ namespace RandomEvents
 
         public override void Start(List<AbstractEvent> activeOtherEvents)
         {
+            buffedBodies.Clear();
             foreach (var body in CharacterBody.instancesList)
             {
                 if (body != null)
                 {
-                    if(!body.HasBuff(RoR2Content.Buffs.AttackSpeedOnCrit))
-                    {
-                        body.AddBuff(RoR2Content.Buffs.AttackSpeedOnCrit);
-                    }
+                    AddBuff(body);
                 }
             }
         }
 
         public override void Stop()
         {
-            foreach (var body in CharacterBody.instancesList)
+            foreach (var body in buffedBodies)
             {
-                if (body != null)
+                if (body != null && body.HasBuff(RoR2Content.Buffs.AttackSpeedOnCrit))
                 {
-                    if (body.HasBuff(RoR2Content.Buffs.AttackSpeedOnCrit))
-                    {
-                        body.RemoveBuff(RoR2Content.Buffs.AttackSpeedOnCrit);
-                    }
+                    body.RemoveBuff(RoR2Content.Buffs.AttackSpeedOnCrit);
                 }
             }
+            buffedBodies.Clear();
         }
     }
 }
