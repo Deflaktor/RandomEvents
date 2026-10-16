@@ -150,9 +150,17 @@ namespace RandomEvents
                     if (master.TryGetComponent(out ZombieComponent zombie))
                     {
                         var body = master.GetBody();
-                        if (body != null)
+                        if (zombie.revived)
                         {
-                            body.RemoveBuff(DLC1Content.Buffs.VoidSurvivorCorruptMode);
+                            if (body != null)
+                            {
+                                body.RemoveBuff(DLC1Content.Buffs.VoidSurvivorCorruptMode);
+                            }
+                        }
+                        // infected monsters lose their revive; one that just died still revives and is then killed
+                        else if (body != null && body.healthComponent.alive)
+                        {
+                            GameObject.Destroy(zombie);
                         }
                     }
                 }
