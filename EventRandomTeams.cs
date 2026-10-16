@@ -56,7 +56,8 @@ namespace RandomEvents
 
         private void CharacterBody_onBodyStartGlobal(CharacterBody body)
         {
-            if (ModConfig.Enabled.Value && NetworkServer.active && IsActive() && body.teamComponent.teamIndex != TeamIndex.Player)
+            // a body spawned in the frame the event started was already handled by Start
+            if (ModConfig.Enabled.Value && NetworkServer.active && IsActive() && body.teamComponent.teamIndex != TeamIndex.Player && !originalTeam.ContainsKey(body.gameObject))
             {
                 List<TeamIndex> candidates = new List<TeamIndex>();
                 //candidates.Add(TeamIndex.Player);
