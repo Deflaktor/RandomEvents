@@ -19,7 +19,7 @@ namespace RandomEvents
 {
     public class EventItemZone : AbstractEvent
     {
-        private AsyncOperationHandle<GameObject> LowerPricedChestsGlow;
+        private AsyncOperationHandle<GameObject> LunarShopTerminal;
         private List<ItemZoneComponent> ItemZones = new List<ItemZoneComponent>();
 
         public override bool LoadCondition()
@@ -58,7 +58,7 @@ namespace RandomEvents
 
         public override void Preload()
         {
-            LowerPricedChestsGlow = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC2/Items/LowerPricedChests/LowerPricedChestsGlow.prefab");
+            LunarShopTerminal = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarShopTerminal/LunarShopTerminal.prefab");
         }
 
         public override void Hook()
@@ -81,23 +81,84 @@ namespace RandomEvents
                 {
                     var distance = safeWardController.holdoutZoneController.baseRadius;
                     int itemZoneCount = 4;
-                    var objs = Helper.ApproximatePlacement(LowerPricedChestsGlow.WaitForCompletion(), safeWardController.gameObject.transform.position, 0f, distance, itemZoneCount);
-                    objs.ForEach(obj => ItemZones.Add(obj.AddComponent<ItemZoneComponent>()));
+                    // each zone is marked by a Lunar Bud that shows the zone's item, which every player sees; it can't be bought
+                    Helper.ApproximatePlacement(LunarShopTerminal.WaitForCompletion(), safeWardController.gameObject.transform.position, 0f, distance, itemZoneCount, setup: bud =>
+                    {
+                        var itemIndex = ChooseItem();
+                        var purchaseInteraction = bud.GetComponent<PurchaseInteraction>();
+                        purchaseInteraction.costType = CostTypeIndex.None;
+                        purchaseInteraction.cost = 0;
+                        purchaseInteraction.available = false;
+                        var shopTerminal = bud.GetComponent<ShopTerminalBehavior>();
+                        shopTerminal.selfGeneratePickup = false;
+                        shopTerminal.SetPickup(new UniquePickup(PickupCatalog.FindPickupIndex(itemIndex)));
+                        var zone = bud.AddComponent<ItemZoneComponent>();
+                        zone.itemIndex = itemIndex;
+                        ItemZones.Add(zone);
+                    });
                 }
             }
         }
 
         public override void Stop()
         {
-            ItemZones.ForEach(zone => GameObject.Destroy(zone.gameObject));
+            ItemZones.ForEach(zone => { if (zone) GameObject.Destroy(zone.gameObject); });
             ItemZones.Clear();
+        }
+
+        // a random item that can't be consumed, corrupted or otherwise kept after the zone is gone
+        private static ItemIndex ChooseItem()
+        {
+            List<PickupIndex> pickupIndices = new List<PickupIndex>();
+            pickupIndices.AddRange(Run.instance.availableTier1DropList);
+            pickupIndices.AddRange(Run.instance.availableTier2DropList);
+            pickupIndices.AddRange(Run.instance.availableTier3DropList);
+            pickupIndices.AddRange(Run.instance.availableBossDropList);
+            pickupIndices.AddRange(Run.instance.availableLunarItemDropList);
+            List<ItemIndex> itemIndices = new List<ItemIndex>();
+            // remove items which are candidates to be turned into void items
+            foreach (var pickupIndex in pickupIndices)
+            {
+                PickupDef pickupDef = PickupCatalog.GetPickupDef(pickupIndex);
+                if (pickupDef != null)
+                {
+                    ItemIndex itemIndex = pickupDef.itemIndex;
+                    if (ContagiousItemManager.GetTransformedItemIndex(itemIndex) == ItemIndex.None)
+                    {
+                        itemIndices.Add(itemIndex);
+                    }
+                }
+            }
+            // remove prayer beads
+            itemIndices.Remove(DLC2Content.Items.ExtraStatsOnLevelUp.itemIndex);
+            // remove items that can be consumed
+            itemIndices.Remove(RoR2Content.Items.ExtraLife.itemIndex);
+            itemIndices.Remove(DLC1Content.Items.FragileDamageBonus.itemIndex);
+            itemIndices.Remove(DLC1Content.Items.HealingPotion.itemIndex);
+            itemIndices.Remove(DLC1Content.Items.RegeneratingScrap.itemIndex);
+            itemIndices.Remove(DLC2Content.Items.TeleportOnLowHealth.itemIndex);
+            itemIndices.Remove(DLC2Content.Items.LowerPricedChests.itemIndex);
+            // may turn other items into lunarsun
+            itemIndices.Remove(DLC1Content.Items.LunarSun.itemIndex);
+            // bug: the buff does not get removed again when removing the item
+            itemIndices.Remove(DLC2Content.Items.BarrageOnBoss.itemIndex);
+            itemIndices.Remove(DLC2Content.Items.OnLevelUpFreeUnlock.itemIndex);
+            // a bit too strong:
+            itemIndices.Remove(DLC2Content.Items.ItemDropChanceOnKill.itemIndex);
+            // items which summon allies instantly
+            itemIndices.Remove(RoR2Content.Items.RoboBallBuddy.itemIndex);
+            itemIndices.Remove(RoR2Content.Items.BeetleGland.itemIndex);
+            // can cause crash
+            itemIndices.Remove(RoR2Content.Items.Clover.itemIndex);
+            var shuffled = itemIndices.OrderBy(x => UnityEngine.Random.Range(0f, 1f)).ToList();
+            return shuffled.First();
         }
 
         public class ItemZoneComponent : MonoBehaviour
         {
             List<TemporaryInventory> inventories = new List<TemporaryInventory>();
             int timer = 0;
-            ItemIndex itemIndex;
+            public ItemIndex itemIndex;
 
             private void FixedUpdate()
             {
@@ -133,53 +194,6 @@ namespace RandomEvents
                 {
                     timer = 0;
                 }
-            }
-
-            private void OnEnable()
-            {
-                List<PickupIndex> pickupIndices = new List<PickupIndex>();
-                pickupIndices.AddRange(Run.instance.availableTier1DropList);
-                pickupIndices.AddRange(Run.instance.availableTier2DropList);
-                pickupIndices.AddRange(Run.instance.availableTier3DropList);
-                pickupIndices.AddRange(Run.instance.availableBossDropList);
-                pickupIndices.AddRange(Run.instance.availableLunarItemDropList);
-                List<ItemIndex> itemIndices = new List<ItemIndex>();
-                // remove items which are candidates to be turned into void items
-                foreach (var pickupIndex in pickupIndices)
-                {
-                    PickupDef pickupDef = PickupCatalog.GetPickupDef(pickupIndex);
-                    if (pickupDef != null)
-                    {
-                        ItemIndex itemIndex = pickupDef.itemIndex;
-                        if (ContagiousItemManager.GetTransformedItemIndex(itemIndex) == ItemIndex.None)
-                        {
-                            itemIndices.Add(itemIndex);
-                        }
-                    }
-                }
-                // remove prayer beads
-                itemIndices.Remove(DLC2Content.Items.ExtraStatsOnLevelUp.itemIndex);
-                // remove items that can be consumed
-                itemIndices.Remove(RoR2Content.Items.ExtraLife.itemIndex);
-                itemIndices.Remove(DLC1Content.Items.FragileDamageBonus.itemIndex);
-                itemIndices.Remove(DLC1Content.Items.HealingPotion.itemIndex);
-                itemIndices.Remove(DLC1Content.Items.RegeneratingScrap.itemIndex);
-                itemIndices.Remove(DLC2Content.Items.TeleportOnLowHealth.itemIndex);
-                itemIndices.Remove(DLC2Content.Items.LowerPricedChests.itemIndex);
-                // may turn other items into lunarsun
-                itemIndices.Remove(DLC1Content.Items.LunarSun.itemIndex);
-                // bug: the buff does not get removed again when removing the item
-                itemIndices.Remove(DLC2Content.Items.BarrageOnBoss.itemIndex);
-                itemIndices.Remove(DLC2Content.Items.OnLevelUpFreeUnlock.itemIndex);
-                // a bit too strong:
-                itemIndices.Remove(DLC2Content.Items.ItemDropChanceOnKill.itemIndex);
-                // items which summon allies instantly
-                itemIndices.Remove(RoR2Content.Items.RoboBallBuddy.itemIndex);
-                itemIndices.Remove(RoR2Content.Items.BeetleGland.itemIndex);
-                // can cause crash
-                itemIndices.Remove(RoR2Content.Items.Clover.itemIndex);
-                var shuffled = itemIndices.OrderBy(x => UnityEngine.Random.Range(0f, 1f)).ToList();
-                itemIndex = shuffled.First();
             }
 
             private void OnDisable()

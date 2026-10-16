@@ -100,7 +100,8 @@ namespace RandomEvents
             return Util.QuaternionSafeLookRotation(targetPosition - point);
         }
 
-        public static List<GameObject> ApproximatePlacement(GameObject prefab, Vector3 targetPosition, float minDistance, float maxDistance, int amount = 1, MapNodeGroup.GraphType nodeGraphType = MapNodeGroup.GraphType.Ground, HullClassification hullSize = HullClassification.Human, bool occupyPosition = true, NodeFlags requiredNodeFlags = NodeFlags.None, NodeFlags forbiddenNodeFlags = NodeFlags.NoCharacterSpawn, bool preventOverhead = true)
+        // setup runs on each object before it is spawned for the clients
+        public static List<GameObject> ApproximatePlacement(GameObject prefab, Vector3 targetPosition, float minDistance, float maxDistance, int amount = 1, MapNodeGroup.GraphType nodeGraphType = MapNodeGroup.GraphType.Ground, HullClassification hullSize = HullClassification.Human, bool occupyPosition = true, NodeFlags requiredNodeFlags = NodeFlags.None, NodeFlags forbiddenNodeFlags = NodeFlags.NoCharacterSpawn, bool preventOverhead = true, Action<GameObject> setup = null)
         {
             var placedObjects = new List<GameObject>();
             DirectorCore instance = DirectorCore.instance;
@@ -115,6 +116,7 @@ namespace RandomEvents
                 {
                     Quaternion rotation = GetRotationFacingTargetPositionFromPoint(targetPosition, position);
                     GameObject gameObject = GameObject.Instantiate(prefab, position, rotation);
+                    setup?.Invoke(gameObject);
                     NetworkServer.Spawn(gameObject);
                     placedObjects.Add(gameObject);
                     if (occupyPosition)
