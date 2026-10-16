@@ -184,7 +184,8 @@ namespace RandomEvents
             int sixSeconds = 60 * 6;
             if(m_activeEvents.Count > 0)
             {
-                var timer = (stopWatch - m_eventStartTime) % eventFrequency;
+                // the time since the events started, which can be longer than the Event Timer
+                var timer = stopWatch - m_eventStartTime;
                 if(timer >= eventDuration - oneSecond)
                 {
                     m_announcementGiven = false;
