@@ -114,7 +114,7 @@ namespace RandomEvents
             int length = 10;
             int r = rand.Next(length);
             var eventText = Language.GetStringFormatted($"ANNOUNCE_EVENT_{r}");
-            Send($"<size=18px><style=cEvent>{eventText}</color></size>");
+            Send($"<size=18px><style=cEvent>{eventText}</style></size>");
         }
 
         public static void AnnounceDoubleEvent()
@@ -122,21 +122,21 @@ namespace RandomEvents
             int length = 5;
             int r = rand.Next(length);
             var eventText = Language.GetStringFormatted($"ANNOUNCE_DOUBLE_EVENT_{r}");
-            Send($"<size=22px><style=cEvent>{eventText}</color></size>");
+            Send($"<size=22px><style=cEvent>{eventText}</style></size>");
         }
         public static void AnnounceTripleEvent()
         {
             int length = 3;
             int r = rand.Next(length);
             var eventText = Language.GetStringFormatted($"ANNOUNCE_TRIPLE_EVENT_{r}");
-            Send($"<size=26px><style=cEvent>{eventText}</color></size>");
+            Send($"<size=26px><style=cEvent>{eventText}</style></size>");
         }
         public static void AnnounceEventConclusion()
         {
             int length = 12;
             int r = rand.Next(length);
             var eventText = Language.GetStringFormatted($"ANNOUNCE_EVENT_CONCLUDE_{r}");
-            Send($"<size=18px><style=cEvent>{eventText}</color></size>");
+            Send($"<size=18px><style=cEvent>{eventText}</style></size>");
         }
 
         public static void SendToken(string token)
