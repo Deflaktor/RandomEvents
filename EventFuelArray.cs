@@ -37,7 +37,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Event \"FuelArray\" inactive.";
+            return "Event \"EquipmentOnly\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {

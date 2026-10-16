@@ -68,7 +68,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Activates up to three random artifacts temporarily. The follwing artifacts are blacklisted: Death, Delusion, Devotion, Evolution, Metamorphosis, Rebirth, Sacrifice, Vengeance.";
+            return "Activates up to three random artifacts temporarily. The following artifacts are blacklisted: Death, Delusion, Devotion, Evolution, Metamorphosis, Prestige, Rebirth, Sacrifice, Vengeance.";
         }
         public override string GetConditionDescription()
         {
