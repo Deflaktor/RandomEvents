@@ -91,14 +91,16 @@ namespace RandomEvents
             WeightedSelection<AbstractEvent> weightedSelection = new WeightedSelection<AbstractEvent>();
             foreach (var ev in eventCandidates)
             {
-                if (!activeEvents.Contains(ev) && ev.IsEnabled() && ev.Condition(activeEvents))
+                // a weighted selection can't pick from weights of 0
+                if (!activeEvents.Contains(ev) && ev.IsEnabled() && ev.GetWeight() > 0f && ev.Condition(activeEvents))
                 {
                     weightedSelection.AddChoice(ev, ev.GetWeight());
                 }
             }
             if (weightedSelection.Count == 0)
                 return null;
-            return weightedSelection.Evaluate(UnityEngine.Random.value);
+            // below 1, unlike UnityEngine.Random.value, which the selection can't evaluate
+            return weightedSelection.Evaluate(RoR2Application.rng.nextNormalizedFloat);
         }
 
         private void PrepareAndAnnounceUpcomingEvents(float announceDelay)
@@ -112,10 +114,11 @@ namespace RandomEvents
                 {
                     currentEventProbability = ModConfig.EventProbability.Value;
                     WeightedSelection<int> weightedSelection = new WeightedSelection<int>();
-                    weightedSelection.AddChoice(1, ModConfig.SingleEventWeight.Value);
-                    weightedSelection.AddChoice(2, ModConfig.DoubleEventWeight.Value);
-                    weightedSelection.AddChoice(3, ModConfig.TripleEventWeight.Value);
-                    var eventAmount = weightedSelection.Evaluate(UnityEngine.Random.value);
+                    weightedSelection.AddChoice(1, Mathf.Max(0f, ModConfig.SingleEventWeight.Value));
+                    weightedSelection.AddChoice(2, Mathf.Max(0f, ModConfig.DoubleEventWeight.Value));
+                    weightedSelection.AddChoice(3, Mathf.Max(0f, ModConfig.TripleEventWeight.Value));
+                    // no events if all three weights are 0
+                    var eventAmount = weightedSelection.GetTotalWeight() > 0f ? weightedSelection.Evaluate(RoR2Application.rng.nextNormalizedFloat) : 0;
 
                     for (int i = 0; i < eventAmount; i++)
                     {

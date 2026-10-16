@@ -111,7 +111,7 @@ namespace RandomEvents
             weightedSelection.AddChoice(RoR2Content.Equipment.Lightning, 1f);
             weightedSelection.AddChoice(RoR2Content.Equipment.Saw, 1f);
             weightedSelection.AddChoice(null, 3f);
-            commonEquipment = weightedSelection.Evaluate(UnityEngine.Random.value);
+            commonEquipment = weightedSelection.Evaluate(RoR2Application.rng.nextNormalizedFloat);
 
             ReadOnlyCollection<TeamComponent> teamMembers = TeamComponent.GetTeamMembers(TeamIndex.Player);
             foreach (var teamMember in teamMembers)
@@ -168,7 +168,7 @@ namespace RandomEvents
                         weightedSelection.AddChoice(RoR2Content.Equipment.CommandMissile, 1f);
                         weightedSelection.AddChoice(RoR2Content.Equipment.Lightning, 1f);
                         weightedSelection.AddChoice(RoR2Content.Equipment.Saw, 1f);
-                        equipmentDef = weightedSelection.Evaluate(UnityEngine.Random.value);
+                        equipmentDef = weightedSelection.Evaluate(RoR2Application.rng.nextNormalizedFloat);
                     }
 
                     if (equipmentDef == RoR2Content.Equipment.BFG) { 
