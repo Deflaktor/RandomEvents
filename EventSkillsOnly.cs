@@ -59,7 +59,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Events \"EquipmentOnly\", \"MonsterTransform\" inactive and none of the players have a bandolier in their inventories (workaround to make it work server-side only).";
+            return "Events \"EquipmentOnly\", \"MonsterTransform\" inactive and none of the players have a Bandolier.";
         }
         protected override void AddConfig(ConfigFile config)
         {
