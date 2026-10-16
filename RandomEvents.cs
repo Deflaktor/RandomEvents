@@ -285,11 +285,14 @@ namespace RandomEvents
 
         private void InfiniteTowerRun_OnWaveAllEnemiesDefeatedServer(On.RoR2.InfiniteTowerRun.orig_OnWaveAllEnemiesDefeatedServer orig, InfiniteTowerRun self, InfiniteTowerWaveController wc)
         {
+            if (ModConfig.Enabled.Value && NetworkServer.active)
+            {
+                // before the wave's end revives dead players, so they come back in their own body
+                StopAllActiveEvents();
+            }
             orig(self, wc);
             if (ModConfig.Enabled.Value && NetworkServer.active)
             {
-                StopAllActiveEvents();
-
                 IEnumerator DelayPrepareEvents()
                 {
                     yield return new WaitForSeconds(1.0f);
