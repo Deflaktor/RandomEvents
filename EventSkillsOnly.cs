@@ -139,7 +139,8 @@ namespace RandomEvents
                     PurchaseInteraction.CreateItemTakenOrb(body.transform.position, body.gameObject, RoR2Content.Items.UtilitySkillMagazine.itemIndex);
                     inventory.GiveTemporaryItem(RoR2Content.Items.AlienHead.itemIndex, 10);
                     PurchaseInteraction.CreateItemTakenOrb(body.transform.position, body.gameObject, RoR2Content.Items.AlienHead.itemIndex);
-                    RandomEvents.instance.StartCoroutine(DelayGivePrimaryReplacement(body));
+                    // on this component, so it stops when the body dies or the event ends
+                    StartCoroutine(DelayGivePrimaryReplacement(body));
                 }
             }
             IEnumerator DelayGivePrimaryReplacement(CharacterBody body)
