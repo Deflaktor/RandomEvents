@@ -121,8 +121,8 @@ namespace RandomEvents
                     inventory.GiveTemporaryItem(RoR2Content.Items.BoostHp.itemIndex, Mathf.RoundToInt(10f * 0.10f * tonicAfflictionAmount));
                     inventory.GiveTemporaryItem(RoR2Content.Items.Hoof.itemIndex, Mathf.RoundToInt(10 * 0.14f * tonicAfflictionAmount));
                     inventory.GiveTemporaryItem(RoR2Content.Items.BoostAttackSpeed.itemIndex, Mathf.RoundToInt(attackSpeedFactor * 10 * 0.1f * tonicAfflictionAmount));
-                    // VoidJailer perma stunning is not fun
-                    if (!body.name.Equals("VoidJailerBody")) {
+                    // VoidJailer perma stunning is not fun; spawned bodies are named "VoidJailerBody(Clone)", so compare the body index
+                    if (body.bodyIndex != BodyCatalog.FindBodyIndex("VoidJailerBody")) {
                         inventory.GiveTemporaryItem(RoR2Content.Items.AlienHead.itemIndex, alienHeadAmount);
                     }
                 }
