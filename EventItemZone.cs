@@ -20,6 +20,7 @@ namespace RandomEvents
     public class EventItemZone : AbstractEvent
     {
         private AsyncOperationHandle<GameObject> LunarShopTerminal;
+        private AsyncOperationHandle<GameObject> ShockDamageAuraPulse;
         private List<ItemZoneComponent> ItemZones = new List<ItemZoneComponent>();
 
         public override bool LoadCondition()
@@ -59,6 +60,8 @@ namespace RandomEvents
         public override void Preload()
         {
             LunarShopTerminal = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LunarShopTerminal/LunarShopTerminal.prefab");
+            // a silent ring that expands to about the zone's radius
+            ShockDamageAuraPulse = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC3/Items/ShockDamageAura/ShockDamageAuraPulse.prefab");
         }
 
         public override void Hook()
@@ -94,6 +97,7 @@ namespace RandomEvents
                         shopTerminal.SetPickup(new UniquePickup(PickupCatalog.FindPickupIndex(itemIndex)));
                         var zone = bud.AddComponent<ItemZoneComponent>();
                         zone.itemIndex = itemIndex;
+                        zone.pulseEffect = ShockDamageAuraPulse.WaitForCompletion();
                         ItemZones.Add(zone);
                     });
                 }
@@ -156,43 +160,47 @@ namespace RandomEvents
 
         public class ItemZoneComponent : MonoBehaviour
         {
+            // a pulse every second, giving about as many items per second as before
+            private const float pulseInterval = 1f;
+            private const int itemsPerPulse = 6;
+            private const float radius = 4f;
             List<TemporaryInventory> inventories = new List<TemporaryInventory>();
-            int timer = 0;
+            float timer = 0f;
             public ItemIndex itemIndex;
+            public GameObject pulseEffect;
 
             private void FixedUpdate()
             {
-                timer++;
-                if ((timer % 10) == 0)
+                timer += Time.fixedDeltaTime;
+                if (timer < pulseInterval)
                 {
-                    var result = Helper.GetPlayersInRadius(HoldoutZoneShape.Sphere, transform.position, 4f, TeamIndex.Player);
-                    foreach (var player in result.playersInRadius)
-                    {
-                        var inventory = TemporaryInventory.Find(player.gameObject, inventories);
-                        if (inventory == null)
-                        {
-                            inventory = player.gameObject.AddComponent<TemporaryInventory>();
-                            inventories.Add(inventory);
-                        }
-                        inventory.GiveTemporaryItem(itemIndex);
-                        PurchaseInteraction.CreateItemTakenOrb(transform.position, player.gameObject, itemIndex);
-                    }
-                    if (timer == 50)
-                    {
-                        foreach (var player in result.playersNotInRadius)
-                        {
-                            var inventory = TemporaryInventory.Find(player.gameObject, inventories);
-                            if (inventory != null)
-                            {
-                                inventory.RemoveTemporaryItem(itemIndex);
-                                // PurchaseInteraction.CreateItemTakenOrb(player.transform.position, gameObject, itemIndex);
-                            }
-                        }
-                    }
+                    return;
                 }
-                if(timer > 50)
+                timer -= pulseInterval;
+                // shows every player the zone and when its items are given
+                if (pulseEffect)
                 {
-                    timer = 0;
+                    EffectManager.SpawnEffect(pulseEffect, new EffectData { origin = transform.position }, transmit: true);
+                }
+                var result = Helper.GetPlayersInRadius(HoldoutZoneShape.Sphere, transform.position, radius, TeamIndex.Player);
+                foreach (var player in result.playersInRadius)
+                {
+                    var inventory = TemporaryInventory.Find(player.gameObject, inventories);
+                    if (inventory == null)
+                    {
+                        inventory = player.gameObject.AddComponent<TemporaryInventory>();
+                        inventories.Add(inventory);
+                    }
+                    inventory.GiveTemporaryItem(itemIndex, itemsPerPulse);
+                    PurchaseInteraction.CreateItemTakenOrb(transform.position, player.gameObject, itemIndex);
+                }
+                foreach (var player in result.playersNotInRadius)
+                {
+                    var inventory = TemporaryInventory.Find(player.gameObject, inventories);
+                    if (inventory != null)
+                    {
+                        inventory.RemoveTemporaryItem(itemIndex);
+                    }
                 }
             }
 
