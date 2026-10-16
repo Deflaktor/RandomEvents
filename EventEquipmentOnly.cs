@@ -143,11 +143,18 @@ namespace RandomEvents
             TemporaryInventory inventory;
             TemporaryEquipment equipment;
             int timer = 0;
+            // a body that spawns as the event starts is set up both by Start and by onBodyStartGlobal
+            bool isSetUp = false;
             public void Setup(EquipmentDef equipmentDef)
             {
+                if (isSetUp)
+                {
+                    return;
+                }
                 var body = GetComponent<CharacterBody>();
                 if (body != null && body.inventory != null)
                 {
+                    isSetUp = true;
                     if (inventory == null)
                     {
                         inventory = gameObject.AddComponent<TemporaryInventory>();
