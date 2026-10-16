@@ -279,7 +279,19 @@ namespace RandomEvents
         {
             On.EntityStates.JellyfishMonster.JellyNova.Detonate += JellyNova_Detonate;
             On.RoR2.Artifacts.EnigmaArtifactManager.OnPlayerCharacterBodyStartServer += EnigmaArtifactManager_OnPlayerCharacterBodyStartServer;
+            On.RoR2.CharacterMaster.RestoreOriginalBodyPrefab += CharacterMaster_RestoreOriginalBodyPrefab;
             //IL.RoR2.CharacterMaster.Respawn += CharacterMaster_Respawn;
+        }
+
+        private void CharacterMaster_RestoreOriginalBodyPrefab(On.RoR2.CharacterMaster.orig_RestoreOriginalBodyPrefab orig, CharacterMaster self)
+        {
+            // Dio's Best Friend and other mid-stage revives restore the base body and clear it. During the event,
+            // a revived player comes back as the monster instead, as before 1.5.0, and the base body stays theirs.
+            if (NetworkServer.active && self.TryGetComponent(out MonsterTransformComponent monsterTransformComponent) && monsterTransformComponent.enabled)
+            {
+                return;
+            }
+            orig(self);
         }
 
         private void JellyNova_Detonate(On.EntityStates.JellyfishMonster.JellyNova.orig_Detonate orig, EntityStates.JellyfishMonster.JellyNova self)
@@ -371,8 +383,8 @@ namespace RandomEvents
                     monsterTransformComponent.enabled = false;
                     GameObject.Destroy(monsterTransformComponent);
                     var body = pc.master.GetBody();
-                    // after the stage has ended, the next stage spawns the player's own body; a player who left would get the monster again
-                    if (body != null && pc.isConnected && Stage.instance != null && !Stage.instance.completed) {
+                    // after the stage has ended, the next stage spawns the player's own body
+                    if (body != null && Stage.instance != null && !Stage.instance.completed) {
                         pc.master.Respawn(body.transform.position, body.transform.rotation);
                     }
                 }
@@ -383,6 +395,8 @@ namespace RandomEvents
         {
             TemporaryInventory temporaryInventory = null;
             private CharacterBody monster = null;
+            // the player's body before the transform, e.g. their survivor or the Heretic, which they get back afterwards
+            private GameObject ownBodyPrefab = null;
             private void FixedUpdate()
             {
                 Check();
@@ -456,6 +470,17 @@ namespace RandomEvents
 
             public void SetMonster(CharacterBody monster)
             {
+                if (ownBodyPrefab == null)
+                {
+                    var master = GetComponent<CharacterMaster>();
+                    ownBodyPrefab = master.bodyPrefab;
+                    // A mid-stage revive earlier in the run clears the base body. The transform's respawn would then make
+                    // the monster the base body, which the next revive after the event would bring back.
+                    if (!master.originalBodyPrefab)
+                    {
+                        master.SetBaseBodyHandlingConfig(null, ownBodyPrefab);
+                    }
+                }
                 this.monster = monster;
                 Check();
             }
@@ -463,9 +488,12 @@ namespace RandomEvents
             private void OnDisable()
             {
                 var master = GetComponent<CharacterMaster>();
-                // a player who left gets their own body prefab back when they rejoin
-                if(master.playerCharacterMasterController != null && master.playerCharacterMasterController.networkUser != null) {
-                    master.playerCharacterMasterController.SetBodyPrefabToPreference();
+                if (master && ownBodyPrefab)
+                {
+                    // the respawns of the event put the monster's body config on the master; replace them with the player's own
+                    var ownBodyConfig = new BodyHandlingConfig(ownBodyPrefab.GetComponent<CharacterBody>().bodyIndex);
+                    master.SetBaseBodyHandlingConfig(ownBodyConfig, ownBodyPrefab);
+                    master.PushBodyHandlingConfig(ownBodyConfig, ownBodyPrefab, clearHandlingConfigs: true);
                 }
                 if (temporaryInventory != null) {
                     Destroy(temporaryInventory);
