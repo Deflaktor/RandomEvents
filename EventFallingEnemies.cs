@@ -60,6 +60,7 @@ namespace RandomEvents
             if (ModConfig.Enabled.Value && 
                 NetworkServer.active && 
                 IsActive() && 
+                GetSpawnTeam(spawnRequest) != TeamIndex.Player && 
                 self.nodeGraphType == RoR2.Navigation.MapNodeGroup.GraphType.Ground && 
                 self.prefab.GetComponent<CharacterMaster>() != null && 
                 self.prefab.GetComponent<CharacterMaster>().bodyPrefab != null && 
@@ -83,6 +84,16 @@ namespace RandomEvents
                 }
             }
             return orig(self, position, rotation, spawnRequest);
+        }
+
+        // the team MasterSummon gives the spawn; allies such as Devoted Lemurians are on the Player team
+        private static TeamIndex GetSpawnTeam(DirectorSpawnRequest spawnRequest)
+        {
+            if (spawnRequest == null)
+            {
+                return TeamIndex.None;
+            }
+            return spawnRequest.teamIndexOverride ?? TeamComponent.GetObjectTeam(spawnRequest.summonerBodyObject);
         }
 
         public override void Prepare()
