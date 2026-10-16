@@ -224,33 +224,43 @@ namespace RandomEvents
                 List<VineOrb.SplitDebuffInformation> list = new List<VineOrb.SplitDebuffInformation>() { item };
                 SphereSearch sphereSearch = new SphereSearch();
                 List<HurtBox> list2 = CollectionPool<HurtBox, List<HurtBox>>.RentCollection();
-                sphereSearch.mask = LayerIndex.entityPrecise.mask;
-                sphereSearch.origin = victimBody.gameObject.transform.position;
-                sphereSearch.radius = 20f;
-                sphereSearch.queryTriggerInteraction = QueryTriggerInteraction.UseGlobal;
-                sphereSearch.RefreshCandidates();
-                sphereSearch.FilterCandidatesByHurtBoxTeam(TeamMask.GetEnemyTeams(TeamIndex.Player));
-                sphereSearch.OrderCandidatesByDistance();
-                sphereSearch.FilterCandidatesByDistinctHurtBoxEntities();
-                sphereSearch.GetHurtBoxes(list2);
-                sphereSearch.ClearCandidates();
-                int num = 2;
-                for (int j = 0; j < list2.Count; j++)
+                try
                 {
-                    HurtBox hurtBox = list2[j];
-                    CharacterBody body = hurtBox.healthComponent.body;
-                    if ((bool)hurtBox && (bool)hurtBox.healthComponent && hurtBox.healthComponent.alive && body != victimBody && body != this && body.master.GetComponent<ZombieComponent>() == null)
+                    sphereSearch.mask = LayerIndex.entityPrecise.mask;
+                    sphereSearch.origin = victimBody.gameObject.transform.position;
+                    sphereSearch.radius = 20f;
+                    sphereSearch.queryTriggerInteraction = QueryTriggerInteraction.UseGlobal;
+                    sphereSearch.RefreshCandidates();
+                    sphereSearch.FilterCandidatesByHurtBoxTeam(TeamMask.GetEnemyTeams(TeamIndex.Player));
+                    sphereSearch.OrderCandidatesByDistance();
+                    sphereSearch.FilterCandidatesByDistinctHurtBoxEntities();
+                    sphereSearch.GetHurtBoxes(list2);
+                    sphereSearch.ClearCandidates();
+                    int num = 2;
+                    for (int j = 0; j < list2.Count; j++)
                     {
-                        CreateVineOrbChain(victimBody.gameObject, hurtBox, list);
-                        body.master.gameObject.EnsureComponent<ZombieComponent>();
-                        num--;
-                        if (num == 0)
+                        HurtBox hurtBox = list2[j];
+                        if (!hurtBox || !hurtBox.healthComponent || !hurtBox.healthComponent.alive)
                         {
-                            return;
+                            continue;
+                        }
+                        CharacterBody body = hurtBox.healthComponent.body;
+                        if (body != null && body != victimBody && body.master != null && body.master.GetComponent<ZombieComponent>() == null)
+                        {
+                            CreateVineOrbChain(victimBody.gameObject, hurtBox, list);
+                            body.master.gameObject.EnsureComponent<ZombieComponent>();
+                            num--;
+                            if (num == 0)
+                            {
+                                return;
+                            }
                         }
                     }
                 }
-                CollectionPool<HurtBox, List<HurtBox>>.ReturnCollection(list2);
+                finally
+                {
+                    CollectionPool<HurtBox, List<HurtBox>>.ReturnCollection(list2);
+                }
             }
 
             private void CreateVineOrbChain(GameObject sourceGameObject, HurtBox targetHurtbox, List<VineOrb.SplitDebuffInformation> debuffInfoList)
