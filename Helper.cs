@@ -122,6 +122,9 @@ namespace RandomEvents
                     if (occupyPosition)
                     {
                         instance.AddOccupiedNode(nodeGraph, nodeIndex);
+                        var occupiedNode = gameObject.AddComponent<OccupiedNode>();
+                        occupiedNode.nodeGraph = nodeGraph;
+                        occupiedNode.nodeIndex = nodeIndex;
                     }
                     if (placedObjects.Count >= amount)
                     {
@@ -147,6 +150,27 @@ namespace RandomEvents
                 position += Vector3.up * (num + 0.25f);
             }
             return !HGPhysics.DoesOverlapSphere(position, num, (int)LayerIndex.world.mask | (int)LayerIndex.CommonMasks.characterBodiesOrDefault | (int)LayerIndex.CommonMasks.fakeActorLayers);
+        }
+
+        // frees the node of a placed object once the object is destroyed
+        private class OccupiedNode : MonoBehaviour
+        {
+            public NodeGraph nodeGraph;
+            public NodeGraph.NodeIndex nodeIndex;
+
+            private void OnDestroy()
+            {
+                DirectorCore director = DirectorCore.instance;
+                if (!director)
+                {
+                    return;
+                }
+                int index = Array.IndexOf(director.occupiedNodes, new DirectorCore.NodeReference(nodeGraph, nodeIndex));
+                if (index != -1)
+                {
+                    ArrayUtils.ArrayRemoveAtAndResize(ref director.occupiedNodes, index);
+                }
+            }
         }
 
         public struct PlayersInRadiusResult {
