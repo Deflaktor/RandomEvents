@@ -78,7 +78,9 @@ namespace RandomEvents
             if(count > 2)
             {
                 // float median = (count % 2 == 1) ? costs[count / 2] : (costs[(count / 2) - 1] + costs[count / 2]) / 2f;
-                float oneQuarterMedian = (count % 4 == 0) ? costs[count / 4] : (costs[(count / 4) - 1] + costs[count / 4]) / 2f;
+                // with fewer than 4 costs there's nothing below the first quarter to average with, e.g. a family of 3 monsters
+                int quarter = count / 4;
+                float oneQuarterMedian = (count % 4 == 0 || quarter == 0) ? costs[quarter] : (costs[quarter - 1] + costs[quarter]) / 2f;
                 var atLeastOneChoice = false;
                 var filteredWeightedSelection = new WeightedSelection<DirectorCard>();
                 foreach (var choice in ClassicStageInfo.instance.monsterSelection.choices)
