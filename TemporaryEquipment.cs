@@ -89,23 +89,26 @@ namespace RandomEvents
         public class TemporarilyRemoveEquipment : IDisposable
         {
             Inventory inventory;
-            TemporaryEquipment temporaryEquipment;
+            // a copy of the equipment as it was: after a pickup the inventory uses temporaryEquipmentStateSlots itself,
+            // so clearing the inventory would clear that too
+            Inventory.EquipmentStateSlot[] savedEquipmentStateSlots;
 
             public TemporarilyRemoveEquipment(Interactor activator)
             {
-                inventory = activator.GetComponent<CharacterBody>().inventory;
-                temporaryEquipment = activator.GetComponent<TemporaryEquipment>();
-                if (temporaryEquipment != null)
+                var body = activator ? activator.GetComponent<CharacterBody>() : null;
+                inventory = body ? body.inventory : null;
+                if (inventory && activator.GetComponent<TemporaryEquipment>() != null)
                 {
+                    savedEquipmentStateSlots = Helper.CopyEquipmentState(inventory._equipmentSlots);
                     Helper.FillEquipment(inventory, EquipmentIndex.None);
                 }
             }
 
             public void Dispose()
             {
-                if (temporaryEquipment != null)
+                if (savedEquipmentStateSlots != null)
                 {
-                    Helper.TransferEquipmentIndex(temporaryEquipment.temporaryEquipmentStateSlots, inventory._equipmentSlots);
+                    Helper.TransferEquipmentIndex(savedEquipmentStateSlots, inventory._equipmentSlots);
                 }
             }
         }
