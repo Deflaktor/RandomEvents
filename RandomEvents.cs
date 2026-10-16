@@ -273,9 +273,30 @@ namespace RandomEvents
 
         private void StartUpcomingEvents()
         {
-            m_activeEvents.AddRange(m_upcomingEvents);
-            m_activeEvents.ForEach(e => e.Start(m_activeEvents));
+            var events = new List<AbstractEvent>(m_upcomingEvents);
             m_upcomingEvents.Clear();
+            m_activeEvents.AddRange(events);
+            // an event that fails to start must not keep the others from starting or leave the queue filled
+            foreach (var ev in events)
+            {
+                try
+                {
+                    ev.Start(m_activeEvents);
+                }
+                catch (Exception e)
+                {
+                    Log.LogError($"Event {ev.GetEventConfigName()} failed to start: {e}");
+                    try
+                    {
+                        ev.Stop();
+                    }
+                    catch (Exception stopException)
+                    {
+                        Log.LogError($"Event {ev.GetEventConfigName()} failed to stop: {stopException}");
+                    }
+                    m_activeEvents.Remove(ev);
+                }
+            }
         }
 
         private void AwaitingActivation_OnEnter(On.EntityStates.InfiniteTowerSafeWard.AwaitingActivation.orig_OnEnter orig, EntityStates.InfiniteTowerSafeWard.AwaitingActivation self)
