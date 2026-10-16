@@ -242,13 +242,15 @@ namespace RandomEvents
                 if (bodyIndex == BodyIndex.None)
                 {
                     Log.LogError($"Could not find body: {name}");
+                    continue;
                 }
                 string defaultReward = null;
 
                 if(BodyBonusItemsDict.TryGetValue(name, out defaultReward))
                 {
                     ConfigEntry<string> bodyBonusItemList = config.Bind(GetEventConfigName(), $"CustomBodyBonusItems_{name}", defaultReward, $"Items gained temporarily when transformed into {name}. Comma-separated list like above.");
-                    CustomBodyBonusItems.Add(bodyIndex, bodyBonusItemList);
+                    // a body can be listed twice
+                    CustomBodyBonusItems[bodyIndex] = bodyBonusItemList;
                 }
             }
         }
