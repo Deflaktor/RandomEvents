@@ -105,7 +105,7 @@ namespace RandomEvents
 #if DEBUG
             Config.Reload();
 #endif
-            if (ModConfig.Enabled.Value && NetworkServer.active && SceneCatalog.GetSceneDefForCurrentScene().sceneType == SceneType.Stage || SceneCatalog.GetSceneDefForCurrentScene().cachedName == "arena")
+            if (ModConfig.Enabled.Value && NetworkServer.active && (SceneCatalog.GetSceneDefForCurrentScene().sceneType == SceneType.Stage || SceneCatalog.GetSceneDefForCurrentScene().cachedName == "arena"))
             {
                 if (currentEventProbability >= 1.0f || RoR2Application.rng.nextNormalizedFloat < currentEventProbability)
                 {
