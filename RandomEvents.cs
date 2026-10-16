@@ -127,7 +127,11 @@ namespace RandomEvents
                         }
                     }
 
-                    instance.StartCoroutine(DelayChatSendAnnouncement(announceDelay, new List<AbstractEvent>(m_upcomingEvents)));
+                    // none of the events may qualify
+                    if (m_upcomingEvents.Count > 0)
+                    {
+                        instance.StartCoroutine(DelayChatSendAnnouncement(announceDelay, new List<AbstractEvent>(m_upcomingEvents)));
+                    }
                 } 
                 else
                 {
@@ -396,7 +400,7 @@ namespace RandomEvents
                 spawnResult.inventory.GiveItemPermanent(RoR2Content.Items.HealthDecay);
             });
             var result = spawnCard.DoSpawn(directorSpawnRequest.placementRule.position, UnityEngine.Quaternion.identity, directorSpawnRequest).spawnedInstance;
-            return result.GetComponent<CharacterMaster>();
+            return result != null ? result.GetComponent<CharacterMaster>() : null;
         }
 
         IEnumerator DelayChatSendAnnouncement(float time, List<AbstractEvent> events)
@@ -414,11 +418,14 @@ namespace RandomEvents
             {
                 ChatHelper.AnnounceTripleEvent();
             }
+            // null while no player has a body, or if the spawn fails
             var gameObject = SpawnHiddenMonsterWithInvadingDoppelgangerItem();
             yield return new WaitForSeconds(0.5f);
-            gameObject.TrueKill();
+            if (gameObject != null)
+            {
+                gameObject.TrueKill();
+            }
             yield return new WaitForSeconds(0.5f);
-            events[0].GetAnnouncement();
             string announcement = "";
             List<string> eventAnnouncements = new List<string>();
             var conjunction = Language.GetString("ANNOUNCE_EVENTS_CONJUNCTION");
@@ -435,13 +442,19 @@ namespace RandomEvents
             {
                 gameObject = SpawnHiddenMonsterWithInvadingDoppelgangerItem();
                 yield return new WaitForSeconds(0.5f);
-                gameObject.TrueKill();
+                if (gameObject != null)
+                {
+                    gameObject.TrueKill();
+                }
                 if (events.Count >= 3)
                 {
                     yield return new WaitForSeconds(0.5f);
                     gameObject = SpawnHiddenMonsterWithInvadingDoppelgangerItem();
                     yield return new WaitForSeconds(0.5f);
-                    gameObject.TrueKill();
+                    if (gameObject != null)
+                    {
+                        gameObject.TrueKill();
+                    }
                 }
             }
         }
