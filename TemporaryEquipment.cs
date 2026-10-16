@@ -37,51 +37,34 @@ namespace RandomEvents
             using (new TemporarilyRestoreOriginalEquipment(ref context)) { orig(ref context); }
         }
 
+        // The TemporaryEquipment of the inventory's current body, if any. The game asks every fixed update for every
+        // inventory, also ones without a master (e.g. Simulacrum's enemy items) or without a body, so this must stay quiet
+        private static TemporaryEquipment FindTemporaryEquipment(Inventory inventory)
+        {
+            if (inventory.TryGetComponent(out CharacterMaster characterMaster) && characterMaster.bodyInstanceObject
+                && characterMaster.bodyInstanceObject.TryGetComponent(out TemporaryEquipment temporaryEquipment))
+            {
+                return temporaryEquipment;
+            }
+            return null;
+        }
+
         private static void Inventory_SetEquipmentDisabled(On.RoR2.Inventory.orig_SetEquipmentDisabled orig, Inventory self, bool _active)
         {
-            if (self.TryGetComponent<CharacterMaster>(out var characterMaster))
+            var temporaryEquipment = FindTemporaryEquipment(self);
+            if (temporaryEquipment && temporaryEquipment.doNotDisableEquipment)
             {
-                if (characterMaster.bodyInstanceObject != null)
-                {
-                    if (characterMaster.bodyInstanceObject.TryGetComponent<CharacterBody>(out var characterBody) && characterMaster.bodyInstanceObject.TryGetComponent<TemporaryEquipment>(out var temporaryEquipment))
-                    {
-                        if (temporaryEquipment.doNotDisableEquipment)
-                        {
-                            return;
-                        }
-                    }
-                }
-                else
-                {
-                    Log.LogError($"characterMaster.bodyInstanceObject is null: {characterMaster}");
-                }
-            }
-            else
-            {
-                Log.LogError($"Inventory does not have a CharacterMaster: {self}");
+                return;
             }
             orig(self, _active);
         }
 
         private static float Inventory_CalculateEquipmentCooldownScale(On.RoR2.Inventory.orig_CalculateEquipmentCooldownScale orig, Inventory self)
         {
-            if (self.TryGetComponent<CharacterMaster>(out var characterMaster))
+            var temporaryEquipment = FindTemporaryEquipment(self);
+            if (temporaryEquipment)
             {
-                if (characterMaster.bodyInstanceObject != null)
-                {
-                    if (characterMaster.bodyInstanceObject.TryGetComponent<CharacterBody>(out var characterBody) && characterMaster.bodyInstanceObject.TryGetComponent<TemporaryEquipment>(out var temporaryEquipment))
-                    {
-                        return temporaryEquipment.cooldownScale * orig(self);
-                    }
-                }
-                else
-                {
-                    Log.LogError($"characterMaster.bodyInstanceObject is null: {characterMaster}");
-                }
-            }
-            else
-            {
-                Log.LogError($"Inventory does not have a CharacterMaster: {self}");
+                return temporaryEquipment.cooldownScale * orig(self);
             }
             return orig(self);
         }
