@@ -371,8 +371,8 @@ namespace RandomEvents
                     monsterTransformComponent.enabled = false;
                     GameObject.Destroy(monsterTransformComponent);
                     var body = pc.master.GetBody();
-                    // after the stage has ended, the next stage spawns the player's own body
-                    if (body != null && Stage.instance != null && !Stage.instance.completed) {
+                    // after the stage has ended, the next stage spawns the player's own body; a player who left would get the monster again
+                    if (body != null && pc.isConnected && Stage.instance != null && !Stage.instance.completed) {
                         pc.master.Respawn(body.transform.position, body.transform.rotation);
                     }
                 }
@@ -396,7 +396,8 @@ namespace RandomEvents
                 var body = master.GetBody();
                 if (body == null)
                     return;
-                if (master.playerCharacterMasterController == null)
+                // a player who left has no body preference until they rejoin
+                if (master.playerCharacterMasterController == null || master.playerCharacterMasterController.networkUser == null)
                     return;
                 var preferredBody = BodyCatalog.GetBodyPrefab(master.playerCharacterMasterController.networkUser.bodyIndexPreference);
                 if (preferredBody == null)
@@ -462,7 +463,8 @@ namespace RandomEvents
             private void OnDisable()
             {
                 var master = GetComponent<CharacterMaster>();
-                if(master.playerCharacterMasterController != null) { 
+                // a player who left gets their own body prefab back when they rejoin
+                if(master.playerCharacterMasterController != null && master.playerCharacterMasterController.networkUser != null) {
                     master.playerCharacterMasterController.SetBodyPrefabToPreference();
                 }
                 if (temporaryInventory != null) {
