@@ -79,8 +79,18 @@ namespace RandomEvents
         {
             if (ModConfig.Enabled.Value && NetworkServer.active && IsActive() && body.teamComponent.teamIndex == TeamIndex.Player && body.isPlayerControlled)
             {
-                body.gameObject.EnsureComponent<SkillsOnlyComponent>();
+                var skillsOnlyComponent = body.gameObject.EnsureComponent<SkillsOnlyComponent>();
+                if (!IsFuelArrayActive(RandomEvents.instance.m_activeEvents))
+                {
+                    skillsOnlyComponent.SetupEquipment();
+                }
             }
+        }
+
+        // the equipment stays for FuelArray
+        private static bool IsFuelArrayActive(List<AbstractEvent> activeEvents)
+        {
+            return activeEvents.Any(e => e.GetEventConfigName().Equals("FuelArray", StringComparison.InvariantCultureIgnoreCase));
         }
 
         public override void Prepare()
@@ -96,8 +106,7 @@ namespace RandomEvents
                 if (teamMember.body != null && teamMember.body.isPlayerControlled)
                 {
                     var skillsOnlyComponent = teamMember.body.gameObject.EnsureComponent<SkillsOnlyComponent>();
-                    var fuelArrayEventActive = activeOtherEvents.Any(e => e.GetEventConfigName().Equals("FuelArray", StringComparison.InvariantCultureIgnoreCase));
-                    if (!fuelArrayEventActive)
+                    if (!IsFuelArrayActive(activeOtherEvents))
                     {
                         skillsOnlyComponent.SetupEquipment();
                     }
