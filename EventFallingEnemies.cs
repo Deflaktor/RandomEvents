@@ -92,42 +92,33 @@ namespace RandomEvents
 
         public override void Start(List<AbstractEvent> activeOtherEvents)
         {
-            var atLeastOneChoice = false;
-            var filteredWeightedSelection = new WeightedSelection<DirectorCard>();
-            foreach(var choice in ClassicStageInfo.instance.monsterSelection.choices)
+            MonsterPool.Filter(this, CanFall);
+        }
+
+        // ground monsters that can move
+        private static bool CanFall(WeightedSelection<DirectorCard>.ChoiceInfo choice)
+        {
+            if (choice.weight > 0 && choice.value != null)
             {
-                if (choice.weight > 0 && choice.value != null)
+                var prefab = choice.value.spawnCard.prefab;
+                if (prefab != null && prefab.GetComponent<CharacterMaster>() != null)
                 {
-                    var prefab = choice.value.spawnCard.prefab;
-                    if (prefab != null && prefab.GetComponent<CharacterMaster>() != null)
+                    var master = prefab.GetComponent<CharacterMaster>();
+                    var body = master.bodyPrefab;
+                    if (body != null && body.GetComponent<CharacterBody>() != null)
                     {
-                        var master = prefab.GetComponent<CharacterMaster>();
-                        var body = master.bodyPrefab;
-                        if (body != null && body.GetComponent<CharacterBody>() != null)
-                        {
-                            CharacterBody b = body.GetComponent<CharacterBody>();
-                            if (b.baseMoveSpeed > 0 && choice.value.spawnCard.nodeGraphType == RoR2.Navigation.MapNodeGroup.GraphType.Ground)
-                            {
-                                filteredWeightedSelection.AddChoice(choice);
-                                atLeastOneChoice = true;
-                            }
-                        }
+                        CharacterBody b = body.GetComponent<CharacterBody>();
+                        return b.baseMoveSpeed > 0 && choice.value.spawnCard.nodeGraphType == RoR2.Navigation.MapNodeGroup.GraphType.Ground;
                     }
                 }
             }
-            if (atLeastOneChoice)
-            {
-                ClassicStageInfo.instance.monsterSelection = filteredWeightedSelection;
-            }
+            return false;
         }
 
 
         public override void Stop()
         {
-            if (ClassicStageInfo.instance != null)
-            {
-                ClassicStageInfo.instance.RebuildCards();
-            }
+            MonsterPool.Restore(this);
         }
     }
 }

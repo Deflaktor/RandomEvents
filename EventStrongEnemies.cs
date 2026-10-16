@@ -61,7 +61,7 @@ namespace RandomEvents
                 infiniteTowerRun.waveController.combatDirector.eliteBias = 3f;
                 infiniteTowerRun.waveController.creditsPerSecond *= 2.0f;
             }
-            var costs = ClassicStageInfo.instance.monsterSelection.choices
+            var costs = MonsterPool.GetChoices()
                 .Where(choice => choice.weight > 0 && choice.value != null)
                 .Select(choice => choice.value.spawnCard.directorCreditCost)
                 .OrderBy(cost => cost)
@@ -71,30 +71,14 @@ namespace RandomEvents
             {
                 float median = (count % 2 == 1) ? costs[count / 2] : (costs[(count / 2) - 1] + costs[count / 2]) / 2f;
                 // float twoThirdsMedian = ((2*count) % 3 == 0) ? costs[2 * count / 3] : (costs[(2*count / 3) - 1] + costs[2*count / 3]) / 2f;
-                var atLeastOneChoice = false;
-                var filteredWeightedSelection = new WeightedSelection<DirectorCard>();
-                foreach (var choice in ClassicStageInfo.instance.monsterSelection.choices)
-                {
-                    if (choice.value != null && choice.value.spawnCard.directorCreditCost >= median)
-                    {
-                        atLeastOneChoice = true;
-                        filteredWeightedSelection.AddChoice(choice);
-                    }
-                }
-                if (atLeastOneChoice)
-                {
-                    ClassicStageInfo.instance.monsterSelection = filteredWeightedSelection;
-                }
+                MonsterPool.Filter(this, choice => choice.value != null && choice.value.spawnCard.directorCreditCost >= median);
             }
         }
 
         public override void Stop()
         {
             //ModCompatibilityServerSideTweaks.ResetOverridePowerBias();
-            if (ClassicStageInfo.instance != null)
-            {
-                ClassicStageInfo.instance.RebuildCards();
-            }
+            MonsterPool.Restore(this);
         }
     }
 }

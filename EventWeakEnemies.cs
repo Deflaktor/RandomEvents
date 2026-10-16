@@ -69,7 +69,7 @@ namespace RandomEvents
                 infiniteTowerRun.waveController.combatDirector.eliteBias = 0f;
                 infiniteTowerRun.waveController.combatDirector.monsterCredit = 0f;
             }
-            var costs = ClassicStageInfo.instance.monsterSelection.choices
+            var costs = MonsterPool.GetChoices()
                 .Where(choice => choice.weight > 0 && choice.value != null)
                 .Select(choice => choice.value.spawnCard.directorCreditCost)
                 .OrderBy(cost => cost)
@@ -81,30 +81,14 @@ namespace RandomEvents
                 // with fewer than 4 costs there's nothing below the first quarter to average with, e.g. a family of 3 monsters
                 int quarter = count / 4;
                 float oneQuarterMedian = (count % 4 == 0 || quarter == 0) ? costs[quarter] : (costs[quarter - 1] + costs[quarter]) / 2f;
-                var atLeastOneChoice = false;
-                var filteredWeightedSelection = new WeightedSelection<DirectorCard>();
-                foreach (var choice in ClassicStageInfo.instance.monsterSelection.choices)
-                {
-                    if(choice.value != null && choice.value.spawnCard.directorCreditCost <= oneQuarterMedian)
-                    {
-                        atLeastOneChoice = true;
-                        filteredWeightedSelection.AddChoice(choice);
-                    }
-                }
-                if (atLeastOneChoice)
-                {
-                    ClassicStageInfo.instance.monsterSelection = filteredWeightedSelection;
-                }
+                MonsterPool.Filter(this, choice => choice.value != null && choice.value.spawnCard.directorCreditCost <= oneQuarterMedian);
             }
         }
 
         public override void Stop()
         {
             // ModCompatibilityServerSideTweaks.ResetOverridePowerBias();
-            if (ClassicStageInfo.instance != null)
-            {
-                ClassicStageInfo.instance.RebuildCards();
-            }
+            MonsterPool.Restore(this);
         }
     }
 }
