@@ -102,6 +102,11 @@ namespace RandomEvents
             artifacts = shuffled.Take(UnityEngine.Random.RandomRangeInt(1, 4)).ToList();
         }
 
+        public bool TurnsOn(ArtifactDef artifactDef)
+        {
+            return artifacts.Contains(artifactDef);
+        }
+
         public override void Start(List<AbstractEvent> activeOtherEvents)
         {
             // leave out artifacts turned on since Prepare, so Stop doesn't turn them off
