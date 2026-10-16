@@ -36,6 +36,7 @@ namespace RandomEvents
         public AsyncOperationHandle<CharacterSpawnCard> someMonster2;
         public bool m_announcementGiven = false;
         public int m_eventStartTime = 0;
+        private readonly Dictionary<InfiniteTowerWaveCategory, InfiniteTowerWaveCategory.WeightedWave[]> originalWavePrefabs = new Dictionary<InfiniteTowerWaveCategory, InfiniteTowerWaveCategory.WeightedWave[]>();
 
         public void Awake()
         {
@@ -239,18 +240,33 @@ namespace RandomEvents
         {
             orig(self);
             WriteRandomEventsMarkdownFile();
-            // remove incompatible wave categories
-            foreach (var waveCategory in self.waveCategories)
+            // the wave categories are assets, so waves removed for one run are put back before the next
+            foreach (var (waveCategory, wavePrefabs) in originalWavePrefabs)
             {
-                List<InfiniteTowerWaveCategory.WeightedWave> wavePrefabs = new List<InfiniteTowerWaveCategory.WeightedWave>();
-                foreach (var wavePrefab in waveCategory.wavePrefabs)
+                waveCategory.wavePrefabs = wavePrefabs;
+            }
+            originalWavePrefabs.Clear();
+            // remove artifact waves, which would clash with RandomArtifact's artifacts
+            var randomArtifact = m_loadedEvents.Find(ev => ev is EventRandomArtifact);
+            if (ModConfig.Enabled.Value && randomArtifact != null && randomArtifact.IsEnabled())
+            {
+                foreach (var waveCategory in self.waveCategories)
                 {
-                    if(wavePrefab.wavePrefab.GetComponent<ArtifactEnabler>() == null)
+                    if (originalWavePrefabs.ContainsKey(waveCategory))
                     {
-                        wavePrefabs.Add(wavePrefab);
+                        continue;
                     }
+                    originalWavePrefabs.Add(waveCategory, waveCategory.wavePrefabs);
+                    List<InfiniteTowerWaveCategory.WeightedWave> wavePrefabs = new List<InfiniteTowerWaveCategory.WeightedWave>();
+                    foreach (var wavePrefab in waveCategory.wavePrefabs)
+                    {
+                        if(wavePrefab.wavePrefab.GetComponent<ArtifactEnabler>() == null)
+                        {
+                            wavePrefabs.Add(wavePrefab);
+                        }
+                    }
+                    waveCategory.wavePrefabs = wavePrefabs.ToArray();
                 }
-                waveCategory.wavePrefabs = wavePrefabs.ToArray();
             }
             currentEventProbability = ModConfig.EventProbability.Value;
         }
