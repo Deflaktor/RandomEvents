@@ -208,6 +208,7 @@ namespace RandomEvents
             // events still going when the last run ended were undone with it
             m_activeEvents.Clear();
             m_upcomingEvents.Clear();
+            TemporaryEquipment.ClearSnapshots();
             m_eventStartTime = 0;
             m_announcementGiven = false;
             currentEventProbability = ModConfig.EventProbability.Value;

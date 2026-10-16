@@ -18,10 +18,27 @@ namespace RandomEvents
 {
     public class TemporaryEquipment : MonoBehaviour
     {
+        // The equipment belongs to the master's inventory, which all bodies of a player share. Two bodies can have a
+        // TemporaryEquipment at once (e.g. a respawn while the old body is still there), so they share one snapshot of
+        // the player's own equipment: the first one takes it, the last one restores it.
+        private class Snapshot
+        {
+            public Inventory.EquipmentStateSlot[] real;
+            public int users;
+        }
+        private static readonly Dictionary<Inventory, Snapshot> snapshots = new Dictionary<Inventory, Snapshot>();
+
+        private Inventory snapshotInventory;
         private Inventory.EquipmentStateSlot[] realEquipmentStateSlots;
         private Inventory.EquipmentStateSlot[] temporaryEquipmentStateSlots;
         public float cooldownScale = 1f;
         public bool doNotDisableEquipment = false;
+
+        // the inventories of an earlier run are gone
+        public static void ClearSnapshots()
+        {
+            snapshots.Clear();
+        }
 
         public static void Hook()
         {
@@ -102,6 +119,10 @@ namespace RandomEvents
             {
                 inventory = context.body.inventory;
                 temporaryEquipment = context.body.GetComponent<TemporaryEquipment>();
+                if (temporaryEquipment != null && (temporaryEquipment.realEquipmentStateSlots == null || temporaryEquipment.temporaryEquipmentStateSlots == null))
+                {
+                    temporaryEquipment = null;
+                }
                 if (temporaryEquipment != null)
                 {
                     Helper.SwapEquipmentSlots(inventory, temporaryEquipment.realEquipmentStateSlots);
@@ -142,31 +163,52 @@ namespace RandomEvents
             if (TryGetComponent(out CharacterBody body))
             {
                 if(body.inventory != null && body.inventory._equipmentSlots != null) {
-                    realEquipmentStateSlots = Helper.CopyEquipmentState(body.inventory._equipmentSlots);
+                    snapshotInventory = body.inventory;
+                    if (!snapshots.TryGetValue(snapshotInventory, out var snapshot))
+                    {
+                        snapshot = new Snapshot { real = Helper.CopyEquipmentState(snapshotInventory._equipmentSlots) };
+                        snapshots[snapshotInventory] = snapshot;
+                    }
+                    snapshot.users++;
+                    // shared, so equipment picked up during the event lands in it
+                    realEquipmentStateSlots = snapshot.real;
                 }
             }
         }
 
         private void OnDisable()
         {
-            if (TryGetComponent(out CharacterBody body))
+            var inventory = snapshotInventory;
+            snapshotInventory = null;
+            if (inventory is null || !snapshots.TryGetValue(inventory, out var snapshot))
             {
-                if (body.inventory != null)
+                return;
+            }
+            snapshot.users--;
+            if (snapshot.users > 0)
+            {
+                // another body of this player still has the event's equipment
+                return;
+            }
+            snapshots.Remove(inventory);
+            if (!inventory)
+            {
+                return;
+            }
+            // every slot and set this event may have written; the snapshot's own if this body never got the equipment
+            var changedEquipmentStateSlots = temporaryEquipmentStateSlots ?? realEquipmentStateSlots;
+            for (uint slot = 0; slot < changedEquipmentStateSlots.Length; slot++)
+            {
+                for (uint set = 0; set < changedEquipmentStateSlots[slot]._setCount; set++)
                 {
-                    for (uint slot = 0; slot < temporaryEquipmentStateSlots.Length; slot++)
+                    var location = new EquipmentLocation { slot = slot, set = set };
+                    if(slot < realEquipmentStateSlots.Length && set < realEquipmentStateSlots[slot]._setCount)
                     {
-                        for (uint set = 0; set < temporaryEquipmentStateSlots[slot]._setCount; set++)
-                        {
-                            var location = new EquipmentLocation { slot = slot, set = set };
-                            if(slot < realEquipmentStateSlots.Length && set < realEquipmentStateSlots[slot]._setCount)
-                            {
-                                body.inventory.SetEquipment(realEquipmentStateSlots[slot].GetEquipment(set), location);
-                            }
-                            else
-                            {
-                                body.inventory.SetEquipmentIndex(EquipmentIndex.None, location);
-                            }
-                        }
+                        inventory.SetEquipment(realEquipmentStateSlots[slot].GetEquipment(set), location);
+                    }
+                    else
+                    {
+                        inventory.SetEquipmentIndex(EquipmentIndex.None, location);
                     }
                 }
             }
