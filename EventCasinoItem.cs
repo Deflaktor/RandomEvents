@@ -95,14 +95,16 @@ namespace RandomEvents
 
         public class CasinoItemComponent : MonoBehaviour
         {
+            // a new item every 10 seconds, starting right away
+            private const float changeInterval = 10f;
             TemporaryInventory inventory;
-            int timer = 0;
-            int index = 0;
+            float timer = changeInterval;
+            int index = -1;
             List<ItemIndex> itemCandidates;
             private void FixedUpdate()
             {
-                timer++;
-                if(timer > 500)
+                timer += Time.fixedDeltaTime;
+                if(timer >= changeInterval)
                 {
                     var body = GetComponent<CharacterBody>();
                     if(body != null && body.inventory != null)
@@ -111,8 +113,10 @@ namespace RandomEvents
                         {
                             inventory = gameObject.AddComponent<TemporaryInventory>();
                         }
-                        var previousItem = itemCandidates[index];
-                        inventory.RemoveTemporaryItem(previousItem, 10);
+                        if (index >= 0)
+                        {
+                            inventory.RemoveTemporaryItem(itemCandidates[index], 10);
+                        }
                         index = (index + 1) % itemCandidates.Count;
                         var nextItem = itemCandidates[index];
                         inventory.GiveTemporaryItem(nextItem, 10);
