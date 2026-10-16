@@ -22,7 +22,7 @@ namespace RandomEvents
         public void SetupConfig(ConfigFile config)
         {
             var conditionDescription = "";
-            if (GetConditionDescription().IsNullOrWhiteSpace())
+            if (!GetConditionDescription().IsNullOrWhiteSpace())
                 conditionDescription += "\nCondition: " + GetConditionDescription();
             Enabled = config.Bind(GetEventConfigName(), "SectionEnabled", true, $"Enable {GetEventConfigName()}: {GetDescription()}{conditionDescription}");
             Weight = config.Bind(GetEventConfigName(), "Weight", 1.0f, $"Weight for the event.");
