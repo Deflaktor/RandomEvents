@@ -380,7 +380,9 @@ namespace RandomEvents
             }
         }
 
-        private CharacterMaster SpawnHiddenMonsterWithInvadingDoppelgangerItem()
+        // The umbra effect on every player's screen, with its sound, belongs to bodies that carry the umbra item, so a
+        // hidden body below the lowest player carries it for a moment. Null while no player has a body.
+        private CharacterMaster SpawnUmbraEffectCarrier()
         {
             bool foundPosition = false;
             Vector3 lowestFloor = new Vector3(0f, float.MaxValue, 0f);
@@ -411,17 +413,44 @@ namespace RandomEvents
                 position = lowestFloor
             };
             SpawnCard spawnCard = someMonster2.WaitForCompletion();
-            DirectorSpawnRequest directorSpawnRequest = new DirectorSpawnRequest(spawnCard, directorPlacementRule, Run.instance.runRNG);
+            // the application's generator, so the run's seeded one gives the same results as without the mod
+            DirectorSpawnRequest directorSpawnRequest = new DirectorSpawnRequest(spawnCard, directorPlacementRule, RoR2Application.rng);
             directorSpawnRequest.teamIndexOverride = TeamIndex.None;
             directorSpawnRequest.ignoreTeamMemberLimit = true;
             directorSpawnRequest.onSpawnedServer = (Action<SpawnCard.SpawnResult>)Delegate.Combine(directorSpawnRequest.onSpawnedServer, (Action<SpawnCard.SpawnResult>)delegate (SpawnCard.SpawnResult result)
             {
-                var spawnResult = result.spawnedInstance.GetComponent<CharacterMaster>();
-                spawnResult.inventory.GiveItemPermanent(RoR2Content.Items.InvadingDoppelganger);
-                spawnResult.inventory.GiveItemPermanent(RoR2Content.Items.HealthDecay);
+                var carrier = result.spawnedInstance.GetComponent<CharacterMaster>();
+                carrier.inventory.GiveItemPermanent(RoR2Content.Items.InvadingDoppelganger);
+                // it only carries the item; its AI is switched on when its body starts, so it's switched off after that
+                carrier.onBodyStart += body =>
+                {
+                    foreach (var ai in carrier.AiComponents)
+                    {
+                        ai.enabled = false;
+                    }
+                };
             });
             var result = spawnCard.DoSpawn(directorSpawnRequest.placementRule.position, UnityEngine.Quaternion.identity, directorSpawnRequest).spawnedInstance;
             return result != null ? result.GetComponent<CharacterMaster>() : null;
+        }
+
+        // One pulse of the umbra effect. The carrier is removed without dying: an umbra that dies drops an item from
+        // Artifact of Vengeance's drop table, which the game handles in every run.
+        IEnumerator ShowUmbraEffect()
+        {
+            var carrier = SpawnUmbraEffectCarrier();
+            yield return new WaitForSeconds(0.5f);
+            if (carrier != null)
+            {
+                // without the item the effect fades out, as it does in the game
+                carrier.inventory.RemoveItemPermanent(RoR2Content.Items.InvadingDoppelganger);
+                var body = carrier.GetBodyObject();
+                if (body != null)
+                {
+                    GameObject.Destroy(body, 0.3f);
+                }
+                GameObject.Destroy(carrier.gameObject, 0.3f);
+            }
         }
 
         IEnumerator DelayChatSendAnnouncement(float time, List<AbstractEvent> events)
@@ -439,13 +468,7 @@ namespace RandomEvents
             {
                 ChatHelper.AnnounceTripleEvent();
             }
-            // null while no player has a body, or if the spawn fails
-            var gameObject = SpawnHiddenMonsterWithInvadingDoppelgangerItem();
-            yield return new WaitForSeconds(0.5f);
-            if (gameObject != null)
-            {
-                gameObject.TrueKill();
-            }
+            yield return ShowUmbraEffect();
             yield return new WaitForSeconds(0.5f);
             string announcement = "";
             List<string> eventAnnouncements = new List<string>();
@@ -461,21 +484,11 @@ namespace RandomEvents
             ChatHelper.Send($"<size=26px>{announcement}</size>");
             if (events.Count >= 2)
             {
-                gameObject = SpawnHiddenMonsterWithInvadingDoppelgangerItem();
-                yield return new WaitForSeconds(0.5f);
-                if (gameObject != null)
-                {
-                    gameObject.TrueKill();
-                }
+                yield return ShowUmbraEffect();
                 if (events.Count >= 3)
                 {
                     yield return new WaitForSeconds(0.5f);
-                    gameObject = SpawnHiddenMonsterWithInvadingDoppelgangerItem();
-                    yield return new WaitForSeconds(0.5f);
-                    if (gameObject != null)
-                    {
-                        gameObject.TrueKill();
-                    }
+                    yield return ShowUmbraEffect();
                 }
             }
         }
