@@ -17,6 +17,8 @@ namespace RandomEvents
     {
         public ConfigEntry<bool> Enabled;
         public ConfigEntry<float> Weight;
+        // see HereticTransformation
+        public virtual bool SuppressesHereticTransformation => false;
         public abstract string GetEventConfigName();
         public abstract string GetAnnouncement();
         public void SetupConfig(ConfigFile config)

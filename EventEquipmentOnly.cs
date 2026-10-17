@@ -65,28 +65,9 @@ namespace RandomEvents
         public override void Hook()
         {
             CharacterBody.onBodyStartGlobal += CharacterBody_onBodyStartGlobal;
-            IL.RoR2.CharacterMaster.OnInventoryChanged += CharacterMaster_OnInventoryChanged;
         }
 
-        private void CharacterMaster_OnInventoryChanged(MonoMod.Cil.ILContext il)
-        {
-            // Skip the whole Heretic transformation while the event is active, not just TransformBody:
-            // since 1.5.0 the block also changes the original body and body handling before that call.
-            ILCursor c = new ILCursor(il);
-            var skipHeretic = c.DefineLabel();
-            c.GotoNext(
-            x => x.MatchLdstr("HereticBody"),
-            x => x.MatchCall(typeof(BodyCatalog), nameof(BodyCatalog.FindBodyPrefab))
-            );
-            var end = c.Clone();
-            end.GotoNext(
-            x => x.MatchLdarg(0),
-            x => x.MatchCall<CharacterMaster>("UpdateMoneyBasedItems")
-            );
-            end.MarkLabel(skipHeretic);
-            c.EmitDelegate<Func<bool>>(() => ModConfig.Enabled.Value && NetworkServer.active && IsActive());
-            c.Emit(OpCodes.Brtrue, skipHeretic);
-        }
+        public override bool SuppressesHereticTransformation => true;
 
         private void CharacterBody_onBodyStartGlobal(CharacterBody body)
         {

@@ -48,6 +48,7 @@ namespace RandomEvents
             {
                 TemporaryInventory.Hook();
                 TemporaryEquipment.Hook();
+                HereticTransformation.Hook();
 
                 ModConfig.Init();
                 InitAndHookEvent(new EventBulletHell());
