@@ -36,6 +36,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | RandomArtifact |  | Activates up to three random artifacts temporarily. The following artifacts are blacklisted: Death, Delusion, Devotion, Evolution, Metamorphosis, Prestige, Rebirth, Sacrifice, Vengeance. | There is at least one artifact which can be enabled and is not blacklisted. |
 | RandomTeams | Enemies turn against each other | Makes some enemies fight each other as well as the players. |  |
 | RedLightGreenLight | Red light, green light | Alternates between green and red light, announced in chat. During red light, all AI-controlled characters are rooted, and players who move lose 10% of their health every quarter second. |  |
+| RitualHelmets | Skulls on the charge | All monsters get a Ritual Helmet and sprint wherever they can, so that it charges. Players take 66% less damage. | Hallowed Concepts is enabled. |
 | SecondWind | Fragile, but never finished | Revives dead players. All other players drop to 10% of their health until the event ends, but anyone who dies during the event is revived once with full health. |  |
 | SkillsOnly | Primary sealed, skills unleashed | Makes players unable to use primary skills but other skills have reduced cooldown. | Events "EquipmentOnly", "MonsterTransform" inactive and none of the players have a Bandolier. |
 | SmallArena | Confined space | Halves the battle zone radius but makes the wave also easier. | Simulacrum mode only |

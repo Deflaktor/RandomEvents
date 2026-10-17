@@ -90,7 +90,8 @@
         "ANNOUNCE_EVENT_SURVIVOR_SWAP": "Walk in another's shoes",
         "ANNOUNCE_EVENT_SECOND_WIND": "Fragile, but never finished",
         "ANNOUNCE_EVENT_CURSED_LOOT": "Spoils come at a price",
-        "ANNOUNCE_EVENT_ITEM_RUSH": "Grab them before they do"
+        "ANNOUNCE_EVENT_ITEM_RUSH": "Grab them before they do",
+        "ANNOUNCE_EVENT_RITUAL_HELMETS": "Skulls on the charge"
         
     }
 }
