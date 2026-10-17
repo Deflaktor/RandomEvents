@@ -2,7 +2,9 @@
 using RoR2;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace RandomEvents
 {
@@ -13,20 +15,15 @@ namespace RandomEvents
         private const float CheckInterval = 0.25f;
         // horizontal, so that falling doesn't count
         private const float AllowedMovementPerCheck = 0.75f;
-        // a player who keeps moving gets a Tonic Affliction every second, and loses one every 5 seconds again once they
-        // stand still or the light is green
+        // a player who keeps moving gets a Tonic Affliction every second, until the event ends
         private const float AfflictionInterval = 1f;
-        private const float AfflictionDecayInterval = 5f;
         private readonly BuffTracker roots = new BuffTracker();
+        // players who stand still during red light can't be hurt
+        private readonly BuffTracker immunities = new BuffTracker();
+        private AsyncOperationHandle<GameObject> AfflictionEffect;
         private readonly Dictionary<CharacterBody, Vector3> lastPositions = new Dictionary<CharacterBody, Vector3>();
         private readonly HashSet<CharacterBody> caughtThisPhase = new HashSet<CharacterBody>();
-        private class Affliction
-        {
-            public int count;
-            public float nextAffliction;
-            public float nextDecay;
-        }
-        private readonly Dictionary<CharacterBody, Affliction> afflictions = new Dictionary<CharacterBody, Affliction>();
+        private readonly Dictionary<CharacterBody, float> nextAfflictions = new Dictionary<CharacterBody, float>();
         private bool redLight;
         private float phaseTimer;
         private float graceTimer;
@@ -50,7 +47,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Alternates between green and red light, announced in chat. During red light, all AI-controlled characters are rooted, and players who move get a Tonic Affliction every second. Once they stop moving, they lose one of them every 5 seconds, and the rest when the event ends.";
+            return "Alternates between green and red light, announced in chat. During red light, all AI-controlled characters are rooted, and players who move get a Tonic Affliction every second until the event ends. Players who stand still can't be hurt.";
         }
         public override string GetConditionDescription()
         {
@@ -61,6 +58,8 @@ namespace RandomEvents
         }
         public override void Preload()
         {
+            // Symbiotic Scorpion's effect with the sound of its debuff hitting
+            AfflictionEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC1/PermanentDebuffOnHit/PermanentDebuffEffect.prefab");
         }
         public override void Hook()
         {
@@ -90,7 +89,6 @@ namespace RandomEvents
             {
                 return;
             }
-            DecayAfflictions();
             phaseTimer -= Time.fixedDeltaTime;
             if (phaseTimer <= 0f)
             {
@@ -131,7 +129,12 @@ namespace RandomEvents
                     movement.y = 0f;
                     if (movement.sqrMagnitude > AllowedMovementPerCheck * AllowedMovementPerCheck)
                     {
+                        immunities.Remove(body, RoR2Content.Buffs.Immune);
                         Punish(body);
+                    }
+                    else if (!immunities.Has(body, RoR2Content.Buffs.Immune))
+                    {
+                        immunities.Add(body, RoR2Content.Buffs.Immune);
                     }
                 }
             }
@@ -154,35 +157,17 @@ namespace RandomEvents
                 ChatHelper.SendEventMessage("EVENT_RED_LIGHT_CAUGHT", ChatHelper.GetColoredPlayerName(body));
             }
             var now = Run.instance.fixedTime;
-            if (!afflictions.TryGetValue(body, out var affliction))
-            {
-                affliction = new Affliction();
-                afflictions[body] = affliction;
-            }
-            // no decay while moving
-            affliction.nextDecay = now + AfflictionDecayInterval;
-            if (now < affliction.nextAffliction)
+            if (nextAfflictions.TryGetValue(body, out var next) && now < next)
             {
                 return;
             }
-            affliction.nextAffliction = now + AfflictionInterval;
-            affliction.count++;
+            nextAfflictions[body] = now + AfflictionInterval;
             EventLoot.GetInventory(this, body).GiveTemporaryItem(RoR2Content.Items.TonicAffliction.itemIndex);
-        }
-
-        private void DecayAfflictions()
-        {
-            var now = Run.instance.fixedTime;
-            foreach (var (body, affliction) in afflictions)
+            EffectManager.SpawnEffect(AfflictionEffect.WaitForCompletion(), new EffectData
             {
-                if (body == null || affliction.count <= 0 || now < affliction.nextDecay)
-                {
-                    continue;
-                }
-                affliction.count--;
-                affliction.nextDecay = now + AfflictionDecayInterval;
-                EventLoot.GetInventory(this, body).RemoveTemporaryItem(RoR2Content.Items.TonicAffliction.itemIndex);
-            }
+                origin = body.corePosition,
+                scale = body.radius
+            }, transmit: true);
         }
 
         private void RedLight()
@@ -216,6 +201,7 @@ namespace RandomEvents
             redLight = false;
             phaseTimer = RoR2Application.rng.RangeFloat(4f, 8f);
             roots.RemoveAll();
+            immunities.RemoveAll();
             lastPositions.Clear();
             ChatHelper.SendEventMessage("EVENT_GREEN_LIGHT");
         }
@@ -235,8 +221,9 @@ namespace RandomEvents
             roots.RemoveAll();
             lastPositions.Clear();
             caughtThisPhase.Clear();
+            immunities.RemoveAll();
             EventLoot.Clear(this);
-            afflictions.Clear();
+            nextAfflictions.Clear();
         }
     }
 }
