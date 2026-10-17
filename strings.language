@@ -44,6 +44,9 @@
         "EVENT_HOT_POTATO_PASSED": "{0} passed the bomb to {1}!",
         "EVENT_HOT_POTATO_WARNING": "The bomb of {0} explodes in {1} seconds!",
         "EVENT_HOT_POTATO_EXPLODED": "The bomb exploded on {0}!",
+        "EVENT_RED_LIGHT": "<color=#ed4c40>Red light!</color> Don't move!",
+        "EVENT_GREEN_LIGHT": "<color=#7ed957>Green light!</color> Move!",
+        "EVENT_RED_LIGHT_CAUGHT": "{0} moved during red light!",
 
         "ANNOUNCE_EVENT_WEAK_ENEMIES": "Horde of the many",
         "ANNOUNCE_EVENT_STRONG_ENEMIES": "Fear the few",
@@ -72,7 +75,8 @@
         "ANNOUNCE_EVENT_HUNTED": "The hunt is on",
         "ANNOUNCE_EVENT_THE_ALPHA": "The pack has a leader",
         "ANNOUNCE_EVENT_LINKED_SOULS": "Your souls are bound together",
-        "ANNOUNCE_EVENT_HOT_POTATO": "Hot potato"
+        "ANNOUNCE_EVENT_HOT_POTATO": "Hot potato",
+        "ANNOUNCE_EVENT_RED_LIGHT_GREEN_LIGHT": "Red light, green light"
         
     }
 }
