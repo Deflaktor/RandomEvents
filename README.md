@@ -30,7 +30,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | ItemZone | Zone fuels your arsenal | Spawns item zones which grant players standing in them temporary items. | Simulacrum mode only |
 | LinkedSouls | Your souls are bound together | Damage a player takes is split evenly among all living players. Each share is reduced by that player's own armor. | At least two players are alive. |
 | Mitosis | Divide and multiply | Only monsters with a weaker relative on the stage spawn, e.g. Elder Lemurians when there are also Lemurians. When they die, they split into two of the weaker monster. | The stage's monsters include such a pair, and events "StrongEnemies" and "WeakEnemies" inactive. |
-| MonsterTransform | Players embrace their monstrous forms | Players transform into monsters. | Event "SkillsOnly" inactive and currently not a boss wave. |
+| MonsterTransform | Players embrace their monstrous forms | Players transform into monsters. | Events "SkillsOnly" and "SurvivorSwap" inactive and currently not a boss wave. |
 | RandomArtifact |  | Activates up to three random artifacts temporarily. The following artifacts are blacklisted: Death, Delusion, Devotion, Evolution, Metamorphosis, Prestige, Rebirth, Sacrifice, Vengeance. | There is at least one artifact which can be enabled and is not blacklisted. |
 | RandomTeams | Enemies turn against each other | Makes some enemies fight each other as well as the players. |  |
 | RedLightGreenLight | Red light, green light | Alternates between green and red light, announced in chat. During red light, all AI-controlled characters are rooted, and players who move lose 10% of their health every quarter second. |  |
@@ -39,6 +39,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | StealthMission | Vanish from their sight | Cloaks all players, so monsters lose track of them. Attacking reveals a player for 2 seconds. | Event "Hunted" inactive. |
 | StrongEnemies | Fear the few | Only strong enemies spawn. | Events "WeakEnemies" and "Mitosis" inactive. |
 | SupplyDrop | Supplies inbound | Drops a random Captain beacon (Healing, Shocking, Resupply, Hacking or Defense) next to each player. The beacons disappear when the event ends. |  |
+| SurvivorSwap | Walk in another's shoes | In multiplayer, every player plays the survivor of another player, with that player's loadout and items. Alone, the player becomes a random other survivor. Everyone gets their own back when the event ends. | Events "MonsterTransform" and "InventoryRoulette" inactive and currently not a boss wave. |
 | TheAlpha | The pack has a leader | Makes a random monster the alpha, with ten times its health and a boss health bar. While it lives, all other monsters are in a frenzy like from Gorag's Opus: +100% attack speed and +50% movement speed. |  |
 | TimeWarp | Time slows for your foes | Slows all enemies to about a third of their speed, almost twice as much as Chronobauble. |  |
 | UmbraAmbush | Umbras emerge from the shadows | Each player is hunted by the umbra of a random survivor. It has ten times the health and as many items per tier as that player, picked to suit its survivor. Killing it drops an item. The umbras disappear when the event ends. |  |

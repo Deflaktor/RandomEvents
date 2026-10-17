@@ -91,7 +91,8 @@ namespace RandomEvents
                     return false;
                 }
             }
-            return !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("SkillsOnly", StringComparison.InvariantCultureIgnoreCase));
+            return !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("SkillsOnly", StringComparison.InvariantCultureIgnoreCase)
+                || e.GetEventConfigName().Equals("SurvivorSwap", StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
         {
@@ -107,7 +108,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Event \"SkillsOnly\" inactive and currently not a boss wave.";
+            return "Events \"SkillsOnly\" and \"SurvivorSwap\" inactive and currently not a boss wave.";
         }
         private static List<string> CalculateDefaultBodyList()
         {
