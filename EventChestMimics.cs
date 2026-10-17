@@ -29,7 +29,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Chests bought with gold may release a monster instead of their item, a boss for a legendary or boss item. Killing it drops twice the chest's items.";
+            return "Chests bought with gold may release a monster instead of their item, a boss for a legendary or boss item. The chest's items are lost.";
         }
         public override string GetConditionDescription()
         {
@@ -45,33 +45,16 @@ namespace RandomEvents
         public override void Hook()
         {
             On.RoR2.ChestBehavior.ItemDrop += ChestBehavior_ItemDrop;
-            GlobalEventManager.onCharacterDeathServer += GlobalEventManager_onCharacterDeathServer;
         }
 
         private void ChestBehavior_ItemDrop(On.RoR2.ChestBehavior.orig_ItemDrop orig, ChestBehavior self)
         {
             if (ModConfig.Enabled.Value && NetworkServer.active && IsActive() && IsMimicCandidate(self) && RoR2Application.rng.nextNormalizedFloat < MimicChance.Value && SpawnMimic(self))
             {
-                // the mimic carries the items instead
+                // the mimic takes the items' place
                 return;
             }
             orig(self);
-        }
-
-        // also after the event: a mimic keeps its loot until it dies
-        private void GlobalEventManager_onCharacterDeathServer(DamageReport damageReport)
-        {
-            if (!NetworkServer.active || damageReport.victimMaster == null || damageReport.victimBody == null || !damageReport.victimMaster.TryGetComponent(out MimicLoot loot))
-            {
-                return;
-            }
-            GameObject.Destroy(loot);
-            var angle = 360f / loot.count;
-            var velocity = Vector3.up * 20f + Vector3.forward * 3f;
-            for (int i = 0; i < loot.count; i++)
-            {
-                PickupDropletController.CreatePickupDroplet(loot.pickup, damageReport.victimBody.corePosition + Vector3.up * 1.5f, Quaternion.AngleAxis(angle * i, Vector3.up) * velocity, false);
-            }
         }
 
         // chests bought with gold, which hold an item; not Lunar Pods, lockboxes or the Artifact of Delusion's chests
@@ -113,9 +96,6 @@ namespace RandomEvents
             {
                 return false;
             }
-            var loot = mimic.gameObject.AddComponent<MimicLoot>();
-            loot.pickup = chest.currentPickup;
-            loot.count = chest.dropCount * 2;
             ChatHelper.SendEventMessage("EVENT_CHEST_MIMICS_REVEALED");
             return true;
         }
@@ -130,12 +110,6 @@ namespace RandomEvents
 
         public override void Stop()
         {
-        }
-
-        public class MimicLoot : MonoBehaviour
-        {
-            public UniquePickup pickup;
-            public int count;
         }
     }
 }
