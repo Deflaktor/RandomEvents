@@ -87,6 +87,7 @@ namespace RandomEvents
                 InitAndHookEvent(new EventTheAlpha());
                 InitAndHookEvent(new EventTimeWarp());
                 InitAndHookEvent(new EventUmbraAmbush());
+                InitAndHookEvent(new EventVengefulSpirits());
                 InitAndHookEvent(new EventWeakEnemies());
                 InitAndHookEvent(new EventZombies());
                 ModConfig.InLobbyConfig();

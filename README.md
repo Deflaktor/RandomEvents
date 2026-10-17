@@ -47,5 +47,6 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | TheAlpha | The pack has a leader | Makes a random monster the alpha, with ten times its health and a boss health bar. While it lives, all other monsters are in a frenzy like from Gorag's Opus: +100% attack speed and +50% movement speed. |  |
 | TimeWarp | Time slows for your foes | Slows all enemies to about a third of their speed, almost twice as much as Chronobauble. |  |
 | UmbraAmbush | Umbras emerge from the shadows | Each player is hunted by an enemy survivor. It has ten times the health and a kit of safe items as big as that player's items per tier, picked to suit its survivor. The hunters disappear when the event ends. |  |
+| VengefulSpirits | Spirits stand guard | All monsters get a Vengeful Spirit: a spirit that takes half of their damage. Killing the spirit makes its monster vengeful, with more attack speed and shorter cooldowns. Half as many monsters spawn. The items are removed when the event ends. | Hallowed Concepts is enabled. |
 | WeakEnemies | Horde of the many | Only weak enemies spawn. | Events "StrongEnemies" and "Mitosis" inactive. |
 | Zombies | The dead refuse to rest | Spawns some infected enemies. Infected enemies infect other nearby enemies upon death and revive once with reduced health and speed. | Currently not a boss wave. |
