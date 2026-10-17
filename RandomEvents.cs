@@ -68,6 +68,7 @@ namespace RandomEvents
                 InitAndHookEvent(new EventHunted());
                 InitAndHookEvent(new EventInventoryRoulette());
                 InitAndHookEvent(new EventItemKits());
+                InitAndHookEvent(new EventItemRush());
                 InitAndHookEvent(new EventItemZone());
                 InitAndHookEvent(new EventLinkedSouls());
                 InitAndHookEvent(new EventMitosis());
