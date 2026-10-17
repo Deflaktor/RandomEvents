@@ -17,7 +17,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | CasinoItem | Ancient relic cycling through its many powers | Gives all players 10 items of random type. The type of the item changes every 10 seconds. |  |
 | ChestMimics | Not every chest is what it seems | Chests bought with gold may release a monster instead of their item, a boss for a legendary or boss item. The chest's items are lost. | Not in Simulacrum, and the stage has an unopened chest bought with gold. |
 | CursedSpoils | Spoils come at a price | Every time a monster dies, each player gets an item until the event ends. Each time a player has taken damage from monsters adding up to 25% of their base health, they get a hex that disables some of their items until the event ends. | Hallowed Concepts is enabled. |
-| DroneEscort | Backup has arrived | Gives each player a random drone of any kind. The drones disappear when the event ends. |  |
+| DroneEscort | Backup has arrived | Gives each player a random drone of any kind; an Equipment Drone gets one of the equipment of EquipmentOnly. The drones disappear when the event ends. |  |
 | EquipmentOnly | Equipment-exclusive combat | Gives all players a random equipment temporarily with reduced cooldown but disables all skills. | Events "SkillsOnly", "FuelArray" inactive. Artifact of Enigma inactive. |
 | ExplodingCorpses | Exploding corpses | All enemies explode upon death. | Players have sufficient means to do ranged damage. |
 | FallingEnemies | Enemies fall down from the heavens | Enemies fall from the sky. Only walking enemies spawn. |  |

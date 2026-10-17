@@ -69,6 +69,13 @@ namespace RandomEvents
 
         public override bool SuppressesHereticTransformation => true;
 
+        // the equipment the event gives, also used by other events
+        public static EquipmentDef[] EventEquipment => new[]
+        {
+            RoR2Content.Equipment.BFG, DLC1Content.Equipment.Molotov, RoR2Content.Equipment.CommandMissile,
+            RoR2Content.Equipment.Lightning, RoR2Content.Equipment.Saw
+        };
+
         private void CharacterBody_onBodyStartGlobal(CharacterBody body)
         {
             if (ModConfig.Enabled.Value && NetworkServer.active && IsActive() && body.teamComponent.teamIndex == TeamIndex.Player && body.isPlayerControlled)

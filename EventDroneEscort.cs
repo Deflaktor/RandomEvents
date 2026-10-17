@@ -28,7 +28,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Gives each player a random drone of any kind. The drones disappear when the event ends.";
+            return "Gives each player a random drone of any kind; an Equipment Drone gets one of the equipment of EquipmentOnly. The drones disappear when the event ends.";
         }
         public override string GetConditionDescription()
         {
@@ -57,10 +57,10 @@ namespace RandomEvents
         }
 
         // all drones of the run's expansions, also those not found on stages, without the Gunner Turret, which can't
-        // follow, and the Equipment Drone, which has no equipment
+        // follow; the Equipment Drone gets one of EquipmentOnly's equipment
         private static List<DroneDef> GetDroneCandidates()
         {
-            var excluded = new HashSet<DroneDef> { RoR2Content.DroneDefs.Turret1, RoR2Content.DroneDefs.EquipmentDrone };
+            var excluded = new HashSet<DroneDef> { RoR2Content.DroneDefs.Turret1 };
             return DroneCatalog.allDroneDefs
                 .Where(droneDef => droneDef != null && !excluded.Contains(droneDef) && droneDef.masterPrefab != null && droneDef.CheckRequiredExpansionEnabled())
                 .ToList();
@@ -94,6 +94,11 @@ namespace RandomEvents
                 if (master != null)
                 {
                     master.gameObject.AddComponent<EscortDrone>();
+                    if (droneDef == RoR2Content.DroneDefs.EquipmentDrone)
+                    {
+                        var equipment = EventEquipmentOnly.EventEquipment;
+                        master.inventory.SetEquipmentIndex(equipment[RoR2Application.rng.RangeInt(0, equipment.Length)].equipmentIndex, master.inventory.activeEquipmentLocation);
+                    }
                     drones.Add(master);
                 }
             }
