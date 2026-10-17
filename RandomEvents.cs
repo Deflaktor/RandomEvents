@@ -65,6 +65,7 @@ namespace RandomEvents
                 InitAndHookEvent(new EventSkillsOnly());
                 InitAndHookEvent(new EventSmallArena());
                 InitAndHookEvent(new EventStrongEnemies());
+                InitAndHookEvent(new EventTimeWarp());
                 InitAndHookEvent(new EventWeakEnemies());
                 InitAndHookEvent(new EventZombies());
                 ModConfig.InLobbyConfig();

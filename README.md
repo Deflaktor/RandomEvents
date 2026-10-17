@@ -28,5 +28,6 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | SkillsOnly | Primary sealed, skills unleashed | Makes players unable to use primary skills but other skills have reduced cooldown. | Events "EquipmentOnly", "MonsterTransform" inactive and none of the players have a Bandolier. |
 | SmallArena | Confined space | Halves the battle zone radius but makes the wave also easier. | Simulacrum mode only |
 | StrongEnemies | Fear the few | Only strong enemies spawn. | Event "WeakEnemies" inactive. |
+| TimeWarp | Time slows for your foes | Slows all enemies to about a third of their speed, almost twice as much as Chronobauble. |  |
 | WeakEnemies | Horde of the many | Only weak enemies spawn. | Event "StrongEnemies" inactive. |
 | Zombies | The dead refuse to rest | Spawns some infected enemies. Infected enemies infect other nearby enemies upon death and revive once with reduced health and speed. | Currently not a boss wave. |
