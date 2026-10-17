@@ -213,13 +213,13 @@ namespace RandomEvents
 
         private static int popupCount;
 
-        // Shows a popup like an item pickup's to every player, with the placeholder icon of equipment cut from the
-        // game, an exclamation mark. That equipment can't be picked up, so the popup never clashes with a real
+        // Shows a popup like an item pickup's to every player, with the placeholder icon of the cut elites'
+        // equipment, an exclamation mark. Players can't get that equipment, so the popup never clashes with a real
         // pickup's, which the queue skips if it names the same equipment as the popup before it. Alternating between
-        // two keeps consecutive popups apart.
+        // the two keeps consecutive popups apart.
         public static void SendPopup(string title, string description)
         {
-            var equipmentDef = popupCount++ % 2 == 0 ? JunkContent.Equipment.SoulJar : JunkContent.Equipment.OrbitalLaser;
+            var equipmentDef = popupCount++ % 2 == 0 ? JunkContent.Equipment.EliteGoldEquipment : JunkContent.Equipment.EliteYellowEquipment;
             if (equipmentDef == null || equipmentDef.equipmentIndex == EquipmentIndex.None)
             {
                 return;
