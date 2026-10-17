@@ -11,7 +11,7 @@ namespace RandomEvents
     public class EventRedLightGreenLight : AbstractEvent
     {
         // time to react to a red light, which also covers the delay until the host knows where a client's player is
-        private const float GracePeriod = 0.75f;
+        private const float GracePeriod = 1f;
         private const float CheckInterval = 0.25f;
         // horizontal, so that falling doesn't count
         private const float AllowedMovementPerCheck = 0.75f;
@@ -48,7 +48,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Alternates between green and red light, announced in chat. During red light, all AI-controlled characters are rooted, and players who move get a Tonic Affliction every second until the event ends. Players who stand still can't be hurt.";
+            return "Alternates between green and red light, announced in chat. During red light, all AI-controlled characters are rooted, and after a second to react, players who move get a Tonic Affliction every second until the event ends. Players who stand still can't be hurt.";
         }
         public override string GetConditionDescription()
         {
