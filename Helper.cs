@@ -173,6 +173,24 @@ namespace RandomEvents
             }
         }
 
+        // the bodies of connected players who are alive
+        public static List<CharacterBody> GetLivingPlayerBodies()
+        {
+            var bodies = new List<CharacterBody>();
+            foreach (var pc in PlayerCharacterMasterController.instances)
+            {
+                if (pc.isConnected && pc.master != null)
+                {
+                    var body = pc.master.GetBody();
+                    if (body != null && body.healthComponent != null && body.healthComponent.alive)
+                    {
+                        bodies.Add(body);
+                    }
+                }
+            }
+            return bodies;
+        }
+
         public struct PlayersInRadiusResult {
             public List<TeamComponent> playersInRadius;
             public List<TeamComponent> playersNotInRadius;

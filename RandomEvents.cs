@@ -58,6 +58,7 @@ namespace RandomEvents
                 InitAndHookEvent(new EventFuelArray());
                 InitAndHookEvent(new EventGhosts());
                 InitAndHookEvent(new EventHaste());
+                InitAndHookEvent(new EventItemKits());
                 InitAndHookEvent(new EventItemZone());
                 InitAndHookEvent(new EventMonsterTransform());
                 InitAndHookEvent(new EventRandomArtifact());

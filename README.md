@@ -21,6 +21,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | FuelArray | Stay above 50% health or face disaster | All players get a Fuel Array equipment temporarily but take reduced damage from all sources. | Event "EquipmentOnly" inactive. |
 | Ghosts | Ghostly apparitions haunt the battlefield | Some enemies spawn as incorporeal ghosts. They disappear after some time. | Currently not a boss wave. |
 | Haste | The world accelerates | All beings become faster. |  |
+| ItemKits | Item kit: Glass Cannon | Gives all players the items of a random kit temporarily, e.g. Glass Cannon or Bounce House. | At least one kit has items. |
 | ItemZone | Zone fuels your arsenal | Spawns item zones which grant players standing in them temporary items. | Simulacrum mode only |
 | MonsterTransform | Players embrace their monstrous forms | Players transform into monsters. | Event "SkillsOnly" inactive and currently not a boss wave. |
 | RandomArtifact |  | Activates up to three random artifacts temporarily. The following artifacts are blacklisted: Death, Delusion, Devotion, Evolution, Metamorphosis, Prestige, Rebirth, Sacrifice, Vengeance. | There is at least one artifact which can be enabled and is not blacklisted. |

@@ -56,7 +56,8 @@
         "ANNOUNCE_EVENT_EQUIPMENT_ONLY": "Equipment-exclusive combat",
         "ANNOUNCE_EVENT_FUEL_ARRAY": "Stay above 50% health or face disaster",
         "ANNOUNCE_EVENT_MONSTER_TRANSFORM": "Players embrace their monstrous forms",
-        "ANNOUNCE_EVENT_TIME_WARP": "Time slows for your foes"
+        "ANNOUNCE_EVENT_TIME_WARP": "Time slows for your foes",
+        "ANNOUNCE_EVENT_ITEM_KITS": "Item kit: {0}"
         
     }
 }
