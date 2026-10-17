@@ -22,6 +22,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | FuelArray | Stay above 50% health or face disaster | All players get a Fuel Array equipment temporarily but take reduced damage from all sources. | Event "EquipmentOnly" inactive. |
 | Ghosts | Ghostly apparitions haunt the battlefield | Some enemies spawn as incorporeal ghosts. They disappear after some time. | Currently not a boss wave. |
 | Haste | The world accelerates | All beings become faster. |  |
+| HotPotato | Hot potato | A random player carries a bomb, marked with a skull, and passes it on by touching another player. After 20 seconds it explodes, dealing half of the carrier's health to them and hurting monsters nearby. Then another player gets a new bomb. | At least two players are alive. |
 | Hunted | The hunt is on | All monsters target one random player, who gets 100 armor. When that player dies, the monsters hunt another one. | At least two players are alive and event "StealthMission" inactive. |
 | ItemKits | Item kit: Glass Cannon | Gives all players the items of a random kit temporarily, e.g. Glass Cannon or Bounce House. | At least one kit has items. |
 | ItemZone | Zone fuels your arsenal | Spawns item zones which grant players standing in them temporary items. | Simulacrum mode only |

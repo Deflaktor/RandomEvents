@@ -40,6 +40,10 @@
         "EVENT_HUNTED_TARGET": "{0} is being hunted!",
         "EVENT_THE_ALPHA_CHOSEN": "An alpha {0} leads the monsters!",
         "EVENT_THE_ALPHA_FALLEN": "The alpha has fallen!",
+        "EVENT_HOT_POTATO_NEW_BOMB": "{0} has the bomb! It explodes in {1} seconds - touch another player to pass it on.",
+        "EVENT_HOT_POTATO_PASSED": "{0} passed the bomb to {1}!",
+        "EVENT_HOT_POTATO_WARNING": "The bomb of {0} explodes in {1} seconds!",
+        "EVENT_HOT_POTATO_EXPLODED": "The bomb exploded on {0}!",
 
         "ANNOUNCE_EVENT_WEAK_ENEMIES": "Horde of the many",
         "ANNOUNCE_EVENT_STRONG_ENEMIES": "Fear the few",
@@ -67,7 +71,8 @@
         "ANNOUNCE_EVENT_DRONE_ESCORT": "Backup has arrived",
         "ANNOUNCE_EVENT_HUNTED": "The hunt is on",
         "ANNOUNCE_EVENT_THE_ALPHA": "The pack has a leader",
-        "ANNOUNCE_EVENT_LINKED_SOULS": "Your souls are bound together"
+        "ANNOUNCE_EVENT_LINKED_SOULS": "Your souls are bound together",
+        "ANNOUNCE_EVENT_HOT_POTATO": "Hot potato"
         
     }
 }
