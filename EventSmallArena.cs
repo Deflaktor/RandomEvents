@@ -48,7 +48,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Halves the battle zone radius but makes the wave also easier.";
+            return "Halves the safe zone, but the wave is easier.";
         }
         public override string GetConditionDescription()
         {

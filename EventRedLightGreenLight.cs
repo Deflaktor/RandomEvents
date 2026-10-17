@@ -48,7 +48,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Alternates between green and red light, announced in chat. During red light, all AI-controlled characters are rooted, and after a second to react, players who move get a Tonic Affliction every second until the event ends. Players who stand still can't be hurt.";
+            return "Red and green light take turns. During red light, monsters freeze, players who stand still can't be hurt, and players who move get Tonic Afflictions until the event ends.";
         }
         public override string GetConditionDescription()
         {

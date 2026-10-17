@@ -41,7 +41,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Some enemies spawn as incorporeal ghosts. They disappear after some time.";
+            return "Some monsters spawn as ghosts that fade after a while.";
         }
         public override string GetConditionDescription()
         {

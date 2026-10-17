@@ -37,7 +37,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Gives all players 10 items of random type. The type of the item changes every 10 seconds.";
+            return "Gives all players 10 of a random item, which changes every 10 seconds.";
         }
         public override string GetConditionDescription()
         {

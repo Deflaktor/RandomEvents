@@ -35,7 +35,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Revives dead players. All other players drop to 10% of their health until the event ends, but anyone who dies during the event is revived once with full health.";
+            return "Revives dead players. Everyone else drops to 10% health, but anyone who dies is revived once.";
         }
         public override string GetConditionDescription()
         {

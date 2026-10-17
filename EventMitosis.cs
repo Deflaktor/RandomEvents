@@ -53,7 +53,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Only monsters with a weaker relative on the stage spawn, e.g. Elder Lemurians when there are also Lemurians. When they die, they split into as many of the weaker monster as their health is worth, at least 2 and at most 10.";
+            return "Only monsters with a weaker relative spawn, and they split into several of them when they die.";
         }
         public override string GetConditionDescription()
         {

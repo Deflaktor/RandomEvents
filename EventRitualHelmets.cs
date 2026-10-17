@@ -58,7 +58,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Only monsters that can sprint spawn, and all monsters get an always charged Ritual Helmet and sprint wherever they can. Players take 66% less damage.";
+            return "Only monsters that can sprint spawn, all with an always charged Ritual Helmet, but players take 66% less damage.";
         }
         public override string GetPopupDescription()
         {

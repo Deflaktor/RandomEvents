@@ -46,7 +46,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "In multiplayer, every player plays the survivor of another player, with that player's loadout and items. Alone, the player becomes a random other survivor. Everyone gets their own back when the event ends.";
+            return "Players swap survivors and items with each other until the event ends. Alone, you become a random survivor.";
         }
         public override string GetConditionDescription()
         {

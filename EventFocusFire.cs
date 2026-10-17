@@ -39,7 +39,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "All monsters have ten times their health, but for every 1% of its health that players deal, a monster gets a stack of Symbiotic Scorpion's debuff, and each stack makes it take 10% more damage, compounding. Few strong hits count as much as many weak ones. After 3 seconds without damage from players, a monster loses a stack every second.";
+            return "Monsters have ten times their health, but take more and more damage the more they are hurt. This wears off if they aren't hurt for 3 seconds.";
         }
         public override string GetPopupDescription()
         {

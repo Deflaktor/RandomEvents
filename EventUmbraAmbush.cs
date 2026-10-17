@@ -64,7 +64,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Each player is hunted by an enemy survivor. It has ten times the health, deals 75% less damage, and has a kit of safe items half as big as that player's items per tier, picked to suit its survivor. The hunters disappear when the event ends.";
+            return "Each player is hunted by a tough enemy survivor with items.";
         }
         public override string GetConditionDescription()
         {

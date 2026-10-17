@@ -42,7 +42,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Gives all players the items of a random kit temporarily, e.g. Glass Cannon or Bounce House.";
+            return "Gives all players a random item kit until the event ends, e.g. Glass Cannon.";
         }
         public override string GetPopupDescription()
         {

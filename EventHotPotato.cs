@@ -45,7 +45,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "A random player carries a ticking bomb, marked with lunar marks and small blasts that speed up as it nears its explosion, and passes it on by touching another player. After 20 seconds it explodes, dealing half of the carrier's health to them and hurting monsters nearby. Then another player gets a new bomb.";
+            return "A player carries a bomb that explodes after 20 seconds and costs them half their health. Touch another player to pass it on.";
         }
         public override string GetConditionDescription()
         {

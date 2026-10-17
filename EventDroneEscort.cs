@@ -28,7 +28,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Gives each player a random drone of any kind; an Equipment Drone gets one of the equipment of EquipmentOnly. The drones disappear when the event ends.";
+            return "Gives each player a random drone until the event ends.";
         }
         public override string GetConditionDescription()
         {

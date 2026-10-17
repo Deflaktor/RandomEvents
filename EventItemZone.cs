@@ -46,7 +46,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Spawns item zones which grant players standing in them temporary items.";
+            return "Item zones appear that give players standing in them temporary items.";
         }
         public override string GetConditionDescription()
         {

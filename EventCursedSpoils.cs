@@ -32,7 +32,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Every time a monster dies, each player gets an item until the event ends. Each time a player has taken damage from monsters adding up to 25% of their base health, they get a hex that disables some of their items until the event ends.";
+            return "Every kill gives each player a temporary item, but taking damage from monsters brings hexes that disable items.";
         }
         public override string GetConditionDescription()
         {

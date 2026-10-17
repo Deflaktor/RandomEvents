@@ -30,7 +30,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Slows all enemies to about a third of their speed, almost twice as much as Chronobauble.";
+            return "Slows all monsters to about a third of their speed.";
         }
         public override string GetConditionDescription()
         {

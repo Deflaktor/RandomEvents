@@ -47,7 +47,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Gives all players a random equipment temporarily with reduced cooldown but disables all skills.";
+            return "Disables all skills, but gives all players a random equipment with a short cooldown.";
         }
         public override string GetConditionDescription()
         {

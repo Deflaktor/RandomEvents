@@ -40,7 +40,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Makes a random monster the alpha, half again as big, with ten times its health and a boss health bar. While it lives, all other monsters are in a frenzy like from Gorag's Opus: +100% attack speed and +50% movement speed.";
+            return "A random monster becomes a big alpha with ten times its health. While it lives, all other monsters are in a frenzy.";
         }
         public override string GetConditionDescription()
         {

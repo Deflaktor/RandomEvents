@@ -30,7 +30,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Damage a player takes is split evenly among all living players. Each share is reduced by that player's own armor.";
+            return "Damage a player takes is split among all living players.";
         }
         public override string GetConditionDescription()
         {

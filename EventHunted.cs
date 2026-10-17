@@ -35,7 +35,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "All monsters target one random player, who gets 100 armor. When that player dies, the monsters hunt another one.";
+            return "All monsters chase one random player, who gets 100 armor.";
         }
         public override string GetConditionDescription()
         {

@@ -30,7 +30,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Chests bought with gold may release a monster instead of their item, a boss for a legendary or boss item. The chest's items are lost.";
+            return "Chests bought with gold may turn into a monster instead of giving their item.";
         }
         public override string GetConditionDescription()
         {

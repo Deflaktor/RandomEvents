@@ -30,7 +30,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Every player gets the items of another player until the event ends. Items picked up meanwhile stay with whoever picked them up; items used up meanwhile are gone for their owner. Equipment stays.";
+            return "Every player gets the items of another player until the event ends.";
         }
         public override string GetConditionDescription()
         {

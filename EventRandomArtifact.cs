@@ -68,7 +68,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Activates up to three random artifacts temporarily. The following artifacts are blacklisted: Death, Delusion, Devotion, Evolution, Metamorphosis, Prestige, Rebirth, Sacrifice, Vengeance.";
+            return "Turns on up to three random artifacts until the event ends.";
         }
         public override string GetPopupDescription()
         {

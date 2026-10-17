@@ -42,7 +42,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Spawns some infected enemies. Infected enemies infect other nearby enemies upon death and revive once with reduced health and speed.";
+            return "Some monsters are infected: they infect others nearby when they die and come back once.";
         }
         public override string GetConditionDescription()
         {

@@ -43,7 +43,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Drops a random Captain beacon (Healing, Shocking, Resupply, Hacking or Defense) next to each player, a different one for each while there are enough, and inside Simulacrum's safe zone or the charging teleporter's zone. The beacons disappear when the event ends.";
+            return "Drops a random Captain beacon next to each player.";
         }
         public override string GetConditionDescription()
         {

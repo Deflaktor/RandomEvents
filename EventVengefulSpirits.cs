@@ -31,7 +31,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "All monsters get a Vengeful Spirit: a spirit that takes half of their damage. Killing the spirit makes its monster vengeful, with more attack speed and shorter cooldowns. Half as many monsters spawn. The items are removed when the event ends.";
+            return "All monsters get a Vengeful Spirit, but half as many spawn.";
         }
         public override string GetConditionDescription()
         {

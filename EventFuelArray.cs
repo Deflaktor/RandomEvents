@@ -33,7 +33,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "All players are healed to full health and shield, then get a Fuel Array equipment temporarily but take reduced damage from all sources.";
+            return "Heals all players and gives them a Fuel Array until the event ends, but they take less damage.";
         }
         public override string GetConditionDescription()
         {

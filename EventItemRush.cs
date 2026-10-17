@@ -41,7 +41,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Items appear around the players, which their finder keeps until the event ends. Monsters can pick them up too and keep them until the event ends, without dropping them when they die. Only items fair for monsters appear, see the setting Unsafe Items, and no lunar or void items.";
+            return "Items appear around the players until the event ends. Monsters can pick them up too.";
         }
         public override string GetPopupDescription()
         {

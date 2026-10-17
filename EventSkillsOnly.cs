@@ -55,7 +55,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Makes players unable to use primary skills but other skills have reduced cooldown.";
+            return "Disables primary skills, but the other skills recharge faster.";
         }
         public override string GetConditionDescription()
         {

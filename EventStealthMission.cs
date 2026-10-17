@@ -30,7 +30,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Cloaks all players, so monsters lose track of them. Attacking reveals a player for 2 seconds.";
+            return "Players are cloaked. Attacking reveals them for 2 seconds.";
         }
         public override string GetConditionDescription()
         {
