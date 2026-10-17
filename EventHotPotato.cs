@@ -19,6 +19,8 @@ namespace RandomEvents
         private const float ExplosionRadius = 15f;
         private const float HolderDamageFraction = 0.5f;
         private AsyncOperationHandle<GameObject> FusionCellExplosion;
+        private AsyncOperationHandle<GameObject> TickEffect;
+        private float tickTimer;
         private readonly BuffTracker buffs = new BuffTracker();
         private CharacterBody holder;
         private float fuseTimer;
@@ -43,7 +45,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "A random player carries a bomb, marked with a skull, and passes it on by touching another player. After 20 seconds it explodes, dealing half of the carrier's health to them and hurting monsters nearby. Then another player gets a new bomb.";
+            return "A random player carries a ticking bomb, marked with lunar marks and small blasts that speed up as it nears its explosion, and passes it on by touching another player. After 20 seconds it explodes, dealing half of the carrier's health to them and hurting monsters nearby. Then another player gets a new bomb.";
         }
         public override string GetConditionDescription()
         {
@@ -55,6 +57,7 @@ namespace RandomEvents
         public override void Preload()
         {
             FusionCellExplosion = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/FusionCellDestructible/FusionCellExplosion.prefab");
+            TickEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/OmniExplosionVFXQuick.prefab");
         }
         public override void Hook()
         {
@@ -95,6 +98,7 @@ namespace RandomEvents
                 Explode();
                 return;
             }
+            Tick();
             if (passTimer <= 0f)
             {
                 var receiver = Helper.GetLivingPlayerBodies()
@@ -109,12 +113,30 @@ namespace RandomEvents
             }
         }
 
+        // a small blast at the carrier, faster and faster as the fuse burns down
+        private void Tick()
+        {
+            tickTimer -= Time.fixedDeltaTime;
+            if (tickTimer > 0f)
+            {
+                return;
+            }
+            tickTimer = Mathf.Lerp(0.15f, 1f, fuseTimer / FuseTime);
+            EffectManager.SpawnEffect(TickEffect.WaitForCompletion(), new EffectData
+            {
+                origin = holder.corePosition,
+                scale = holder.radius * 2f
+            }, transmit: true);
+        }
+
         private void GiveBomb(CharacterBody body, bool keepFuse)
         {
             buffs.RemoveAll();
             holder = body;
-            // Death Mark's skull shows everyone who carries the bomb
-            buffs.Add(holder, RoR2Content.Buffs.DeathMark);
+            tickTimer = 0f;
+            // Essence of Heresy's marks show everyone who carries the bomb; only a teammate's Essence of Heresy with
+            // Artifact of Chaos could detonate them, unlike Death Mark's skull, which adds 50% damage taken
+            buffs.Add(holder, RoR2Content.Buffs.LunarDetonationCharge);
             passTimer = PassCooldown;
             if (!keepFuse)
             {
