@@ -21,6 +21,7 @@ namespace RandomEvents
         // players who stand still during red light can't be hurt
         private readonly BuffTracker immunities = new BuffTracker();
         private AsyncOperationHandle<GameObject> AfflictionEffect;
+        private AsyncOperationHandle<GameObject> RedLightEffect;
         private readonly Dictionary<CharacterBody, Vector3> lastPositions = new Dictionary<CharacterBody, Vector3>();
         private readonly HashSet<CharacterBody> caughtThisPhase = new HashSet<CharacterBody>();
         private readonly Dictionary<CharacterBody, float> nextAfflictions = new Dictionary<CharacterBody, float>();
@@ -60,6 +61,8 @@ namespace RandomEvents
         {
             // Symbiotic Scorpion's effect with the sound of its debuff hitting
             AfflictionEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC1/PermanentDebuffOnHit/PermanentDebuffEffect.prefab");
+            // the red burst of a monster leveling up
+            RedLightEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/LevelUpEffectEnemy.prefab");
         }
         public override void Hook()
         {
@@ -185,6 +188,16 @@ namespace RandomEvents
                 }
             }
             ChatHelper.SendEventMessage("EVENT_RED_LIGHT");
+            foreach (var body in Helper.GetLivingPlayerBodies())
+            {
+                var effectData = new EffectData
+                {
+                    origin = body.corePosition,
+                    scale = body.radius
+                };
+                effectData.SetNetworkedObjectReference(body.gameObject);
+                EffectManager.SpawnEffect(RedLightEffect.WaitForCompletion(), effectData, transmit: true);
+            }
             // the sound of being rooted by a Void Reaver
             var sound = CharacterBody.CommonAssets.nullifiedBuffAppliedSound;
             if (sound != null)
