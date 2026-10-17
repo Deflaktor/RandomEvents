@@ -93,7 +93,8 @@
         "ANNOUNCE_EVENT_ITEM_RUSH": "Grab them before they do",
         "ANNOUNCE_EVENT_RITUAL_HELMETS": "Skulls on the charge",
         "ANNOUNCE_EVENT_VENGEFUL_SPIRITS": "Spirits stand guard",
-        "ANNOUNCE_EVENT_FOCUS_FIRE": "Focus your fire"
+        "ANNOUNCE_EVENT_FOCUS_FIRE": "Focus your fire",
+        "ANNOUNCE_EVENT_BREACHING_FINS": "Up, up and away"
         
     }
 }
