@@ -213,10 +213,10 @@ namespace RandomEvents
 
         private static int popupCount;
 
-        // Shows a popup like an item pickup's to every player. It has to name an equipment for its icon, which is
-        // hidden. Equipment cut from the game can't be picked up, so the popup never clashes with a real pickup's,
-        // which the queue skips if it names the same equipment as the popup before it. Alternating between two keeps
-        // consecutive popups apart.
+        // Shows a popup like an item pickup's to every player, with the placeholder icon of equipment cut from the
+        // game, an exclamation mark. That equipment can't be picked up, so the popup never clashes with a real
+        // pickup's, which the queue skips if it names the same equipment as the popup before it. Alternating between
+        // two keeps consecutive popups apart.
         public static void SendPopup(string title, string description)
         {
             var equipmentDef = popupCount++ % 2 == 0 ? JunkContent.Equipment.SoulJar : JunkContent.Equipment.OrbitalLaser;
@@ -228,7 +228,8 @@ namespace RandomEvents
             {
                 titleText = title,
                 descriptionText = description,
-                iconColor = Color.clear
+                // the tint multiplies the icon's magenta, so it can't get brighter
+                iconColor = new Color(1f, 1f, 0f)
             };
             foreach (var pc in PlayerCharacterMasterController.instances)
             {
