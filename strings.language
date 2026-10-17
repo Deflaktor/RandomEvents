@@ -38,6 +38,8 @@
         "ANNOUNCE_EVENTS_CONJUNCTION": " and ",
 
         "EVENT_HUNTED_TARGET": "{0} is being hunted!",
+        "EVENT_THE_ALPHA_CHOSEN": "An alpha {0} leads the monsters!",
+        "EVENT_THE_ALPHA_FALLEN": "The alpha has fallen!",
 
         "ANNOUNCE_EVENT_WEAK_ENEMIES": "Horde of the many",
         "ANNOUNCE_EVENT_STRONG_ENEMIES": "Fear the few",
@@ -63,7 +65,8 @@
         "ANNOUNCE_EVENT_STEALTH_MISSION": "Vanish from their sight",
         "ANNOUNCE_EVENT_SUPPLY_DROP": "Supplies inbound",
         "ANNOUNCE_EVENT_DRONE_ESCORT": "Backup has arrived",
-        "ANNOUNCE_EVENT_HUNTED": "The hunt is on"
+        "ANNOUNCE_EVENT_HUNTED": "The hunt is on",
+        "ANNOUNCE_EVENT_THE_ALPHA": "The pack has a leader"
         
     }
 }
