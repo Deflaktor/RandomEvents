@@ -38,6 +38,23 @@ namespace RandomEvents
             return $"<color=#{playerColor}>{body.GetUserName()}</color>";
         }
 
+        // a player's name in their survivor's color, for event messages
+        public static string GetColoredPlayerName(CharacterBody body)
+        {
+            var pc = body.master != null ? body.master.playerCharacterMasterController : null;
+            if (pc == null)
+            {
+                return body.GetDisplayName();
+            }
+            return $"<color=#{GetPlayerColor(pc)}>{body.GetUserName()}</color>";
+        }
+
+        // a message of a running event, e.g. who it picked
+        public static void SendEventMessage(string token, params object[] args)
+        {
+            Send($"<style=cEvent>{Language.GetStringFormatted(token, args)}</style>");
+        }
+
         public static void LunarShopTerminalUsesLeft(PlayerCharacterMasterController playerCharacterMasterController, int usesLeft)
         {
             var coloredPlayerName = GetColoredPlayerName(playerCharacterMasterController);
