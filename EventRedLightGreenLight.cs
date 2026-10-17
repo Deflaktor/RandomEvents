@@ -13,10 +13,20 @@ namespace RandomEvents
         private const float CheckInterval = 0.25f;
         // horizontal, so that falling doesn't count
         private const float AllowedMovementPerCheck = 0.75f;
-        private const float DamageFractionPerCheck = 0.1f;
+        // a player who keeps moving gets a Tonic Affliction every second, and loses one every 5 seconds again once they
+        // stand still or the light is green
+        private const float AfflictionInterval = 1f;
+        private const float AfflictionDecayInterval = 5f;
         private readonly BuffTracker roots = new BuffTracker();
         private readonly Dictionary<CharacterBody, Vector3> lastPositions = new Dictionary<CharacterBody, Vector3>();
         private readonly HashSet<CharacterBody> caughtThisPhase = new HashSet<CharacterBody>();
+        private class Affliction
+        {
+            public int count;
+            public float nextAffliction;
+            public float nextDecay;
+        }
+        private readonly Dictionary<CharacterBody, Affliction> afflictions = new Dictionary<CharacterBody, Affliction>();
         private bool redLight;
         private float phaseTimer;
         private float graceTimer;
@@ -40,7 +50,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Alternates between green and red light, announced in chat. During red light, all AI-controlled characters are rooted, and players who move lose 10% of their health every quarter second.";
+            return "Alternates between green and red light, announced in chat. During red light, all AI-controlled characters are rooted, and players who move get a Tonic Affliction every second. Once they stop moving, they lose one of them every 5 seconds, and the rest when the event ends.";
         }
         public override string GetConditionDescription()
         {
@@ -80,6 +90,7 @@ namespace RandomEvents
             {
                 return;
             }
+            DecayAfflictions();
             phaseTimer -= Time.fixedDeltaTime;
             if (phaseTimer <= 0f)
             {
@@ -142,14 +153,36 @@ namespace RandomEvents
             {
                 ChatHelper.SendEventMessage("EVENT_RED_LIGHT_CAUGHT", ChatHelper.GetColoredPlayerName(body));
             }
-            body.healthComponent.TakeDamage(new DamageInfo
+            var now = Run.instance.fixedTime;
+            if (!afflictions.TryGetValue(body, out var affliction))
             {
-                damage = body.healthComponent.fullCombinedHealth * DamageFractionPerCheck,
-                position = body.corePosition,
-                damageType = DamageType.BypassArmor | DamageType.BypassBlock,
-                procCoefficient = 0f,
-                damageColorIndex = DamageColorIndex.Bleed
-            });
+                affliction = new Affliction();
+                afflictions[body] = affliction;
+            }
+            // no decay while moving
+            affliction.nextDecay = now + AfflictionDecayInterval;
+            if (now < affliction.nextAffliction)
+            {
+                return;
+            }
+            affliction.nextAffliction = now + AfflictionInterval;
+            affliction.count++;
+            EventLoot.GetInventory(this, body).GiveTemporaryItem(RoR2Content.Items.TonicAffliction.itemIndex);
+        }
+
+        private void DecayAfflictions()
+        {
+            var now = Run.instance.fixedTime;
+            foreach (var (body, affliction) in afflictions)
+            {
+                if (body == null || affliction.count <= 0 || now < affliction.nextDecay)
+                {
+                    continue;
+                }
+                affliction.count--;
+                affliction.nextDecay = now + AfflictionDecayInterval;
+                EventLoot.GetInventory(this, body).RemoveTemporaryItem(RoR2Content.Items.TonicAffliction.itemIndex);
+            }
         }
 
         private void RedLight()
@@ -202,6 +235,8 @@ namespace RandomEvents
             roots.RemoveAll();
             lastPositions.Clear();
             caughtThisPhase.Clear();
+            EventLoot.Clear(this);
+            afflictions.Clear();
         }
     }
 }
