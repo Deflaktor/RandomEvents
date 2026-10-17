@@ -25,6 +25,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | Haste | The world accelerates | All beings become faster. |  |
 | HotPotato | Hot potato | A random player carries a bomb, marked with a skull, and passes it on by touching another player. After 20 seconds it explodes, dealing half of the carrier's health to them and hurting monsters nearby. Then another player gets a new bomb. | At least two players are alive. |
 | Hunted | The hunt is on | All monsters target one random player, who gets 100 armor. When that player dies, the monsters hunt another one. | At least two players are alive and event "StealthMission" inactive. |
+| InventoryRoulette | Spin the inventory roulette | Every player gets the items of another player until the event ends. Items picked up meanwhile stay with whoever picked them up; items used up meanwhile are gone for their owner. Equipment stays. | At least two players are alive and event "SurvivorSwap" inactive. |
 | ItemKits | Item kit: Glass Cannon | Gives all players the items of a random kit temporarily, e.g. Glass Cannon or Bounce House. | At least one kit has items. |
 | ItemZone | Zone fuels your arsenal | Spawns item zones which grant players standing in them temporary items. | Simulacrum mode only |
 | LinkedSouls | Your souls are bound together | Damage a player takes is split evenly among all living players. Each share is reduced by that player's own armor. | At least two players are alive. |

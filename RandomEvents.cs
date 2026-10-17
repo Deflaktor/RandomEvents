@@ -63,6 +63,7 @@ namespace RandomEvents
                 InitAndHookEvent(new EventHaste());
                 InitAndHookEvent(new EventHotPotato());
                 InitAndHookEvent(new EventHunted());
+                InitAndHookEvent(new EventInventoryRoulette());
                 InitAndHookEvent(new EventItemKits());
                 InitAndHookEvent(new EventItemZone());
                 InitAndHookEvent(new EventLinkedSouls());
