@@ -56,7 +56,7 @@ namespace RandomEvents
                 InitAndHookEvent(new EventBulletHell());
                 InitAndHookEvent(new EventCasinoItem());
                 InitAndHookEvent(new EventChestMimics());
-                InitAndHookEvent(new EventCursedLoot());
+                InitAndHookEvent(new EventCursedSpoils());
                 InitAndHookEvent(new EventDroneEscort());
                 InitAndHookEvent(new EventEquipmentOnly());
                 InitAndHookEvent(new EventExplodingCorpses());

@@ -7,7 +7,7 @@ using UnityEngine.Networking;
 
 namespace RandomEvents
 {
-    public class EventCursedLoot : AbstractEvent
+    public class EventCursedSpoils : AbstractEvent
     {
         private ConfigEntry<float> HexDamage;
         // damage each player took from monsters since their last hex
@@ -24,15 +24,15 @@ namespace RandomEvents
         }
         public override string GetEventConfigName()
         {
-            return "CursedLoot";
+            return "CursedSpoils";
         }
         public override string GetAnnouncement()
         {
-            return Language.GetStringFormatted("ANNOUNCE_EVENT_CURSED_LOOT");
+            return Language.GetStringFormatted("ANNOUNCE_EVENT_CURSED_SPOILS");
         }
         public override string GetDescription()
         {
-            return "Monsters drop an item when they die, which its finder keeps until the event ends. Each time a player has taken damage from monsters adding up to 25% of their base health, they get a hex that disables some of their items until the event ends.";
+            return "Every time a monster dies, each player gets an item until the event ends. Each time a player has taken damage from monsters adding up to 25% of their base health, they get a hex that disables some of their items until the event ends.";
         }
         public override string GetConditionDescription()
         {
@@ -58,19 +58,33 @@ namespace RandomEvents
             {
                 return;
             }
-            // the rarities of a small chest
+            // every player gets an item of their own, flying to them from the monster
+            foreach (var body in Helper.GetLivingPlayerBodies())
+            {
+                var itemIndex = RollItem();
+                if (itemIndex == ItemIndex.None)
+                {
+                    return;
+                }
+                EventLoot.GetInventory(this, body).GiveTemporaryItem(itemIndex);
+                PurchaseInteraction.CreateItemTakenOrb(damageReport.victimBody.corePosition, body.gameObject, itemIndex);
+            }
+        }
+
+        // an item with the rarities of a small chest
+        private static ItemIndex RollItem()
+        {
             var selector = Run.instance.smallChestDropTierSelector;
             if (selector.Count == 0)
             {
-                return;
+                return ItemIndex.None;
             }
             var dropList = selector.Evaluate(RoR2Application.rng.nextNormalizedFloat);
             if (dropList == null || dropList.Count == 0)
             {
-                return;
+                return ItemIndex.None;
             }
-            var pickupIndex = dropList[RoR2Application.rng.RangeInt(0, dropList.Count)];
-            EventLoot.Drop(this, pickupIndex, damageReport.victimBody.corePosition + Vector3.up * 1.5f, Vector3.up * 20f);
+            return PickupCatalog.GetPickupDef(dropList[RoR2Application.rng.RangeInt(0, dropList.Count)])?.itemIndex ?? ItemIndex.None;
         }
 
         private void GlobalEventManager_onServerDamageDealt(DamageReport damageReport)

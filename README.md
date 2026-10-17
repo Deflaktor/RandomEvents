@@ -16,7 +16,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | BulletHell | Projectile density dialed to eleven | Increases the fire rate of enemies but lowers their damage. |  |
 | CasinoItem | Ancient relic cycling through its many powers | Gives all players 10 items of random type. The type of the item changes every 10 seconds. |  |
 | ChestMimics | Not every chest is what it seems | Chests bought with gold may release a monster instead of their item, a boss for a legendary or boss item. The chest's items are lost. | The stage has an unopened chest bought with gold. |
-| CursedLoot | Spoils come at a price | Monsters drop an item when they die, which its finder keeps until the event ends. Each time a player has taken damage from monsters adding up to 25% of their base health, they get a hex that disables some of their items until the event ends. | Hallowed Concepts is enabled. |
+| CursedSpoils | Spoils come at a price | Every time a monster dies, each player gets an item until the event ends. Each time a player has taken damage from monsters adding up to 25% of their base health, they get a hex that disables some of their items until the event ends. | Hallowed Concepts is enabled. |
 | DroneEscort | Backup has arrived | Gives each player a random drone that can be found on stages. The drones disappear when the event ends. |  |
 | EquipmentOnly | Equipment-exclusive combat | Gives all players a random equipment temporarily with reduced cooldown but disables all skills. | Events "SkillsOnly", "FuelArray" inactive. Artifact of Enigma inactive. |
 | ExplodingCorpses | Exploding corpses | All enemies explode upon death. | Players have sufficient means to do ranged damage. |
