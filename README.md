@@ -40,5 +40,6 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | SupplyDrop | Supplies inbound | Drops a random Captain beacon (Healing, Shocking, Resupply, Hacking or Defense) next to each player. The beacons disappear when the event ends. |  |
 | TheAlpha | The pack has a leader | Makes a random monster the alpha, with ten times its health and a boss health bar. While it lives, all other monsters are in a frenzy like from Gorag's Opus: +100% attack speed and +50% movement speed. |  |
 | TimeWarp | Time slows for your foes | Slows all enemies to about a third of their speed, almost twice as much as Chronobauble. |  |
+| UmbraAmbush | Umbras emerge from the shadows | Each player is hunted by the umbra of a random survivor. It has ten times the health and as many items per tier as that player, picked to suit its survivor. Killing it drops an item. The umbras disappear when the event ends. |  |
 | WeakEnemies | Horde of the many | Only weak enemies spawn. | Events "StrongEnemies" and "Mitosis" inactive. |
 | Zombies | The dead refuse to rest | Spawns some infected enemies. Infected enemies infect other nearby enemies upon death and revive once with reduced health and speed. | Currently not a boss wave. |

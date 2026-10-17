@@ -79,7 +79,8 @@
         "ANNOUNCE_EVENT_HOT_POTATO": "Hot potato",
         "ANNOUNCE_EVENT_RED_LIGHT_GREEN_LIGHT": "Red light, green light",
         "ANNOUNCE_EVENT_CHEST_MIMICS": "Not every chest is what it seems",
-        "ANNOUNCE_EVENT_MITOSIS": "Divide and multiply"
+        "ANNOUNCE_EVENT_MITOSIS": "Divide and multiply",
+        "ANNOUNCE_EVENT_UMBRA_AMBUSH": "Umbras emerge from the shadows"
         
     }
 }
