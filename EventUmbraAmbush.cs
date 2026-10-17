@@ -8,8 +8,9 @@ namespace RandomEvents
 {
     public class EventUmbraAmbush : AbstractEvent
     {
-        // Items that suit each survivor. An umbra gets as many items of each tier as the player it hunts has,
-        // picked from its survivor's list, or from the default list if that has none of the tier.
+        // Items that suit each survivor. A hunter gets a kit with as many items of each tier as the player it hunts
+        // has, picked from its survivor's list, or from the default list if that has none of the tier, or else from
+        // all safe items of the tier. Only safe items go into the kit, see the setting Unsafe Items.
         private static readonly Dictionary<string, string> DefaultSurvivorItems = new Dictionary<string, string>
         {
             { "Default", "Syringe, CritGlasses, Hoof, Bear, Crowbar, BossDamageBonus, StickyBomb, ArmorPlate, FlatHealth, Tooth, ChainLightning, Missile, AttackSpeedOnCrit, Seed, Infusion, IceRing, FireRing, SprintArmor, ExplodeOnDeath, Behemoth, ShockNearby, BounceNearby, Dagger, AlienHead, BarrierOnOverHeal, Knurl, SprintWisp, LightningStrikeOnHit, FireballsOnHit, BleedOnHitAndExplode" },
@@ -30,7 +31,7 @@ namespace RandomEvents
             { "FalseSonBody", "ArmorPlate, FlatHealth, Bear, Infusion, Thorns, BarrierOnOverHeal, Knurl" },
             { "ChefBody", "IgniteOnKill, StickyBomb, FireRing, ChainLightning, Behemoth, FireballsOnHit" },
         };
-        // the tiers whose items the umbras copy the count of; void items count as their normal tier
+        // the tiers whose item counts measure a player's power; void items count as their normal tier
         private static readonly Dictionary<ItemTier, ItemTier> TierOfCount = new Dictionary<ItemTier, ItemTier>
         {
             { ItemTier.Tier1, ItemTier.Tier1 }, { ItemTier.VoidTier1, ItemTier.Tier1 },
@@ -38,11 +39,9 @@ namespace RandomEvents
             { ItemTier.Tier3, ItemTier.Tier3 }, { ItemTier.VoidTier3, ItemTier.Tier3 },
             { ItemTier.Boss, ItemTier.Boss }, { ItemTier.VoidBoss, ItemTier.Boss },
         };
-        // the umbra item makes them deal 4% of their damage, as Artifact of Vengeance's umbras that copy all of a player's items
-        private const float UmbraItemDamage = 0.04f;
-        private ConfigEntry<float> UmbraDamage;
+        private ConfigEntry<float> HealthMultiplier;
         private readonly Dictionary<string, ConfigEntry<string>> survivorItems = new Dictionary<string, ConfigEntry<string>>();
-        private readonly List<CharacterMaster> umbras = new List<CharacterMaster>();
+        private readonly List<CharacterMaster> hunters = new List<CharacterMaster>();
 
         public override bool LoadCondition()
         {
@@ -62,7 +61,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Each player is hunted by the umbra of a random survivor. It has ten times the health and as many items per tier as that player, picked to suit its survivor. Killing it drops an item. The umbras disappear when the event ends.";
+            return "Each player is hunted by an enemy survivor. It has ten times the health and a kit of safe items as big as that player's items per tier, picked to suit its survivor. The hunters disappear when the event ends.";
         }
         public override string GetConditionDescription()
         {
@@ -70,12 +69,12 @@ namespace RandomEvents
         }
         protected override void AddConfig(ConfigFile config)
         {
-            UmbraDamage = config.Bind(GetEventConfigName(), "Umbra Damage", 1f, "The umbras' damage, relative to their survivor's normal damage. Artifact of Vengeance's umbras deal 0.04.");
+            HealthMultiplier = config.Bind(GetEventConfigName(), "Health Multiplier", 10f, "The hunters' health, relative to their survivor's normal health.");
             foreach (var (survivor, items) in DefaultSurvivorItems)
             {
-                survivorItems[survivor] = config.Bind(GetEventConfigName(), $"Umbra Items {survivor}", items, survivor == "Default"
-                    ? "Comma-separated internal item names for the umbras of survivors without their own list, and for tiers that a survivor's list lacks."
-                    : $"Comma-separated internal item names that suit the umbra of {survivor}.");
+                survivorItems[survivor] = config.Bind(GetEventConfigName(), $"Hunter Items {survivor}", items, survivor == "Default"
+                    ? "Comma-separated internal item names for the hunters of survivors without their own list, and for tiers that a survivor's list lacks. Unsafe items are left out."
+                    : $"Comma-separated internal item names that suit a hunter of {survivor}. Unsafe items are left out.");
             }
         }
         public override void Preload()
@@ -121,7 +120,7 @@ namespace RandomEvents
             return result;
         }
 
-        // the player's items per tier, which the umbra gets as many of
+        // the player's items per tier, which the hunter's kit gets as many of
         private static Dictionary<ItemTier, int> CountItemsPerTier(Inventory inventory)
         {
             var counts = new Dictionary<ItemTier, int>();
@@ -138,10 +137,11 @@ namespace RandomEvents
             return counts;
         }
 
-        private void GiveItems(Inventory umbraInventory, string survivor, Dictionary<ItemTier, int> counts)
+        private void GiveItems(Inventory hunterInventory, string survivor, Dictionary<ItemTier, int> counts)
         {
-            var survivorList = ParseItems(survivor);
-            var defaultList = ParseItems("Default");
+            var safeItems = new HashSet<ItemIndex>(SafeItems.Get());
+            var survivorList = ParseItems(survivor).Where(safeItems.Contains).ToList();
+            var defaultList = ParseItems("Default").Where(safeItems.Contains).ToList();
             foreach (var (tier, count) in counts)
             {
                 var candidates = survivorList.Where(itemIndex => ItemCatalog.GetItemDef(itemIndex).tier == tier).ToList();
@@ -151,11 +151,15 @@ namespace RandomEvents
                 }
                 if (candidates.Count == 0)
                 {
+                    candidates = safeItems.Where(itemIndex => ItemCatalog.GetItemDef(itemIndex).tier == tier).ToList();
+                }
+                if (candidates.Count == 0)
+                {
                     continue;
                 }
                 for (int i = 0; i < count; i++)
                 {
-                    umbraInventory.GiveItemPermanent(candidates[RoR2Application.rng.RangeInt(0, candidates.Count)]);
+                    hunterInventory.GiveItemPermanent(candidates[RoR2Application.rng.RangeInt(0, candidates.Count)]);
                 }
             }
         }
@@ -166,7 +170,7 @@ namespace RandomEvents
 
         public override void Start(List<AbstractEvent> activeOtherEvents)
         {
-            umbras.Clear();
+            hunters.Clear();
             var survivors = GetSurvivorCandidates();
             if (survivors.Count == 0)
             {
@@ -178,7 +182,7 @@ namespace RandomEvents
                 var body = survivorDef.bodyPrefab.GetComponent<CharacterBody>();
                 var masterPrefab = MasterCatalog.GetMasterPrefab(MasterCatalog.FindAiMasterIndexForBody(body.bodyIndex));
                 var position = Helper.FindGroundPositionNear(target.footPosition, 20f, 40f) ?? target.footPosition;
-                var umbra = new MasterSummon
+                var hunter = new MasterSummon
                 {
                     masterPrefab = masterPrefab,
                     position = position,
@@ -187,19 +191,18 @@ namespace RandomEvents
                     ignoreTeamMemberLimit = true,
                     useAmbientLevel = true
                 }.Perform();
-                if (umbra == null)
+                if (hunter == null)
                 {
                     continue;
                 }
-                // the umbra item gives the look, the name "Umbra of ...", ten times the health and an item drop on death
-                umbra.inventory.GiveItemPermanent(RoR2Content.Items.InvadingDoppelganger);
-                var boostDamage = Mathf.RoundToInt((UmbraDamage.Value / UmbraItemDamage - 1f) * 10f);
-                if (boostDamage > 0)
+                // each Boost Hp adds 10% of the base health
+                var boostHp = Mathf.RoundToInt((HealthMultiplier.Value - 1f) * 10f);
+                if (boostHp > 0)
                 {
-                    umbra.inventory.GiveItemPermanent(RoR2Content.Items.BoostDamage, boostDamage);
+                    hunter.inventory.GiveItemPermanent(RoR2Content.Items.BoostHp, boostHp);
                 }
-                GiveItems(umbra.inventory, body.name, CountItemsPerTier(target.inventory));
-                foreach (var ai in umbra.AiComponents)
+                GiveItems(hunter.inventory, body.name, CountItemsPerTier(target.inventory));
+                foreach (var ai in hunter.AiComponents)
                 {
                     if (ai != null && ai.currentEnemy != null)
                     {
@@ -208,22 +211,22 @@ namespace RandomEvents
                         ai.enemyAttention = ai.enemyAttentionDuration;
                     }
                 }
-                umbras.Add(umbra);
+                hunters.Add(hunter);
             }
         }
 
         public override void Stop()
         {
             // removed without dying, so they drop no items
-            foreach (var umbra in umbras)
+            foreach (var hunter in hunters)
             {
-                if (umbra != null)
+                if (hunter != null)
                 {
-                    umbra.DestroyBody();
-                    GameObject.Destroy(umbra.gameObject);
+                    hunter.DestroyBody();
+                    GameObject.Destroy(hunter.gameObject);
                 }
             }
-            umbras.Clear();
+            hunters.Clear();
         }
     }
 }
