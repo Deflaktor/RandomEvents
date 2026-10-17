@@ -30,6 +30,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | SmallArena | Confined space | Halves the battle zone radius but makes the wave also easier. | Simulacrum mode only |
 | StealthMission | Vanish from their sight | Cloaks all players, so monsters lose track of them. Attacking reveals a player for 2 seconds. | Event "Hunted" inactive. |
 | StrongEnemies | Fear the few | Only strong enemies spawn. | Event "WeakEnemies" inactive. |
+| SupplyDrop | Supplies inbound | Drops a random Captain beacon (Healing, Shocking, Resupply, Hacking or Defense) next to each player. The beacons disappear when the event ends. |  |
 | TimeWarp | Time slows for your foes | Slows all enemies to about a third of their speed, almost twice as much as Chronobauble. |  |
 | WeakEnemies | Horde of the many | Only weak enemies spawn. | Event "StrongEnemies" inactive. |
 | Zombies | The dead refuse to rest | Spawns some infected enemies. Infected enemies infect other nearby enemies upon death and revive once with reduced health and speed. | Currently not a boss wave. |

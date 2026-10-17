@@ -173,6 +173,21 @@ namespace RandomEvents
             }
         }
 
+        // a random ground node in the distance range, or the floor below the center if there is none
+        public static Vector3? FindGroundPositionNear(Vector3 center, float minDistance, float maxDistance)
+        {
+            var nodeGraph = SceneInfo.instance ? SceneInfo.instance.GetNodeGraph(MapNodeGroup.GraphType.Ground) : null;
+            if (nodeGraph)
+            {
+                var nodes = nodeGraph.FindNodesInRangeWithFlagConditions(center, minDistance, maxDistance, HullMask.Human, NodeFlags.None, NodeFlags.NoCharacterSpawn, false);
+                if (nodes.Count > 0 && nodeGraph.GetNodePosition(nodes[RoR2Application.rng.RangeInt(0, nodes.Count)], out var position))
+                {
+                    return position;
+                }
+            }
+            return RaycastToFloor(center, 50f, true);
+        }
+
         // the bodies of connected players who are alive
         public static List<CharacterBody> GetLivingPlayerBodies()
         {
