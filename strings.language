@@ -92,7 +92,8 @@
         "ANNOUNCE_EVENT_CURSED_LOOT": "Spoils come at a price",
         "ANNOUNCE_EVENT_ITEM_RUSH": "Grab them before they do",
         "ANNOUNCE_EVENT_RITUAL_HELMETS": "Skulls on the charge",
-        "ANNOUNCE_EVENT_VENGEFUL_SPIRITS": "Spirits stand guard"
+        "ANNOUNCE_EVENT_VENGEFUL_SPIRITS": "Spirits stand guard",
+        "ANNOUNCE_EVENT_FOCUS_FIRE": "Focus your fire"
         
     }
 }

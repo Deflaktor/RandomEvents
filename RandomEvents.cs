@@ -61,6 +61,7 @@ namespace RandomEvents
                 InitAndHookEvent(new EventEquipmentOnly());
                 InitAndHookEvent(new EventExplodingCorpses());
                 InitAndHookEvent(new EventFallingEnemies());
+                InitAndHookEvent(new EventFocusFire());
                 InitAndHookEvent(new EventFuelArray());
                 InitAndHookEvent(new EventGhosts());
                 InitAndHookEvent(new EventHaste());
