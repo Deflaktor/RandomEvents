@@ -28,6 +28,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | ItemKits | Item kit: Glass Cannon | Gives all players the items of a random kit temporarily, e.g. Glass Cannon or Bounce House. | At least one kit has items. |
 | ItemZone | Zone fuels your arsenal | Spawns item zones which grant players standing in them temporary items. | Simulacrum mode only |
 | LinkedSouls | Your souls are bound together | Damage a player takes is split evenly among all living players. Each share is reduced by that player's own armor. | At least two players are alive. |
+| Mitosis | Divide and multiply | Only monsters with a weaker relative on the stage spawn, e.g. Elder Lemurians when there are also Lemurians. When they die, they split into two of the weaker monster. | The stage's monsters include such a pair, and events "StrongEnemies" and "WeakEnemies" inactive. |
 | MonsterTransform | Players embrace their monstrous forms | Players transform into monsters. | Event "SkillsOnly" inactive and currently not a boss wave. |
 | RandomArtifact |  | Activates up to three random artifacts temporarily. The following artifacts are blacklisted: Death, Delusion, Devotion, Evolution, Metamorphosis, Prestige, Rebirth, Sacrifice, Vengeance. | There is at least one artifact which can be enabled and is not blacklisted. |
 | RandomTeams | Enemies turn against each other | Makes some enemies fight each other as well as the players. |  |
@@ -35,9 +36,9 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | SkillsOnly | Primary sealed, skills unleashed | Makes players unable to use primary skills but other skills have reduced cooldown. | Events "EquipmentOnly", "MonsterTransform" inactive and none of the players have a Bandolier. |
 | SmallArena | Confined space | Halves the battle zone radius but makes the wave also easier. | Simulacrum mode only |
 | StealthMission | Vanish from their sight | Cloaks all players, so monsters lose track of them. Attacking reveals a player for 2 seconds. | Event "Hunted" inactive. |
-| StrongEnemies | Fear the few | Only strong enemies spawn. | Event "WeakEnemies" inactive. |
+| StrongEnemies | Fear the few | Only strong enemies spawn. | Events "WeakEnemies" and "Mitosis" inactive. |
 | SupplyDrop | Supplies inbound | Drops a random Captain beacon (Healing, Shocking, Resupply, Hacking or Defense) next to each player. The beacons disappear when the event ends. |  |
 | TheAlpha | The pack has a leader | Makes a random monster the alpha, with ten times its health and a boss health bar. While it lives, all other monsters are in a frenzy like from Gorag's Opus: +100% attack speed and +50% movement speed. |  |
 | TimeWarp | Time slows for your foes | Slows all enemies to about a third of their speed, almost twice as much as Chronobauble. |  |
-| WeakEnemies | Horde of the many | Only weak enemies spawn. | Event "StrongEnemies" inactive. |
+| WeakEnemies | Horde of the many | Only weak enemies spawn. | Events "StrongEnemies" and "Mitosis" inactive. |
 | Zombies | The dead refuse to rest | Spawns some infected enemies. Infected enemies infect other nearby enemies upon death and revive once with reduced health and speed. | Currently not a boss wave. |

@@ -65,6 +65,7 @@ namespace RandomEvents
                 InitAndHookEvent(new EventItemKits());
                 InitAndHookEvent(new EventItemZone());
                 InitAndHookEvent(new EventLinkedSouls());
+                InitAndHookEvent(new EventMitosis());
                 InitAndHookEvent(new EventMonsterTransform());
                 InitAndHookEvent(new EventRandomArtifact());
                 InitAndHookEvent(new EventRandomTeams());
