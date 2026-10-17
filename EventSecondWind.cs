@@ -64,13 +64,16 @@ namespace RandomEvents
         private void CharacterMaster_OnBodyDeath(On.RoR2.CharacterMaster.orig_OnBodyDeath orig, CharacterMaster self, CharacterBody body)
         {
             orig(self, body);
-            // only when no item or other effect revives them; the pending revive also keeps the run from ending
+            // only when no item or other effect revives them
             if (ModConfig.Enabled.Value && NetworkServer.active && IsActive() && self.playerCharacterMasterController != null
                 && self.playerCharacterMasterController.isConnected && !revived.Contains(self) && self.IsDeadAndOutOfLivesServer())
             {
                 revived.Add(self);
                 fragile.Remove(self);
                 self.Invoke(nameof(CharacterMaster.RespawnExtraLifeShrine), ReviveDelay);
+                // the death without a revive item cleared it, so the stage would end the run if everyone is dead;
+                // the respawn sets it again
+                self.preventGameOver = true;
                 ChatHelper.SendEventMessage("EVENT_SECOND_WIND_REVIVED", ChatHelper.GetColoredPlayerName(body));
             }
         }
