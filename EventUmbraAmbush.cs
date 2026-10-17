@@ -8,9 +8,10 @@ namespace RandomEvents
 {
     public class EventUmbraAmbush : AbstractEvent
     {
-        // Items that suit each survivor. A hunter gets a kit with as many items of each tier as the player it hunts
-        // has, picked from its survivor's list, or from the default list if that has none of the tier, or else from
-        // all safe items of the tier. Only safe items go into the kit, see the setting Unsafe Items.
+        // Items that suit each survivor. A hunter gets a kit with half as many items of each tier as the player it
+        // hunts has (setting Item Multiplier), picked from its survivor's list, or from the default list if that has
+        // none of the tier, or else from all safe items of the tier. Only safe items go into the kit, see the setting
+        // Unsafe Items.
         private static readonly Dictionary<string, string> DefaultSurvivorItems = new Dictionary<string, string>
         {
             { "Default", "Syringe, CritGlasses, Hoof, Bear, Crowbar, BossDamageBonus, StickyBomb, ArmorPlate, FlatHealth, Tooth, ChainLightning, Missile, AttackSpeedOnCrit, Seed, Infusion, IceRing, FireRing, SprintArmor, ExplodeOnDeath, Behemoth, ShockNearby, BounceNearby, Dagger, AlienHead, BarrierOnOverHeal, Knurl, SprintWisp, LightningStrikeOnHit, FireballsOnHit, BleedOnHitAndExplode" },
@@ -40,6 +41,7 @@ namespace RandomEvents
             { ItemTier.Boss, ItemTier.Boss }, { ItemTier.VoidBoss, ItemTier.Boss },
         };
         private ConfigEntry<float> HealthMultiplier;
+        private ConfigEntry<float> ItemMultiplier;
         private readonly Dictionary<string, ConfigEntry<string>> survivorItems = new Dictionary<string, ConfigEntry<string>>();
         private readonly List<CharacterMaster> hunters = new List<CharacterMaster>();
 
@@ -61,7 +63,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Each player is hunted by an enemy survivor. It has ten times the health and a kit of safe items as big as that player's items per tier, picked to suit its survivor. The hunters disappear when the event ends.";
+            return "Each player is hunted by an enemy survivor. It has ten times the health and a kit of safe items half as big as that player's items per tier, picked to suit its survivor. The hunters disappear when the event ends.";
         }
         public override string GetConditionDescription()
         {
@@ -70,6 +72,7 @@ namespace RandomEvents
         protected override void AddConfig(ConfigFile config)
         {
             HealthMultiplier = config.Bind(GetEventConfigName(), "Health Multiplier", 10f, "The hunters' health, relative to their survivor's normal health.");
+            ItemMultiplier = config.Bind(GetEventConfigName(), "Item Multiplier", 0.5f, "The number of items per tier in a hunter's kit, relative to the player it hunts.");
             foreach (var (survivor, items) in DefaultSurvivorItems)
             {
                 survivorItems[survivor] = config.Bind(GetEventConfigName(), $"Hunter Items {survivor}", items, survivor == "Default"
@@ -157,7 +160,8 @@ namespace RandomEvents
                 {
                     continue;
                 }
-                for (int i = 0; i < count; i++)
+                var amount = Mathf.RoundToInt(count * Mathf.Max(0f, ItemMultiplier.Value));
+                for (int i = 0; i < amount; i++)
                 {
                     hunterInventory.GiveItemPermanent(candidates[RoR2Application.rng.RangeInt(0, candidates.Count)]);
                 }
