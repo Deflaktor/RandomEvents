@@ -33,7 +33,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "All players get a Fuel Array equipment temporarily but take reduced damage from all sources.";
+            return "All players are healed to full health and shield, then get a Fuel Array equipment temporarily but take reduced damage from all sources.";
         }
         public override string GetConditionDescription()
         {
@@ -75,6 +75,14 @@ namespace RandomEvents
                 if (teamMember.body != null && teamMember.body.isPlayerControlled)
                 {
                     teamMember.body.gameObject.EnsureComponent<FuelArrayComponent>();
+                    // everyone starts far from the Fuel Array's threshold; set directly, since healing rules such as
+                    // Eclipse's reduced healing would leave some players short of full health
+                    var healthComponent = teamMember.body.healthComponent;
+                    if (healthComponent != null && healthComponent.alive)
+                    {
+                        healthComponent.Networkhealth = healthComponent.fullHealth;
+                        healthComponent.RechargeShieldFull();
+                    }
                 }
             }
         }

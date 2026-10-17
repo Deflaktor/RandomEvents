@@ -21,7 +21,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | EquipmentOnly | Equipment-exclusive combat | Gives all players a random equipment temporarily with reduced cooldown but disables all skills. | Events "SkillsOnly", "FuelArray" inactive. Artifact of Enigma inactive. |
 | ExplodingCorpses | Exploding corpses | All enemies explode upon death. | Players have sufficient means to do ranged damage. |
 | FallingEnemies | Enemies fall down from the heavens | Enemies fall from the sky. Only walking enemies spawn. |  |
-| FuelArray | Stay above 50% health or face disaster | All players get a Fuel Array equipment temporarily but take reduced damage from all sources. | Event "EquipmentOnly" inactive. |
+| FuelArray | Stay above 50% health or face disaster | All players are healed to full health and shield, then get a Fuel Array equipment temporarily but take reduced damage from all sources. | Event "EquipmentOnly" inactive. |
 | Ghosts | Ghostly apparitions haunt the battlefield | Some enemies spawn as incorporeal ghosts. They disappear after some time. | Currently not a boss wave. |
 | Haste | The world accelerates | All beings become faster. |  |
 | HotPotato | Hot potato | A random player carries a bomb, marked with a skull, and passes it on by touching another player. After 20 seconds it explodes, dealing half of the carrier's health to them and hurting monsters nearby. Then another player gets a new bomb. | At least two players are alive. |
