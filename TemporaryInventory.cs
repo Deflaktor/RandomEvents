@@ -119,7 +119,8 @@ namespace RandomEvents
 
         private void OnDisable()
         {
-            if (TryGetComponent(out CharacterBody body))
+            // a dying monster's master, and with it the inventory, can be destroyed before its body
+            if (TryGetComponent(out CharacterBody body) && body.inventory)
             {
                 foreach (var (itemIndex, count) in temporaryItems)
                 {
