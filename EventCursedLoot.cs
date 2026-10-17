@@ -36,7 +36,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "The expansion with hexes is enabled.";
+            return "Hallowed Concepts is enabled.";
         }
         protected override void AddConfig(ConfigFile config)
         {
