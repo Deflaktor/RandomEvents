@@ -13,6 +13,11 @@ namespace RandomEvents
         private ConfigEntry<float> DamagePerStack;
         // damage toward each monster's next stack, as a share of its health
         private readonly Dictionary<CharacterBody, float> progress = new Dictionary<CharacterBody, float>();
+        private ConfigEntry<float> DecayDelay;
+        private ConfigEntry<float> DecayInterval;
+        // when each monster last took damage from players, and when it next loses a stack
+        private readonly Dictionary<CharacterBody, float> lastDamage = new Dictionary<CharacterBody, float>();
+        private readonly Dictionary<CharacterBody, float> nextDecay = new Dictionary<CharacterBody, float>();
         // the stacks of Symbiotic Scorpion's debuff this event gave each monster, which also show on its health bar
         private readonly Dictionary<CharacterBody, int> stacks = new Dictionary<CharacterBody, int>();
 
@@ -34,7 +39,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "All monsters have ten times their health, but for every 1% of its health that players deal, a monster gets a stack of Symbiotic Scorpion's debuff, and each stack makes it take 10% more damage, compounding. Few strong hits count as much as many weak ones.";
+            return "All monsters have ten times their health, but for every 1% of its health that players deal, a monster gets a stack of Symbiotic Scorpion's debuff, and each stack makes it take 10% more damage, compounding. Few strong hits count as much as many weak ones. After 3 seconds without damage from players, a monster loses a stack every second.";
         }
         public override string GetPopupDescription()
         {
@@ -47,6 +52,8 @@ namespace RandomEvents
         protected override void AddConfig(ConfigFile config)
         {
             HealthMultiplier = config.Bind(GetEventConfigName(), "Health Multiplier", 10f, "The monsters' health, relative to normal.");
+            DecayDelay = config.Bind(GetEventConfigName(), "Decay Delay", 3f, "Seconds without damage from players after which a monster starts losing stacks.");
+            DecayInterval = config.Bind(GetEventConfigName(), "Decay Interval", 1f, "Seconds between two stacks a monster loses.");
             DamagePerStack = config.Bind(GetEventConfigName(), "Damage Per Stack", 0.01f, "Damage that gives a monster a stack, as a share of its health, before the stacks multiply it.");
             DamageGrowth = config.Bind(GetEventConfigName(), "Damage Growth", 0.1f, "How much more damage each stack makes a monster take, compounding: 0.1 means 1.1 to the power of the stacks.");
         }
@@ -57,6 +64,28 @@ namespace RandomEvents
         {
             CharacterBody.onBodyStartGlobal += CharacterBody_onBodyStartGlobal;
             On.RoR2.HealthComponent.TakeDamage += HealthComponent_TakeDamage;
+            RoR2Application.onFixedUpdate += RoR2Application_onFixedUpdate;
+        }
+
+        // monsters that players leave alone lose their stacks again
+        private void RoR2Application_onFixedUpdate()
+        {
+            if (!NetworkServer.active || !IsActive() || Run.instance == null)
+            {
+                return;
+            }
+            var now = Run.instance.fixedTime;
+            foreach (var body in new List<CharacterBody>(stacks.Keys))
+            {
+                var count = stacks[body];
+                if (body == null || count <= 0 || now < lastDamage.GetValueOrDefault(body) + DecayDelay.Value || now < nextDecay.GetValueOrDefault(body))
+                {
+                    continue;
+                }
+                nextDecay[body] = now + Mathf.Max(0.05f, DecayInterval.Value);
+                stacks[body] = count - 1;
+                body.RemoveUnmanagedBuff(DLC1Content.Buffs.PermanentDebuff);
+            }
         }
 
         // monsters spawning during the event are tough too
@@ -107,6 +136,7 @@ namespace RandomEvents
             {
                 return;
             }
+            lastDamage[body] = Run.instance.fixedTime;
             var share = baseDamage / self.fullCombinedHealth + progress.GetValueOrDefault(body);
             var perStack = Mathf.Max(0.0001f, DamagePerStack.Value);
             var added = Mathf.FloorToInt(share / perStack);
@@ -126,6 +156,8 @@ namespace RandomEvents
         {
             stacks.Clear();
             progress.Clear();
+            lastDamage.Clear();
+            nextDecay.Clear();
             foreach (var body in CharacterBody.readOnlyInstancesList)
             {
                 Toughen(body);
@@ -143,6 +175,8 @@ namespace RandomEvents
             }
             stacks.Clear();
             progress.Clear();
+            lastDamage.Clear();
+            nextDecay.Clear();
             EventLoot.Clear(this);
         }
     }
