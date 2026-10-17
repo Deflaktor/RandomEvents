@@ -66,7 +66,8 @@
         "ANNOUNCE_EVENT_SUPPLY_DROP": "Supplies inbound",
         "ANNOUNCE_EVENT_DRONE_ESCORT": "Backup has arrived",
         "ANNOUNCE_EVENT_HUNTED": "The hunt is on",
-        "ANNOUNCE_EVENT_THE_ALPHA": "The pack has a leader"
+        "ANNOUNCE_EVENT_THE_ALPHA": "The pack has a leader",
+        "ANNOUNCE_EVENT_LINKED_SOULS": "Your souls are bound together"
         
     }
 }

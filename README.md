@@ -25,6 +25,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | Hunted | The hunt is on | All monsters target one random player, who gets 100 armor. When that player dies, the monsters hunt another one. | At least two players are alive and event "StealthMission" inactive. |
 | ItemKits | Item kit: Glass Cannon | Gives all players the items of a random kit temporarily, e.g. Glass Cannon or Bounce House. | At least one kit has items. |
 | ItemZone | Zone fuels your arsenal | Spawns item zones which grant players standing in them temporary items. | Simulacrum mode only |
+| LinkedSouls | Your souls are bound together | Damage a player takes is split evenly among all living players. Each share is reduced by that player's own armor. | At least two players are alive. |
 | MonsterTransform | Players embrace their monstrous forms | Players transform into monsters. | Event "SkillsOnly" inactive and currently not a boss wave. |
 | RandomArtifact |  | Activates up to three random artifacts temporarily. The following artifacts are blacklisted: Death, Delusion, Devotion, Evolution, Metamorphosis, Prestige, Rebirth, Sacrifice, Vengeance. | There is at least one artifact which can be enabled and is not blacklisted. |
 | RandomTeams | Enemies turn against each other | Makes some enemies fight each other as well as the players. |  |
