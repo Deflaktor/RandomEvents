@@ -166,6 +166,8 @@ namespace RandomEvents
             }
             nextAfflictions[body] = now + AfflictionInterval;
             EventLoot.GetInventory(this, body).GiveTemporaryItem(RoR2Content.Items.TonicAffliction.itemIndex);
+            // the affliction flies into the player from above, like a picked up item
+            PurchaseInteraction.CreateItemTakenOrb(body.corePosition + Vector3.up * 4f, body.gameObject, RoR2Content.Items.TonicAffliction.itemIndex);
             EffectManager.SpawnEffect(AfflictionEffect.WaitForCompletion(), new EffectData
             {
                 origin = body.corePosition,
