@@ -17,7 +17,8 @@ namespace RandomEvents
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            return InstanceTracker.GetInstancesList<ChestBehavior>().Any(chest => chest != null && IsMimicCandidate(chest) && chest.TryGetComponent(out PurchaseInteraction purchaseInteraction) && purchaseInteraction.available);
+            // not in Simulacrum
+            return !(Run.instance is InfiniteTowerRun) && InstanceTracker.GetInstancesList<ChestBehavior>().Any(chest => chest != null && IsMimicCandidate(chest) && chest.TryGetComponent(out PurchaseInteraction purchaseInteraction) && purchaseInteraction.available);
         }
         public override string GetEventConfigName()
         {
@@ -33,7 +34,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "The stage has an unopened chest bought with gold.";
+            return "Not in Simulacrum, and the stage has an unopened chest bought with gold.";
         }
         protected override void AddConfig(ConfigFile config)
         {
