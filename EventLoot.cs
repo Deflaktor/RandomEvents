@@ -7,13 +7,14 @@ using UnityEngine.Networking;
 namespace RandomEvents
 {
     // Items an event drops, which their finder keeps only until the event ends. The mark follows the item from its
-    // droplet to its pickup, also through the Artifact of Command's choice cube.
+    // droplet to its pickup, also through the Artifact of Command's choice cube. Monsters can be allowed to pick the
+    // items up too, which they don't drop again.
     public static class EventLoot
     {
         private static readonly Dictionary<AbstractEvent, List<TemporaryInventory>> inventories = new Dictionary<AbstractEvent, List<TemporaryInventory>>();
         private static readonly List<EventLootMarker> markers = new List<EventLootMarker>();
-        // the event whose droplet or choice cube is creating a pickup right now
-        private static AbstractEvent creatingFor;
+        // the mark of the droplet or choice cube creating a pickup right now
+        private static EventLootMarker creatingFrom;
 
         public static void Hook()
         {
@@ -24,14 +25,14 @@ namespace RandomEvents
             On.RoR2.GenericPickupController.AttemptGrant += GenericPickupController_AttemptGrant;
         }
 
-        public static void Drop(AbstractEvent owner, PickupIndex pickupIndex, Vector3 position, Vector3 velocity)
+        public static void Drop(AbstractEvent owner, PickupIndex pickupIndex, Vector3 position, Vector3 velocity, bool monstersCanPickUp = false)
         {
             PickupDropletController.CreatePickupDroplet(new UniquePickup { pickupIndex = pickupIndex }, position, velocity, false);
             // the droplet just created is the last one tracked
             var droplets = InstanceTracker.GetInstancesList<PickupDropletController>();
             if (droplets.Count > 0)
             {
-                Mark(droplets[droplets.Count - 1].gameObject, owner);
+                Mark(droplets[droplets.Count - 1].gameObject, owner, monstersCanPickUp);
             }
         }
 
@@ -72,28 +73,29 @@ namespace RandomEvents
             }
         }
 
-        private static void Mark(GameObject obj, AbstractEvent owner)
+        private static void Mark(GameObject obj, AbstractEvent owner, bool monstersCanPickUp)
         {
             var marker = obj.AddComponent<EventLootMarker>();
             marker.owner = owner;
+            marker.monstersCanPickUp = monstersCanPickUp;
             markers.Add(marker);
         }
 
-        private static AbstractEvent GetOwner(Component component)
+        private static EventLootMarker GetMarker(Component component)
         {
-            return component.TryGetComponent(out EventLootMarker marker) ? marker.owner : null;
+            return component.TryGetComponent(out EventLootMarker marker) ? marker : null;
         }
 
         private static void PickupDropletController_CreatePickup(On.RoR2.PickupDropletController.orig_CreatePickup orig, PickupDropletController self)
         {
-            creatingFor = GetOwner(self);
+            creatingFrom = GetMarker(self);
             try
             {
                 orig(self);
             }
             finally
             {
-                creatingFor = null;
+                creatingFrom = null;
             }
         }
 
@@ -101,31 +103,31 @@ namespace RandomEvents
         private static void PickupPickerController_SetOptionsFromPickupForCommandArtifact(On.RoR2.PickupPickerController.orig_SetOptionsFromPickupForCommandArtifact_UniquePickup orig, PickupPickerController self, UniquePickup pickup)
         {
             orig(self, pickup);
-            if (creatingFor != null)
+            if (creatingFrom != null)
             {
-                Mark(self.gameObject, creatingFor);
+                Mark(self.gameObject, creatingFrom.owner, creatingFrom.monstersCanPickUp);
             }
         }
 
         private static void PickupPickerController_CreatePickup(On.RoR2.PickupPickerController.orig_CreatePickup_UniquePickup orig, PickupPickerController self, UniquePickup pickupState)
         {
-            creatingFor = GetOwner(self);
+            creatingFrom = GetMarker(self);
             try
             {
                 orig(self, pickupState);
             }
             finally
             {
-                creatingFor = null;
+                creatingFrom = null;
             }
         }
 
         private static GenericPickupController GenericPickupController_CreatePickup(On.RoR2.GenericPickupController.orig_CreatePickup orig, ref GenericPickupController.CreatePickupInfo createPickupInfo)
         {
             var pickup = orig(ref createPickupInfo);
-            if (creatingFor != null && pickup != null)
+            if (creatingFrom != null && pickup != null)
             {
-                Mark(pickup.gameObject, creatingFor);
+                Mark(pickup.gameObject, creatingFrom.owner, creatingFrom.monstersCanPickUp);
             }
             return pickup;
         }
@@ -133,11 +135,24 @@ namespace RandomEvents
         // the item goes into the finder's inventory of the event's items instead
         private static void GenericPickupController_AttemptGrant(On.RoR2.GenericPickupController.orig_AttemptGrant orig, GenericPickupController self, CharacterBody body)
         {
-            var owner = GetOwner(self);
+            var marker = GetMarker(self);
+            var owner = marker != null ? marker.owner : null;
             var itemIndex = PickupCatalog.GetPickupDef(self.pickup.pickupIndex)?.itemIndex ?? ItemIndex.None;
             if (!NetworkServer.active || owner == null || !owner.IsActive() || body == null || body.inventory == null || itemIndex == ItemIndex.None)
             {
                 orig(self, body);
+                return;
+            }
+            // the game only lets players pick up items
+            if (body.teamComponent.teamIndex != TeamIndex.Player)
+            {
+                if (marker.monstersCanPickUp && !marker.taken)
+                {
+                    marker.taken = true;
+                    GetInventory(owner, body).GiveTemporaryItem(itemIndex);
+                    PurchaseInteraction.CreateItemTakenOrb(self.transform.position, body.gameObject, itemIndex);
+                    Object.Destroy(self.gameObject);
+                }
                 return;
             }
             var before = body.inventory.GetItemCountPermanent(itemIndex);
@@ -153,6 +168,9 @@ namespace RandomEvents
         private class EventLootMarker : MonoBehaviour
         {
             public AbstractEvent owner;
+            public bool monstersCanPickUp;
+            // a monster took the item, which the game destroys only at the end of the frame
+            public bool taken;
 
             private void OnDestroy()
             {
