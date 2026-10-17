@@ -109,6 +109,12 @@ namespace RandomEvents
             if (hexes > 0)
             {
                 EventLoot.GetInventory(this, body).GiveTemporaryItem(DLC4Content.Items.RoamingItemDisable.itemIndex, hexes);
+                // each hex flies to the player from the monster that hurt them
+                var origin = damageReport.attackerBody != null ? damageReport.attackerBody.corePosition : body.corePosition + Vector3.up * 4f;
+                for (int i = 0; i < hexes; i++)
+                {
+                    PurchaseInteraction.CreateItemTakenOrb(origin, body.gameObject, DLC4Content.Items.RoamingItemDisable.itemIndex);
+                }
             }
         }
 
