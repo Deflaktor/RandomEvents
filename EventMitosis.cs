@@ -28,7 +28,7 @@ namespace RandomEvents
             ("LunarWispBody", "LunarExploderBody"),
             ("VoidMegaCrabBody", "NullifierBody"),
         };
-        private const int SplitCount = 2;
+        private ConfigEntry<int> MaxSplits;
         // the strong monsters of the pool and the cards of their weaker relatives
         private readonly Dictionary<BodyIndex, SpawnCard> splits = new Dictionary<BodyIndex, SpawnCard>();
 
@@ -53,7 +53,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Only monsters with a weaker relative on the stage spawn, e.g. Elder Lemurians when there are also Lemurians. When they die, they split into two of the weaker monster.";
+            return "Only monsters with a weaker relative on the stage spawn, e.g. Elder Lemurians when there are also Lemurians. When they die, they split into as many of the weaker monster as their health is worth, at least 2 and at most 10.";
         }
         public override string GetConditionDescription()
         {
@@ -61,6 +61,20 @@ namespace RandomEvents
         }
         protected override void AddConfig(ConfigFile config)
         {
+            MaxSplits = config.Bind(GetEventConfigName(), "Max Splits", 10, "The most weaker monsters a monster can split into.");
+        }
+
+        // As many weaker monsters as the strong one's health is worth, from their base health at the same level,
+        // without items or elite boosts, which the halves get as well
+        private int GetSplitCount(CharacterBody body, SpawnCard weakCard)
+        {
+            var weakMaster = weakCard.prefab != null ? weakCard.prefab.GetComponent<CharacterMaster>() : null;
+            var weakBody = weakMaster != null && weakMaster.bodyPrefab != null ? weakMaster.bodyPrefab.GetComponent<CharacterBody>() : null;
+            var level = Mathf.Max(0f, body.level - 1f);
+            var weakHealth = weakBody != null ? weakBody.baseMaxHealth + weakBody.levelMaxHealth * level : 0f;
+            var strongHealth = body.baseMaxHealth + body.levelMaxHealth * level;
+            var count = weakHealth > 0f ? Mathf.RoundToInt(strongHealth / weakHealth) : 2;
+            return Mathf.Clamp(count, 2, Mathf.Max(2, MaxSplits.Value));
         }
         public override void Preload()
         {
@@ -117,9 +131,10 @@ namespace RandomEvents
             // the halves keep an elite's aspect
             var eliteDef = EliteCatalog.GetEliteDefFromEquipmentIndex(master.inventory.currentEquipmentIndex);
             var position = body.isFlying ? body.corePosition : body.footPosition;
-            for (int i = 0; i < SplitCount; i++)
+            var splitCount = GetSplitCount(body, weakCard);
+            for (int i = 0; i < splitCount; i++)
             {
-                var offset = Quaternion.AngleAxis(360f / SplitCount * i, Vector3.up) * Vector3.forward * (body.radius * 0.5f);
+                var offset = Quaternion.AngleAxis(360f / splitCount * i, Vector3.up) * Vector3.forward * (body.radius * 0.5f);
                 Helper.SpawnMonster(weakCard, position + offset, eliteDef);
             }
         }
