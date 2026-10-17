@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
@@ -380,37 +381,24 @@ namespace RandomEvents
             }
         }
 
-        // The umbra effect on every player's screen, with its sound, belongs to bodies that carry the umbra item, so a
-        // hidden body below the lowest player carries it for a moment. Null while no player has a body.
+        // The sound of the umbra effect, which players don't hear from its carrier far away
+        private const string UmbraSound = "Play_elite_haunt_spawn";
+
+        // The umbra effect on every player's screen belongs to bodies that carry the umbra item, so a hidden body far
+        // above the players carries it for a moment. What the effect does to the screen reaches every player, wherever it is.
         private CharacterMaster SpawnUmbraEffectCarrier()
         {
-            bool foundPosition = false;
-            Vector3 lowestFloor = new Vector3(0f, float.MaxValue, 0f);
-            ReadOnlyCollection<TeamComponent> teamMembers = TeamComponent.GetTeamMembers(TeamIndex.Player);
-            foreach (var teamMember in teamMembers)
+            var position = new Vector3(0f, 1000f, 0f);
+            var bodies = Helper.GetLivingPlayerBodies();
+            if (bodies.Count > 0)
             {
-                if (teamMember.body != null && teamMember.body.isPlayerControlled)
-                {
-                    var floor = Helper.RaycastToFloor(teamMember.body.corePosition, 50f, false);
-                    var lowestPosition = floor.HasValue ? floor.Value : teamMember.body.footPosition;
-                    if (lowestPosition.y < lowestFloor.y)
-                    {
-                        lowestFloor.x = lowestPosition.x;
-                        lowestFloor.y = lowestPosition.y;
-                        lowestFloor.z = lowestPosition.z;
-                        foundPosition = true;
-                    }
-                }
+                position = bodies[0].corePosition;
+                position.y = bodies.Max(body => body.corePosition.y) + 1000f;
             }
-            if (!foundPosition)
-            {
-                return null;
-            }
-            lowestFloor.y -= 15f;
             DirectorPlacementRule directorPlacementRule = new DirectorPlacementRule
             {
                 placementMode = DirectorPlacementRule.PlacementMode.Direct,
-                position = lowestFloor
+                position = position
             };
             SpawnCard spawnCard = someMonster2.WaitForCompletion();
             // the application's generator, so the run's seeded one gives the same results as without the mod
@@ -458,15 +446,15 @@ namespace RandomEvents
             yield return new WaitForSeconds(time);
             if (events.Count == 1)
             {
-                ChatHelper.AnnounceEvent();
+                ChatHelper.AnnounceEvent(UmbraSound);
             }
             else if (events.Count == 2)
             {
-                ChatHelper.AnnounceDoubleEvent();
+                ChatHelper.AnnounceDoubleEvent(UmbraSound);
             }
             else
             {
-                ChatHelper.AnnounceTripleEvent();
+                ChatHelper.AnnounceTripleEvent(UmbraSound);
             }
             yield return ShowUmbraEffect();
             yield return new WaitForSeconds(0.5f);
@@ -481,15 +469,20 @@ namespace RandomEvents
                     announcement += $"<style=cEvent>{conjunction}</style>";
                 }
             }
-            ChatHelper.Send($"<size=26px>{announcement}</size>");
             if (events.Count >= 2)
             {
+                // the next umbra effect starts with the events' names
+                ChatHelper.SendWithSound($"<size=26px>{announcement}</size>", UmbraSound);
                 yield return ShowUmbraEffect();
                 if (events.Count >= 3)
                 {
                     yield return new WaitForSeconds(0.5f);
                     yield return ShowUmbraEffect();
                 }
+            }
+            else
+            {
+                ChatHelper.Send($"<size=26px>{announcement}</size>");
             }
         }
 

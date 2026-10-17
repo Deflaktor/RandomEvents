@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using RoR2.Networking;
 using UnityEngine;
+using UnityEngine.Networking;
 
 namespace RandomEvents
 {
@@ -126,27 +128,27 @@ namespace RandomEvents
             return string.Join(", ", itemNames);
         }
 
-        public static void AnnounceEvent()
+        public static void AnnounceEvent(string sound)
         {
             int length = 10;
             int r = rand.Next(length);
             var eventText = Language.GetStringFormatted($"ANNOUNCE_EVENT_{r}");
-            Send($"<size=18px><style=cEvent>{eventText}</style></size>");
+            SendWithSound($"<size=18px><style=cEvent>{eventText}</style></size>", sound);
         }
 
-        public static void AnnounceDoubleEvent()
+        public static void AnnounceDoubleEvent(string sound)
         {
             int length = 5;
             int r = rand.Next(length);
             var eventText = Language.GetStringFormatted($"ANNOUNCE_DOUBLE_EVENT_{r}");
-            Send($"<size=22px><style=cEvent>{eventText}</style></size>");
+            SendWithSound($"<size=22px><style=cEvent>{eventText}</style></size>", sound);
         }
-        public static void AnnounceTripleEvent()
+        public static void AnnounceTripleEvent(string sound)
         {
             int length = 3;
             int r = rand.Next(length);
             var eventText = Language.GetStringFormatted($"ANNOUNCE_TRIPLE_EVENT_{r}");
-            Send($"<size=26px><style=cEvent>{eventText}</style></size>");
+            SendWithSound($"<size=26px><style=cEvent>{eventText}</style></size>", sound);
         }
         public static void AnnounceEventConclusion()
         {
@@ -170,6 +172,43 @@ namespace RandomEvents
             {
                 baseToken = message
             });
+        }
+
+        // the game's message type for chat, see Chat.SendBroadcastChat
+        private const short ChatMessageType = 59;
+
+        // Sends a message with a sound that every player hears at their own body. The NPC chat message, which the game
+        // uses for boss dialogue, plays its sound at its sender on each client, so each player gets their own copy.
+        public static void SendWithSound(string message, string sound)
+        {
+            var livingBodies = Helper.GetLivingPlayerBodies();
+            foreach (var connection in NetworkServer.connections)
+            {
+                if (connection == null)
+                {
+                    continue;
+                }
+                var user = NetworkUser.readOnlyInstancesList.FirstOrDefault(networkUser => networkUser.connectionToClient == connection);
+                var body = user != null && user.master != null ? user.master.GetBody() : null;
+                // a dead player hears it at a living one
+                if ((body == null || !body.healthComponent.alive) && livingBodies.Count > 0)
+                {
+                    body = livingBodies[0];
+                }
+                var chatMessage = new Chat.NpcChatMessage
+                {
+                    sender = body != null ? body.gameObject : null,
+                    baseToken = message,
+                    formatStringToken = "{0}",
+                    sound = sound
+                };
+                var writer = new NetworkWriter();
+                writer.StartMessage(ChatMessageType);
+                writer.Write(chatMessage.GetTypeIndex());
+                writer.Write(chatMessage);
+                writer.FinishMessage();
+                connection.SendWriter(writer, QosChannelIndex.chat.intVal);
+            }
         }
        
     }
