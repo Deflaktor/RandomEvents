@@ -51,6 +51,8 @@
         "EVENT_INVENTORY_ROULETTE_LENT": "{0} has the items of {1}.",
         "EVENT_SURVIVOR_SWAP_TAKES": "{0} plays the {1} of {2}.",
         "EVENT_SURVIVOR_SWAP_RANDOM": "{0} plays {1} for a while.",
+        "EVENT_SECOND_WIND_RETURNED": "{0} is back on their feet!",
+        "EVENT_SECOND_WIND_REVIVED": "{0} gets a second wind!",
 
         "ANNOUNCE_EVENT_WEAK_ENEMIES": "Horde of the many",
         "ANNOUNCE_EVENT_STRONG_ENEMIES": "Fear the few",
@@ -85,7 +87,8 @@
         "ANNOUNCE_EVENT_MITOSIS": "Divide and multiply",
         "ANNOUNCE_EVENT_UMBRA_AMBUSH": "Umbras emerge from the shadows",
         "ANNOUNCE_EVENT_INVENTORY_ROULETTE": "Spin the inventory roulette",
-        "ANNOUNCE_EVENT_SURVIVOR_SWAP": "Walk in another's shoes"
+        "ANNOUNCE_EVENT_SURVIVOR_SWAP": "Walk in another's shoes",
+        "ANNOUNCE_EVENT_SECOND_WIND": "Fragile, but never finished"
         
     }
 }
