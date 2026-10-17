@@ -15,6 +15,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 |------------|--------------|-------------|-----------|
 | BulletHell | Projectile density dialed to eleven | Increases the fire rate of enemies but lowers their damage. |  |
 | CasinoItem | Ancient relic cycling through its many powers | Gives all players 10 items of random type. The type of the item changes every 10 seconds. |  |
+| DroneEscort | Backup has arrived | Gives each player a random drone that can be found on stages. The drones disappear when the event ends. |  |
 | EquipmentOnly | Equipment-exclusive combat | Gives all players a random equipment temporarily with reduced cooldown but disables all skills. | Events "SkillsOnly", "FuelArray" inactive. Artifact of Enigma inactive. |
 | ExplodingCorpses | Exploding corpses | All enemies explode upon death. | Players have sufficient means to do ranged damage. |
 | FallingEnemies | Enemies fall down from the heavens | Enemies fall from the sky. Only walking enemies spawn. |  |
