@@ -313,7 +313,18 @@ namespace RandomEvents
 
         private void StopAllActiveEvents()
         {
-            m_activeEvents.ForEach(ev => ev.Stop());
+            // an event that fails to stop must not keep the others running or leave the list filled
+            foreach (var ev in m_activeEvents)
+            {
+                try
+                {
+                    ev.Stop();
+                }
+                catch (Exception e)
+                {
+                    Log.LogError($"Event {ev.GetEventConfigName()} failed to stop: {e}");
+                }
+            }
             m_activeEvents.Clear();
         }
 
