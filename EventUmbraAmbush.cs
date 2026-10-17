@@ -42,6 +42,7 @@ namespace RandomEvents
         };
         private ConfigEntry<float> HealthMultiplier;
         private ConfigEntry<float> ItemMultiplier;
+        private ConfigEntry<float> DamageReduction;
         private readonly Dictionary<string, ConfigEntry<string>> survivorItems = new Dictionary<string, ConfigEntry<string>>();
         private readonly List<CharacterMaster> hunters = new List<CharacterMaster>();
 
@@ -63,7 +64,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Each player is hunted by an enemy survivor. It has ten times the health and a kit of safe items half as big as that player's items per tier, picked to suit its survivor. The hunters disappear when the event ends.";
+            return "Each player is hunted by an enemy survivor. It has ten times the health, deals 75% less damage, and has a kit of safe items half as big as that player's items per tier, picked to suit its survivor. The hunters disappear when the event ends.";
         }
         public override string GetConditionDescription()
         {
@@ -72,6 +73,7 @@ namespace RandomEvents
         protected override void AddConfig(ConfigFile config)
         {
             HealthMultiplier = config.Bind(GetEventConfigName(), "Health Multiplier", 10f, "The hunters' health, relative to their survivor's normal health.");
+            DamageReduction = config.Bind(GetEventConfigName(), "Damage Reduction", 0.75f, "How much less damage the hunters deal than their survivor normally does.");
             ItemMultiplier = config.Bind(GetEventConfigName(), "Item Multiplier", 0.5f, "The number of items per tier in a hunter's kit, relative to the player it hunts.");
             foreach (var (survivor, items) in DefaultSurvivorItems)
             {
@@ -204,6 +206,12 @@ namespace RandomEvents
                 if (boostHp > 0)
                 {
                     hunter.inventory.GiveItemPermanent(RoR2Content.Items.BoostHp, boostHp);
+                }
+                // an item without a name, which lowers the damage by 1% per stack
+                var reduceDamage = Mathf.RoundToInt(Mathf.Clamp01(DamageReduction.Value) * 100f);
+                if (reduceDamage > 0)
+                {
+                    hunter.inventory.GiveItemPermanent(DLC4Content.Items.ReduceDamage, reduceDamage);
                 }
                 GiveItems(hunter.inventory, body.name, CountItemsPerTier(target.inventory));
                 foreach (var ai in hunter.AiComponents)
