@@ -7,8 +7,9 @@ using UnityEngine.Networking;
 
 namespace RandomEvents
 {
-    // Events that change players' items or equipment for a while skip the Heretic transformation while they run.
-    // Since 1.5.0 it also makes the Heretic the player's original body, so it would outlast the event.
+    // Events that change players' items or equipment for a while skip the Heretic transformation while they run, and
+    // so does a player who holds one of the heresy items only temporarily, e.g. SkillsOnly's Visions of Heresy. Since
+    // 1.5.0 the transformation also makes the Heretic the player's original body, so it would outlast the event.
     public static class HereticTransformation
     {
         public static void Hook()
@@ -31,13 +32,31 @@ namespace RandomEvents
             x => x.MatchCall<CharacterMaster>("UpdateMoneyBasedItems")
             );
             end.MarkLabel(skipHeretic);
-            c.EmitDelegate<Func<bool>>(IsSuppressed);
+            c.Emit(OpCodes.Ldarg_0);
+            c.EmitDelegate<Func<CharacterMaster, bool>>(IsSuppressed);
             c.Emit(OpCodes.Brtrue, skipHeretic);
         }
 
-        private static bool IsSuppressed()
+        private static readonly ItemDef[] HeresyItems =
         {
-            return ModConfig.Enabled.Value && NetworkServer.active && RandomEvents.instance.m_activeEvents.Any(ev => ev.SuppressesHereticTransformation);
+            RoR2Content.Items.LunarPrimaryReplacement, RoR2Content.Items.LunarSecondaryReplacement,
+            RoR2Content.Items.LunarUtilityReplacement, RoR2Content.Items.LunarSpecialReplacement
+        };
+
+        private static bool IsSuppressed(CharacterMaster master)
+        {
+            if (!ModConfig.Enabled.Value || !NetworkServer.active)
+            {
+                return false;
+            }
+            if (RandomEvents.instance.m_activeEvents.Any(ev => ev.SuppressesHereticTransformation))
+            {
+                return true;
+            }
+            // the events' temporary items are channeled stacks, which also remain after the event ended until removed
+            var inventory = master.inventory;
+            return inventory != null && HeresyItems.Any(itemDef => inventory.GetItemCountChanneled(itemDef) > 0
+                && inventory.GetItemCountPermanent(itemDef) + inventory.GetItemCountTemp(itemDef.itemIndex) <= 0);
         }
     }
 }
