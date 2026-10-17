@@ -28,7 +28,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Gives each player a random drone that can be found on stages. The drones disappear when the event ends.";
+            return "Gives each player a random drone of any kind. The drones disappear when the event ends.";
         }
         public override string GetConditionDescription()
         {
@@ -56,12 +56,13 @@ namespace RandomEvents
             orig(self, contactPoint);
         }
 
-        // the drones that can be repaired on stages, without the Gunner Turret, which can't follow, and the Equipment Drone, which has no equipment
+        // all drones of the run's expansions, also those not found on stages, without the Gunner Turret, which can't
+        // follow, and the Equipment Drone, which has no equipment
         private static List<DroneDef> GetDroneCandidates()
         {
             var excluded = new HashSet<DroneDef> { RoR2Content.DroneDefs.Turret1, RoR2Content.DroneDefs.EquipmentDrone };
             return DroneCatalog.allDroneDefs
-                .Where(droneDef => droneDef != null && !excluded.Contains(droneDef) && droneDef.droneBrokenSpawnCard != null && droneDef.masterPrefab != null && droneDef.CheckRequiredExpansionEnabled())
+                .Where(droneDef => droneDef != null && !excluded.Contains(droneDef) && droneDef.masterPrefab != null && droneDef.CheckRequiredExpansionEnabled())
                 .ToList();
         }
 
