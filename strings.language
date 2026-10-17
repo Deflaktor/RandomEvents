@@ -47,6 +47,7 @@
         "EVENT_RED_LIGHT": "<color=#ed4c40>Red light!</color> Don't move!",
         "EVENT_GREEN_LIGHT": "<color=#7ed957>Green light!</color> Move!",
         "EVENT_RED_LIGHT_CAUGHT": "{0} moved during red light!",
+        "EVENT_CHEST_MIMICS_REVEALED": "The chest was a mimic!",
 
         "ANNOUNCE_EVENT_WEAK_ENEMIES": "Horde of the many",
         "ANNOUNCE_EVENT_STRONG_ENEMIES": "Fear the few",
@@ -76,7 +77,8 @@
         "ANNOUNCE_EVENT_THE_ALPHA": "The pack has a leader",
         "ANNOUNCE_EVENT_LINKED_SOULS": "Your souls are bound together",
         "ANNOUNCE_EVENT_HOT_POTATO": "Hot potato",
-        "ANNOUNCE_EVENT_RED_LIGHT_GREEN_LIGHT": "Red light, green light"
+        "ANNOUNCE_EVENT_RED_LIGHT_GREEN_LIGHT": "Red light, green light",
+        "ANNOUNCE_EVENT_CHEST_MIMICS": "Not every chest is what it seems"
         
     }
 }

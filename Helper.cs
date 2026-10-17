@@ -188,6 +188,59 @@ namespace RandomEvents
             return RaycastToFloor(center, 50f, true);
         }
 
+        // The director that spawns the stage's monsters. In Simulacrum the wave's, so that its monsters count for the wave.
+        public static CombatDirector FindCombatDirector()
+        {
+            if (Run.instance is InfiniteTowerRun infiniteTowerRun && infiniteTowerRun.waveController != null && infiniteTowerRun.waveController.combatDirector != null)
+            {
+                return infiniteTowerRun.waveController.combatDirector;
+            }
+            foreach (var director in CombatDirector.instancesList)
+            {
+                // not the teleporter's boss director, whose monsters join the boss fight
+                if (director != null && director.isActiveAndEnabled && director.teamIndex == TeamIndex.Monster && director.combatSquad == null)
+                {
+                    return director;
+                }
+            }
+            return null;
+        }
+
+        // Spawns a monster at the position as the director does, with an elite's boosts and gold and experience for the kill
+        public static CharacterMaster SpawnMonster(SpawnCard spawnCard, Vector3 position, EliteDef eliteDef = null)
+        {
+            var director = FindCombatDirector();
+            if (director == null)
+            {
+                var spawnRequest = new DirectorSpawnRequest(spawnCard, new DirectorPlacementRule
+                {
+                    placementMode = DirectorPlacementRule.PlacementMode.Direct,
+                    position = position
+                }, RoR2Application.rng)
+                {
+                    teamIndexOverride = TeamIndex.Monster,
+                    ignoreTeamMemberLimit = true
+                };
+                var spawnedObject = DirectorCore.instance != null ? DirectorCore.instance.TrySpawnObject(spawnRequest) : null;
+                return spawnedObject != null ? spawnedObject.GetComponent<CharacterMaster>() : null;
+            }
+            var target = new GameObject("RandomEventsSpawnTarget");
+            target.transform.position = position;
+            GameObject spawned = null;
+            UnityEngine.Events.UnityAction<GameObject> listener = spawnedInstance => spawned = spawnedInstance;
+            director.onSpawnedServer.AddListener(listener);
+            try
+            {
+                director.Spawn(spawnCard, eliteDef, target.transform, DirectorCore.MonsterSpawnDistance.CloseNoMinimum, false, 1f, DirectorPlacementRule.PlacementMode.Direct);
+            }
+            finally
+            {
+                director.onSpawnedServer.RemoveListener(listener);
+                GameObject.Destroy(target);
+            }
+            return spawned != null ? spawned.GetComponent<CharacterMaster>() : null;
+        }
+
         // the bodies of connected players who are alive
         public static List<CharacterBody> GetLivingPlayerBodies()
         {
