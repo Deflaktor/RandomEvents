@@ -10,6 +10,9 @@ namespace RandomEvents
     {
         private ConfigEntry<float> HealthMultiplier;
         private ConfigEntry<float> DamageGrowth;
+        private ConfigEntry<float> DamagePerStack;
+        // damage toward each monster's next stack, as a share of its health
+        private readonly Dictionary<CharacterBody, float> progress = new Dictionary<CharacterBody, float>();
         // the stacks of Symbiotic Scorpion's debuff this event gave each monster, which also show on its health bar
         private readonly Dictionary<CharacterBody, int> stacks = new Dictionary<CharacterBody, int>();
 
@@ -31,11 +34,11 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "All monsters have ten times their health, but each hit from a player leaves Symbiotic Scorpion's debuff on them, and each stack makes them take 10% more damage, compounding.";
+            return "All monsters have ten times their health, but for every 1% of its health that players deal, a monster gets a stack of Symbiotic Scorpion's debuff, and each stack makes it take 10% more damage, compounding. Few strong hits count as much as many weak ones.";
         }
         public override string GetPopupDescription()
         {
-            return "Monsters are very tough, but every hit makes them take more damage. Focus your fire!";
+            return "Monsters are very tough, but the more damage they take, the more damage they take. Focus your fire!";
         }
         public override string GetConditionDescription()
         {
@@ -44,6 +47,7 @@ namespace RandomEvents
         protected override void AddConfig(ConfigFile config)
         {
             HealthMultiplier = config.Bind(GetEventConfigName(), "Health Multiplier", 10f, "The monsters' health, relative to normal.");
+            DamagePerStack = config.Bind(GetEventConfigName(), "Damage Per Stack", 0.01f, "Damage that gives a monster a stack, as a share of its health, before the stacks multiply it.");
             DamageGrowth = config.Bind(GetEventConfigName(), "Damage Growth", 0.1f, "How much more damage each stack makes a monster take, compounding: 0.1 means 1.1 to the power of the stacks.");
         }
         public override void Preload()
@@ -92,14 +96,25 @@ namespace RandomEvents
                 orig(self, damageInfo);
                 return;
             }
+            // the damage before the stacks multiply it, so that they don't feed themselves
+            var baseDamage = damageInfo.damage;
             damageInfo.damage *= Mathf.Pow(1f + Mathf.Max(0f, DamageGrowth.Value), count);
             orig(self, damageInfo);
-            // a hit from a player or their allies, not damage over time
+            // Stacks by damage dealt rather than by hits, so survivors that hit rarely but hard aren't at a disadvantage.
+            // From players or their allies, also over time.
             var attacker = damageInfo.attacker != null ? damageInfo.attacker.GetComponent<CharacterBody>() : null;
-            if (!damageInfo.rejected && damageInfo.procCoefficient > 0f && attacker != null && attacker.teamComponent.teamIndex == TeamIndex.Player && self.alive)
+            if (damageInfo.rejected || attacker == null || attacker.teamComponent.teamIndex != TeamIndex.Player || !self.alive || self.fullCombinedHealth <= 0f)
             {
-                stacks[body] = count + 1;
-                body.AddUnmanagedBuff(DLC1Content.Buffs.PermanentDebuff);
+                return;
+            }
+            var share = baseDamage / self.fullCombinedHealth + progress.GetValueOrDefault(body);
+            var perStack = Mathf.Max(0.0001f, DamagePerStack.Value);
+            var added = Mathf.FloorToInt(share / perStack);
+            progress[body] = share - added * perStack;
+            if (added > 0)
+            {
+                stacks[body] = count + added;
+                body.AddUnmanagedBuff(DLC1Content.Buffs.PermanentDebuff, added);
             }
         }
 
@@ -110,6 +125,7 @@ namespace RandomEvents
         public override void Start(List<AbstractEvent> activeOtherEvents)
         {
             stacks.Clear();
+            progress.Clear();
             foreach (var body in CharacterBody.readOnlyInstancesList)
             {
                 Toughen(body);
@@ -126,6 +142,7 @@ namespace RandomEvents
                 }
             }
             stacks.Clear();
+            progress.Clear();
             EventLoot.Clear(this);
         }
     }

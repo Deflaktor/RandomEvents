@@ -21,7 +21,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | EquipmentOnly | Equipment-exclusive combat | Gives all players a random equipment temporarily with reduced cooldown but disables all skills. | Events "SkillsOnly", "FuelArray" inactive. Artifact of Enigma inactive. |
 | ExplodingCorpses | Exploding corpses | All enemies explode upon death. | Players have sufficient means to do ranged damage. |
 | FallingEnemies | Enemies fall down from the heavens | Enemies fall from the sky. Only walking enemies spawn. |  |
-| FocusFire | Focus your fire | All monsters have ten times their health, but each hit from a player leaves Symbiotic Scorpion's debuff on them, and each stack makes them take 10% more damage, compounding. |  |
+| FocusFire | Focus your fire | All monsters have ten times their health, but for every 1% of its health that players deal, a monster gets a stack of Symbiotic Scorpion's debuff, and each stack makes it take 10% more damage, compounding. Few strong hits count as much as many weak ones. |  |
 | FuelArray | Stay above 50% health or face disaster | All players are healed to full health and shield, then get a Fuel Array equipment temporarily but take reduced damage from all sources. | Event "EquipmentOnly" inactive. |
 | Ghosts | Ghostly apparitions haunt the battlefield | Some enemies spawn as incorporeal ghosts. They disappear after some time. | Currently not a boss wave. |
 | Haste | The world accelerates | All beings become faster. |  |
