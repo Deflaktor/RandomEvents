@@ -65,6 +65,7 @@ namespace RandomEvents
                 InitAndHookEvent(new EventRandomTeams());
                 InitAndHookEvent(new EventSkillsOnly());
                 InitAndHookEvent(new EventSmallArena());
+                InitAndHookEvent(new EventStealthMission());
                 InitAndHookEvent(new EventStrongEnemies());
                 InitAndHookEvent(new EventTimeWarp());
                 InitAndHookEvent(new EventWeakEnemies());
