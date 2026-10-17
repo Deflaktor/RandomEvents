@@ -44,6 +44,10 @@ namespace RandomEvents
         {
             return "Gives all players the items of a random kit temporarily, e.g. Glass Cannon or Bounce House.";
         }
+        public override string GetPopupDescription()
+        {
+            return "Gives all players the items of the kit temporarily.";
+        }
         public override string GetConditionDescription()
         {
             return "At least one kit has items.";

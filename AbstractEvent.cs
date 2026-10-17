@@ -59,6 +59,11 @@ namespace RandomEvents
         public abstract void Stop();
         public abstract void Hook();
         public abstract string GetDescription();
+        // the text players see in the event's popup
+        public virtual string GetPopupDescription()
+        {
+            return GetDescription();
+        }
         public abstract string GetConditionDescription();
     }
 }

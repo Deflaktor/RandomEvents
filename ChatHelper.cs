@@ -210,6 +210,34 @@ namespace RandomEvents
                 connection.SendWriter(writer, QosChannelIndex.chat.intVal);
             }
         }
+
+        private static int popupCount;
+
+        // Shows a popup like an item pickup's to every player. It has to name an equipment for its icon, which is
+        // hidden. Equipment cut from the game can't be picked up, so the popup never clashes with a real pickup's,
+        // which the queue skips if it names the same equipment as the popup before it. Alternating between two keeps
+        // consecutive popups apart.
+        public static void SendPopup(string title, string description)
+        {
+            var equipmentDef = popupCount++ % 2 == 0 ? JunkContent.Equipment.SoulJar : JunkContent.Equipment.OrbitalLaser;
+            if (equipmentDef == null || equipmentDef.equipmentIndex == EquipmentIndex.None)
+            {
+                return;
+            }
+            var overrideInfo = new CharacterMasterNotificationQueue.CustomOverrideInfo
+            {
+                titleText = title,
+                descriptionText = description,
+                iconColor = Color.clear
+            };
+            foreach (var pc in PlayerCharacterMasterController.instances)
+            {
+                if (pc.master != null)
+                {
+                    CharacterMasterNotificationQueue.SendCustomNotification(pc.master, equipmentDef.equipmentIndex, overrideInfo);
+                }
+            }
+        }
        
     }
 }

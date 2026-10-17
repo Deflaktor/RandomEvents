@@ -469,6 +469,10 @@ namespace RandomEvents
                     announcement += $"<style=cEvent>{conjunction}</style>";
                 }
             }
+            foreach (var ev in events)
+            {
+                ChatHelper.SendPopup($"<style=cWorldEvent>{ev.GetAnnouncement()}</style>", ev.GetPopupDescription());
+            }
             if (events.Count >= 2)
             {
                 // the next umbra effect starts with the events' names
