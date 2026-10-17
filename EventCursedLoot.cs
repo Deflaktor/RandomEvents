@@ -32,7 +32,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Monsters drop an item when they die, which its finder keeps until the event ends. Each time a player has taken damage from monsters adding up to 10% of their base health, they get a hex that disables some of their items until the event ends.";
+            return "Monsters drop an item when they die, which its finder keeps until the event ends. Each time a player has taken damage from monsters adding up to 25% of their base health, they get a hex that disables some of their items until the event ends.";
         }
         public override string GetConditionDescription()
         {
@@ -40,7 +40,7 @@ namespace RandomEvents
         }
         protected override void AddConfig(ConfigFile config)
         {
-            HexDamage = config.Bind(GetEventConfigName(), "Hex Damage", 0.1f, "Damage a player takes from monsters per hex, relative to their base health: their survivor's health at their level, without items.");
+            HexDamage = config.Bind(GetEventConfigName(), "Hex Damage", 0.25f, "Damage a player takes from monsters per hex, relative to their base health: their survivor's health at their level, without items.");
         }
         public override void Preload()
         {
