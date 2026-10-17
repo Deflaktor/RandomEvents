@@ -3,6 +3,7 @@ using EntityStates.Captain.Weapon;
 using RoR2;
 using RoR2.Projectile;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
@@ -42,7 +43,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Drops a random Captain beacon (Healing, Shocking, Resupply, Hacking or Defense) next to each player. The beacons disappear when the event ends.";
+            return "Drops a random Captain beacon (Healing, Shocking, Resupply, Hacking or Defense) next to each player, a different one for each while there are enough, and inside Simulacrum's safe zone or the charging teleporter's zone. The beacons disappear when the event ends.";
         }
         public override string GetConditionDescription()
         {
@@ -69,12 +70,55 @@ namespace RandomEvents
         public override void Start(List<AbstractEvent> activeOtherEvents)
         {
             beacons.Clear();
-            foreach (var body in Helper.GetLivingPlayerBodies())
+            // every player a random beacon, all different while there are enough kinds
+            var kinds = beaconPrefabs.OrderBy(_ => RoR2Application.rng.nextNormalizedFloat).ToList();
+            var bodies = Helper.GetLivingPlayerBodies();
+            for (int i = 0; i < bodies.Count; i++)
             {
-                var prefab = beaconPrefabs[RoR2Application.rng.RangeInt(0, beaconPrefabs.Count)].WaitForCompletion();
-                var position = Helper.FindGroundPositionNear(body.footPosition, 4f, 10f) ?? body.footPosition;
-                DropBeacon(body, prefab, position);
+                DropBeacon(bodies[i], kinds[i % kinds.Count].WaitForCompletion(), FindBeaconPosition(bodies[i]));
             }
+        }
+
+        // Next to the player, but inside Simulacrum's safe zone or the charging teleporter's zone, where the players
+        // have to stay; within the zone instead if the player is outside it.
+        private static Vector3 FindBeaconPosition(CharacterBody body)
+        {
+            IZone zone = null;
+            Vector3 center = Vector3.zero;
+            float radius = 0f;
+            if (Run.instance is InfiniteTowerRun infiniteTowerRun && infiniteTowerRun.safeWardController != null)
+            {
+                zone = infiniteTowerRun.safeWardController.safeZone;
+                center = infiniteTowerRun.safeWardController.transform.position;
+                radius = infiniteTowerRun.safeWardController.holdoutZoneController.currentRadius;
+            }
+            else if (TeleporterInteraction.instance != null && TeleporterInteraction.instance.isCharging)
+            {
+                zone = TeleporterInteraction.instance.holdoutZoneController;
+                center = TeleporterInteraction.instance.transform.position;
+                radius = TeleporterInteraction.instance.holdoutZoneController.currentRadius;
+            }
+            for (int i = 0; i < 5; i++)
+            {
+                var position = Helper.FindGroundPositionNear(body.footPosition, 4f, 10f);
+                if (position.HasValue && (zone == null || zone.IsInBounds(position.Value)))
+                {
+                    return position.Value;
+                }
+            }
+            if (zone == null)
+            {
+                return body.footPosition;
+            }
+            for (int i = 0; i < 5; i++)
+            {
+                var position = Helper.FindGroundPositionNear(center, 0f, Mathf.Max(1f, radius * 0.8f));
+                if (position.HasValue && zone.IsInBounds(position.Value))
+                {
+                    return position.Value;
+                }
+            }
+            return center;
         }
 
         // as Captain's skill does, but the beacon isn't one of the player's deployables, so it can't replace a Captain's own

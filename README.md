@@ -43,7 +43,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | SmallArena | Confined space | Halves the battle zone radius but makes the wave also easier. | Simulacrum mode only |
 | StealthMission | Vanish from their sight | Cloaks all players, so monsters lose track of them. Attacking reveals a player for 2 seconds. | Event "Hunted" inactive. |
 | StrongEnemies | Fear the few | Only strong enemies spawn. | Events "WeakEnemies" and "Mitosis" inactive. |
-| SupplyDrop | Supplies inbound | Drops a random Captain beacon (Healing, Shocking, Resupply, Hacking or Defense) next to each player. The beacons disappear when the event ends. |  |
+| SupplyDrop | Supplies inbound | Drops a random Captain beacon (Healing, Shocking, Resupply, Hacking or Defense) next to each player, a different one for each while there are enough, and inside Simulacrum's safe zone or the charging teleporter's zone. The beacons disappear when the event ends. |  |
 | SurvivorSwap | Walk in another's shoes | In multiplayer, every player plays the survivor of another player, with that player's loadout and items. Alone, the player becomes a random other survivor. Everyone gets their own back when the event ends. | Events "MonsterTransform" and "InventoryRoulette" inactive and currently not a boss wave. |
 | TheAlpha | The pack has a leader | Makes a random monster the alpha, half again as big, with ten times its health and a boss health bar. While it lives, all other monsters are in a frenzy like from Gorag's Opus: +100% attack speed and +50% movement speed. |  |
 | TimeWarp | Time slows for your foes | Slows all enemies to about a third of their speed, almost twice as much as Chronobauble. |  |
