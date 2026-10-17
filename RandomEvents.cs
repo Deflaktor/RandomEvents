@@ -50,11 +50,13 @@ namespace RandomEvents
                 TemporaryInventory.Hook();
                 TemporaryEquipment.Hook();
                 HereticTransformation.Hook();
+                EventLoot.Hook();
 
                 ModConfig.Init();
                 InitAndHookEvent(new EventBulletHell());
                 InitAndHookEvent(new EventCasinoItem());
                 InitAndHookEvent(new EventChestMimics());
+                InitAndHookEvent(new EventCursedLoot());
                 InitAndHookEvent(new EventDroneEscort());
                 InitAndHookEvent(new EventEquipmentOnly());
                 InitAndHookEvent(new EventExplodingCorpses());
