@@ -18,9 +18,8 @@ namespace RandomEvents
         {
             "BackupDroneBody", "DroneCommanderBody", "DTGunnerDroneBody", "DTHaulerDroneBody", "DTHealingDroneBody", "EngiTurretBody", "EngiWalkerTurretBody"
         };
-        // attacks less often, since its freezing is so strong
+        // its freezing is too strong against players
         private const string FreezeDroneBody = "CopycatDroneBody";
-        private const float FreezeDroneAttackSlowdown = 4f;
         // a spawn card for each drone's master, made once
         private readonly Dictionary<GameObject, CharacterSpawnCard> spawnCards = new Dictionary<GameObject, CharacterSpawnCard>();
         private readonly HashSet<BodyIndex> droneBodies = new HashSet<BodyIndex>();
@@ -68,7 +67,8 @@ namespace RandomEvents
         }
 
         // All drones of the run's expansions with their cost: those of the drone catalog, also those not found on
-        // stages, and those that items and survivors bring. The Equipment Drone gets one of EquipmentOnly's equipment.
+        // stages, and those that items and survivors bring, without the Freeze Drone. The Equipment Drone gets one of
+        // EquipmentOnly's equipment.
         private static List<(GameObject masterPrefab, int cost)> GetDroneCandidates()
         {
             var candidates = DroneCatalog.allDroneDefs
@@ -86,7 +86,9 @@ namespace RandomEvents
                     candidates.Add((masterPrefab, 40));
                 }
             }
-            return candidates.GroupBy(candidate => candidate.masterPrefab).Select(group => group.First()).ToList();
+            return candidates
+                .Where(candidate => candidate.masterPrefab.GetComponent<CharacterMaster>()?.bodyPrefab?.name != FreezeDroneBody)
+                .GroupBy(candidate => candidate.masterPrefab).Select(group => group.First()).ToList();
         }
 
         private static bool IsExpansionEnabled(GameObject prefab)
@@ -135,10 +137,6 @@ namespace RandomEvents
             if (reduceDamage > 0)
             {
                 body.inventory.GiveItemPermanent(DLC4Content.Items.ReduceDamage, reduceDamage);
-            }
-            if (body.bodyIndex == BodyCatalog.FindBodyIndex(FreezeDroneBody))
-            {
-                Slowdown.Apply(body, FreezeDroneAttackSlowdown);
             }
             if (body.bodyIndex == BodyCatalog.FindBodyIndex("EquipmentDroneBody") && body.inventory.currentEquipmentIndex == EquipmentIndex.None)
             {
