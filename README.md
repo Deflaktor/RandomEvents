@@ -56,7 +56,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | SurvivorSwap | Walk in another's shoes | Players swap survivors and items with each other until the event ends. Alone, you become a random survivor with 100 armor. | Events "MonsterTransform" and "InventoryRoulette" inactive and currently not a boss wave. |
 | TheAlpha | The pack has a leader | A random monster becomes a big alpha with ten times its health. While it lives, all other monsters are in a frenzy. |  |
 | TimeWarp | Time slows for your foes | Slows all monsters to about a third of their speed. |  |
-| UmbraAmbush | Umbras emerge from the shadows | Each player is hunted by a tough enemy survivor with items. |  |
+| UmbraAmbush | Umbras emerge from the shadows | Each player is hunted by a tough enemy survivor with items, which attacks slowly. |  |
 | UnitedWeStand | United we stand | Players close to each other share all their items. | At least two players are alive. |
 | VengefulSpirits | Spirits stand guard | All monsters get a Vengeful Spirit, but half as many spawn. | Hallowed Concepts is enabled. |
 | WeakEnemies | Horde of the many | Only weak enemies spawn. | Events "StrongEnemies", "Mitosis" and "LynxPups" inactive. |
