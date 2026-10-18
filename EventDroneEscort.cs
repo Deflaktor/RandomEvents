@@ -1,4 +1,5 @@
 ﻿using BepInEx.Configuration;
+using HG;
 using RoR2;
 using System.Collections.Generic;
 using System.Linq;
@@ -46,6 +47,7 @@ namespace RandomEvents
         public override void Hook()
         {
             On.EntityStates.Drone.DeathState.OnImpactServer += DeathState_OnImpactServer;
+            CharacterBody.onBodyStartGlobal += CharacterBody_onBodyStartGlobal;
             On.RoR2.HealthComponent.TakeDamage += HealthComponent_TakeDamage;
         }
 
@@ -60,11 +62,20 @@ namespace RandomEvents
             orig(self, damageInfo);
         }
 
+        // The body is marked too: a destroyed drone's master can be gone by the time its wreck hits the ground. Also the
+        // body of a drone that comes back, e.g. with its player's Dio's Best Friend.
+        private void CharacterBody_onBodyStartGlobal(CharacterBody body)
+        {
+            if (NetworkServer.active && body.master != null && body.master.GetComponent<EscortDrone>() != null)
+            {
+                body.gameObject.EnsureComponent<EscortDrone>();
+            }
+        }
+
         // an escort drone that is destroyed leaves no broken drone to repair
         private void DeathState_OnImpactServer(On.EntityStates.Drone.DeathState.orig_OnImpactServer orig, EntityStates.Drone.DeathState self, Vector3 contactPoint)
         {
-            var master = self.characterBody ? self.characterBody.master : null;
-            if (master != null && master.GetComponent<EscortDrone>() != null)
+            if (self.characterBody != null && self.characterBody.GetComponent<EscortDrone>() != null)
             {
                 return;
             }

@@ -1,4 +1,5 @@
 ﻿using BepInEx.Configuration;
+using HG;
 using RoR2;
 using RoR2.ExpansionManagement;
 using RoR2.Navigation;
@@ -132,6 +133,8 @@ namespace RandomEvents
                 return;
             }
             body.master.gameObject.AddComponent<HostileDrone>();
+            // a destroyed drone's master can be gone by the time its wreck hits the ground
+            body.gameObject.EnsureComponent<HostileDrone>();
             // an item without a name, which lowers the damage by 1% per stack
             var reduceDamage = Mathf.RoundToInt((1f - Mathf.Clamp01(DamageMultiplier.Value)) * 100f);
             if (reduceDamage > 0)
@@ -148,8 +151,7 @@ namespace RandomEvents
         // a hostile drone leaves no broken drone for the players to repair, also after the event
         private void DeathState_OnImpactServer(On.EntityStates.Drone.DeathState.orig_OnImpactServer orig, EntityStates.Drone.DeathState self, Vector3 contactPoint)
         {
-            var master = self.characterBody ? self.characterBody.master : null;
-            if (master != null && master.GetComponent<HostileDrone>() != null)
+            if (self.characterBody != null && self.characterBody.GetComponent<HostileDrone>() != null)
             {
                 return;
             }
