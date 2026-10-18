@@ -22,6 +22,9 @@ namespace RandomEvents
         private readonly BuffTracker immunities = new BuffTracker();
         private AsyncOperationHandle<GameObject> AfflictionEffect;
         private AsyncOperationHandle<GameObject> RedLightEffect;
+        // effects that tint everyone's screen
+        private AsyncOperationHandle<GameObject> RedLightFlash;
+        private AsyncOperationHandle<GameObject> GreenLightFlash;
         private readonly Dictionary<CharacterBody, Vector3> lastPositions = new Dictionary<CharacterBody, Vector3>();
         private readonly HashSet<CharacterBody> caughtThisPhase = new HashSet<CharacterBody>();
         private readonly Dictionary<CharacterBody, float> nextAfflictions = new Dictionary<CharacterBody, float>();
@@ -63,6 +66,10 @@ namespace RandomEvents
             AfflictionEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC1/PermanentDebuffOnHit/PermanentDebuffEffect.prefab");
             // the red burst of a monster leveling up
             RedLightEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/LevelUpEffectEnemy.prefab");
+            // the red flash of a teleporter's activation, with a rift's
+            RedLightFlash = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC4/survival/common/RiftActivation.prefab");
+            // the flash and chime of a Solus portal appearing
+            GreenLightFlash = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC3/SolusWebPortalSpawnEffect.prefab");
         }
         public override void Hook()
         {
@@ -190,6 +197,7 @@ namespace RandomEvents
                 }
             }
             ChatHelper.SendEventMessage("EVENT_RED_LIGHT");
+            Flash(RedLightFlash);
             foreach (var body in Helper.GetLivingPlayerBodies())
             {
                 var effectData = new EffectData
@@ -219,6 +227,21 @@ namespace RandomEvents
             immunities.RemoveAll();
             lastPositions.Clear();
             ChatHelper.SendEventMessage("EVENT_GREEN_LIGHT");
+            Flash(GreenLightFlash);
+        }
+
+        // on each player, so everyone sees and hears it
+        private static void Flash(AsyncOperationHandle<GameObject> effect)
+        {
+            var prefab = effect.WaitForCompletion();
+            if (prefab == null)
+            {
+                return;
+            }
+            foreach (var body in Helper.GetLivingPlayerBodies())
+            {
+                EffectManager.SpawnEffect(prefab, new EffectData { origin = body.corePosition }, transmit: true);
+            }
         }
 
         public override void Prepare()
