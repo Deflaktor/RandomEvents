@@ -37,7 +37,7 @@ namespace RandomEvents
                 return false;
             }
             var bodies = Helper.GetLivingPlayerBodies();
-            return bodies.Count >= 2 || (bodies.Count == 1 && GetSurvivorCandidates(bodies[0].master.bodyPrefab).Count > 0);
+            return bodies.Count >= 2 || (bodies.Count == 1 && GetSurvivorCandidates(bodies[0].master).Count > 0);
         }
         public override string GetEventConfigName()
         {
@@ -102,11 +102,14 @@ namespace RandomEvents
             }
         }
 
-        private static List<SurvivorDef> GetSurvivorCandidates(GameObject currentBodyPrefab)
+        // the survivors other than the current one that the player has unlocked
+        private static List<SurvivorDef> GetSurvivorCandidates(CharacterMaster master)
         {
+            var networkUser = master.playerCharacterMasterController != null ? master.playerCharacterMasterController.networkUser : null;
             return SurvivorCatalog.orderedSurvivorDefs.Where(survivorDef =>
             {
-                if (survivorDef == null || survivorDef.hidden || survivorDef.bodyPrefab == null || survivorDef.bodyPrefab == currentBodyPrefab)
+                if (survivorDef == null || survivorDef.hidden || survivorDef.bodyPrefab == null || survivorDef.bodyPrefab == master.bodyPrefab
+                    || (survivorDef.unlockableDef != null && networkUser != null && !networkUser.unlockables.Contains(survivorDef.unlockableDef)))
                 {
                     return false;
                 }
@@ -162,7 +165,7 @@ namespace RandomEvents
             else if (bodies.Count == 1)
             {
                 var master = bodies[0].master;
-                var candidates = GetSurvivorCandidates(master.bodyPrefab);
+                var candidates = GetSurvivorCandidates(master);
                 if (candidates.Count > 0)
                 {
                     var survivorDef = candidates[RoR2Application.rng.RangeInt(0, candidates.Count)];
