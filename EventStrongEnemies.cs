@@ -16,7 +16,8 @@ namespace RandomEvents
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
             return !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("WeakEnemies", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("Mitosis", StringComparison.InvariantCultureIgnoreCase));
+                || e.GetEventConfigName().Equals("Mitosis", StringComparison.InvariantCultureIgnoreCase)
+                || e.GetEventConfigName().Equals("LynxPups", StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
         {
@@ -32,7 +33,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Events \"WeakEnemies\" and \"Mitosis\" inactive.";
+            return "Events \"WeakEnemies\", \"Mitosis\" and \"LynxPups\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {

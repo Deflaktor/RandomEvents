@@ -26,7 +26,8 @@ namespace RandomEvents
             return GetDroneCandidates().Count > 0 && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("Mitosis", StringComparison.InvariantCultureIgnoreCase)
                 || e.GetEventConfigName().Equals("RitualHelmets", StringComparison.InvariantCultureIgnoreCase)
                 || e.GetEventConfigName().Equals("FallingEnemies", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("Bouncy", StringComparison.InvariantCultureIgnoreCase));
+                || e.GetEventConfigName().Equals("Bouncy", StringComparison.InvariantCultureIgnoreCase)
+                || e.GetEventConfigName().Equals("LynxPups", StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
         {
@@ -42,7 +43,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Events \"Mitosis\", \"RitualHelmets\", \"FallingEnemies\" and \"Bouncy\" inactive.";
+            return "Events \"Mitosis\", \"RitualHelmets\", \"FallingEnemies\", \"Bouncy\" and \"LynxPups\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {

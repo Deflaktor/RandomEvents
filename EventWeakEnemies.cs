@@ -24,7 +24,8 @@ namespace RandomEvents
                 }
             }
             return !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("StrongEnemies", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("Mitosis", StringComparison.InvariantCultureIgnoreCase));
+                || e.GetEventConfigName().Equals("Mitosis", StringComparison.InvariantCultureIgnoreCase)
+                || e.GetEventConfigName().Equals("LynxPups", StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
         {
@@ -40,7 +41,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Events \"StrongEnemies\" and \"Mitosis\" inactive.";
+            return "Events \"StrongEnemies\", \"Mitosis\" and \"LynxPups\" inactive.";
         }
 
         protected override void AddConfig(ConfigFile config)
