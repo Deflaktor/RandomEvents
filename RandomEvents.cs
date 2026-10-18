@@ -80,6 +80,7 @@ namespace RandomEvents
                 InitAndHookEvent(new EventLynxPups());
                 InitAndHookEvent(new EventMitosis());
                 InitAndHookEvent(new EventMonsterTransform());
+                InitAndHookEvent(new EventNeutroniumWeights());
                 InitAndHookEvent(new EventOssification());
                 InitAndHookEvent(new EventRandomArtifact());
                 InitAndHookEvent(new EventRandomTeams());

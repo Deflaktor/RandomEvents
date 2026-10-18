@@ -40,6 +40,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | LynxPups | The pups have grown | Half of the monsters that spawn are Lynx Pups, three times as big and with ten times the health. | Hallowed Concepts is enabled, not a Simulacrum boss wave, and events "DroneUprising", "Mitosis", "StrongEnemies" and "WeakEnemies" inactive. |
 | Mitosis | Divide and multiply | Only monsters with a weaker relative spawn, and they split into several of them when they die. | Not a Simulacrum boss wave, the stage's monsters include such a pair, and events "StrongEnemies", "WeakEnemies", "DroneUprising" and "LynxPups" inactive. |
 | MonsterTransform | Players embrace their monstrous forms | Players transform into monsters. | Events "SkillsOnly" and "SurvivorSwap" inactive and currently not a boss wave. |
+| NeutroniumWeights | A heavy burden | All monsters get a Neutronium Weight until the event ends. | Alloyed Collective is enabled. |
 | Ossification | Every kill shields both sides | All players get 5 Hexes of Ossification, so their kills give nearby monsters barrier, but also enough Topaz Brooches for each kill to fill their own barrier. | Hallowed Concepts is enabled. |
 | RandomArtifact |  | Turns on up to three random artifacts until the event ends. | There is at least one artifact which can be enabled and is not blacklisted. |
 | RandomTeams | Enemies turn against each other | Makes some enemies fight each other as well as the players. |  |
