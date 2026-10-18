@@ -22,6 +22,8 @@ namespace RandomEvents
     public class EventEquipmentOnly : AbstractEvent
     {
         private EquipmentDef commonEquipment;
+        // a Molotov's fire stays on the ground, useless against mostly flying monsters
+        private static bool molotovUseful = true;
         public override bool LoadCondition()
         {
             return true;
@@ -85,6 +87,14 @@ namespace RandomEvents
             }
         }
 
+        // whether flying monsters make up most of the spawn pool's weight
+        private static bool MostlyFlyingMonsters()
+        {
+            var choices = MonsterPool.GetChoices().Where(choice => choice.value != null && choice.value.spawnCard != null).ToList();
+            var flying = choices.Where(choice => choice.value.spawnCard.nodeGraphType == RoR2.Navigation.MapNodeGroup.GraphType.Air).Sum(choice => choice.weight);
+            return flying > choices.Sum(choice => choice.weight) / 2f;
+        }
+
         public override void Prepare()
         {
 
@@ -92,9 +102,10 @@ namespace RandomEvents
 
         public override void Start(List<AbstractEvent> activeOtherEvents)
         {
+            molotovUseful = !MostlyFlyingMonsters() && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("DroneUprising", StringComparison.InvariantCultureIgnoreCase));
             WeightedSelection<EquipmentDef> weightedSelection = new WeightedSelection<EquipmentDef>();
             weightedSelection.AddChoice(RoR2Content.Equipment.BFG, 3f);
-            weightedSelection.AddChoice(DLC1Content.Equipment.Molotov, 2f);
+            weightedSelection.AddChoice(DLC1Content.Equipment.Molotov, molotovUseful ? 2f : 0f);
             weightedSelection.AddChoice(RoR2Content.Equipment.CommandMissile, 1f);
             weightedSelection.AddChoice(RoR2Content.Equipment.Lightning, 1f);
             weightedSelection.AddChoice(RoR2Content.Equipment.Saw, 1f);
@@ -152,7 +163,7 @@ namespace RandomEvents
                     {
                         WeightedSelection<EquipmentDef> weightedSelection = new WeightedSelection<EquipmentDef>();
                         weightedSelection.AddChoice(RoR2Content.Equipment.BFG, 1.5f);
-                        weightedSelection.AddChoice(DLC1Content.Equipment.Molotov, 1f);
+                        weightedSelection.AddChoice(DLC1Content.Equipment.Molotov, molotovUseful ? 1f : 0f);
                         weightedSelection.AddChoice(RoR2Content.Equipment.CommandMissile, 1f);
                         weightedSelection.AddChoice(RoR2Content.Equipment.Lightning, 1f);
                         weightedSelection.AddChoice(RoR2Content.Equipment.Saw, 1f);
