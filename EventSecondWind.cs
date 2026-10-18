@@ -10,7 +10,7 @@ namespace RandomEvents
 {
     public class EventSecondWind : AbstractEvent
     {
-        private const float FragileHealthFraction = 0.1f;
+        private const float FragileHealthFraction = 0.01f;
         private const float ReviveDelay = 2f;
         // the players alive at the start, who are fragile until they die or the event ends; also their new bodies, e.g. after Dio's Best Friend
         private readonly HashSet<CharacterMaster> fragile = new HashSet<CharacterMaster>();
@@ -35,7 +35,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Revives dead players. Everyone else drops to 10% health, but anyone who dies is revived once.";
+            return "Revives dead players. Everyone else drops to 1% health, but anyone who dies is revived once.";
         }
         public override string GetConditionDescription()
         {
