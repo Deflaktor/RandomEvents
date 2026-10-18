@@ -51,6 +51,19 @@ namespace RandomEvents
         {
             On.RoR2.CharacterMaster.OnBodyDeath += CharacterMaster_OnBodyDeath;
             CharacterBody.onBodyStartGlobal += CharacterBody_onBodyStartGlobal;
+            On.RoR2.Inventory.ItemTransformation.TryTransform += ItemTransformation_TryTransform;
+        }
+
+        // the Delicate Watch of fragile players doesn't break, since any hit takes them to low health
+        private bool ItemTransformation_TryTransform(On.RoR2.Inventory.ItemTransformation.orig_TryTransform orig, ref Inventory.ItemTransformation self, Inventory inventory, out Inventory.ItemTransformation.TryTransformResult result)
+        {
+            if (NetworkServer.active && IsActive() && self.originalItemIndex == DLC1Content.Items.FragileDamageBonus.itemIndex
+                && inventory != null && inventory.TryGetComponent(out CharacterMaster master) && fragile.Contains(master))
+            {
+                result = default;
+                return false;
+            }
+            return orig(ref self, inventory, out result);
         }
 
         private void CharacterBody_onBodyStartGlobal(CharacterBody body)
