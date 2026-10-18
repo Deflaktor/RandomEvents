@@ -20,6 +20,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | CursedSpoils | Spoils come at a price | Every kill gives each player a temporary item, but taking damage from monsters brings hexes that disable items. | Hallowed Concepts is enabled. |
 | DroneEscort | Backup has arrived | Gives each player a random drone until the event ends. |  |
 | DroneUprising | The drones have turned | Hostile drones spawn instead of monsters. They deal half their normal damage and leave no wreck. | Events "Mitosis", "RitualHelmets" and "FallingEnemies" inactive. |
+| EliteSurge | Every foe is elite | Every monster gains random elite types, usually one, sometimes two or three, with stronger ones rarer and without an elite's extra health and damage. A quarter fewer monsters spawn, and every player gets a Wake of Vultures. |  |
 | EquipmentOnly | Equipment-exclusive combat | Disables all skills, but gives all players a random equipment with a short cooldown. | Events "SkillsOnly", "FuelArray" inactive. Artifact of Enigma inactive. |
 | ExplodingCorpses | Exploding corpses | All enemies explode upon death. | Players have sufficient means to do ranged damage. |
 | FallingEnemies | Enemies fall down from the heavens | Enemies fall from the sky. Only walking enemies spawn. | Event "DroneUprising" inactive. |

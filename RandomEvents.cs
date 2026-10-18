@@ -60,6 +60,7 @@ namespace RandomEvents
                 InitAndHookEvent(new EventCursedSpoils());
                 InitAndHookEvent(new EventDroneEscort());
                 InitAndHookEvent(new EventDroneUprising());
+                InitAndHookEvent(new EventEliteSurge());
                 InitAndHookEvent(new EventEquipmentOnly());
                 InitAndHookEvent(new EventExplodingCorpses());
                 InitAndHookEvent(new EventFallingEnemies());
