@@ -101,6 +101,11 @@ namespace RandomEvents
         public override void Start(List<AbstractEvent> activeOtherEvents)
         {
             grown.Clear();
+            // the Artifact of Kin, e.g. on its Simulacrum wave, keeps to one kind of monster
+            if (RunArtifactManager.instance != null && RunArtifactManager.instance.IsArtifactEnabled(RoR2Content.Artifacts.SingleMonsterType))
+            {
+                return;
+            }
             var choices = MonsterPool.GetChoices();
             var share = Mathf.Clamp(PupShare.Value, 0f, 0.95f);
             var otherWeight = choices.Sum(choice => choice.weight);
