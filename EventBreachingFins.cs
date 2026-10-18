@@ -9,6 +9,7 @@ namespace RandomEvents
     public class EventBreachingFins : AbstractEvent
     {
         private ConfigEntry<float> MonsterGravity;
+        private ConfigEntry<float> GroundedWeight;
         // the monsters' own gravity, to put back when the event ends
         private readonly Dictionary<CharacterMotor, float> gravityScales = new Dictionary<CharacterMotor, float>();
 
@@ -32,7 +33,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "All players get a Breaching Fin without a cooldown until the event ends, and monsters fall three times as fast.";
+            return "All players get a Breaching Fin without a cooldown until the event ends, and monsters fall three times as fast. More walking monsters spawn.";
         }
         public override string GetConditionDescription()
         {
@@ -41,6 +42,7 @@ namespace RandomEvents
         protected override void AddConfig(ConfigFile config)
         {
             MonsterGravity = config.Bind(GetEventConfigName(), "Monster Gravity", 3f, "How fast monsters fall during the event, relative to normal, so launched ones come back down quickly.");
+            GroundedWeight = config.Bind(GetEventConfigName(), "Grounded Monster Weight", 2f, "How much more often monsters that walk spawn during the event, since the fins launch them.");
         }
         public override void Preload()
         {
@@ -96,6 +98,8 @@ namespace RandomEvents
         public override void Start(List<AbstractEvent> activeOtherEvents)
         {
             gravityScales.Clear();
+            MonsterPool.Reweight(this, choice => choice.value != null && choice.value.spawnCard != null
+                && choice.value.spawnCard.nodeGraphType == RoR2.Navigation.MapNodeGroup.GraphType.Ground ? Mathf.Max(0f, GroundedWeight.Value) : 1f);
             foreach (var body in Helper.GetLivingPlayerBodies())
             {
                 GiveFin(body);
@@ -108,6 +112,7 @@ namespace RandomEvents
 
         public override void Stop()
         {
+            MonsterPool.Restore(this);
             EventLoot.Clear(this);
             foreach (var (motor, gravityScale) in gravityScales)
             {
