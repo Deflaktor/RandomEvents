@@ -28,6 +28,8 @@ namespace RandomEvents
             }
         }
         private int addedScale;
+        public enum AlphaDrop { None, White, Green, Red }
+        private ConfigEntry<AlphaDrop> Drop;
         private GameObject squad;
         private bool alphaFallen;
         private float updateTimer;
@@ -50,7 +52,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "A random monster becomes a big alpha with ten times its health. While it lives, all other monsters are in a frenzy.";
+            return "A random monster becomes a big alpha with ten times its health. While it lives, all other monsters are in a frenzy. It drops an item when killed.";
         }
         public override string GetConditionDescription()
         {
@@ -58,6 +60,7 @@ namespace RandomEvents
         }
         protected override void AddConfig(ConfigFile config)
         {
+            Drop = config.Bind(GetEventConfigName(), "Alpha Drop", AlphaDrop.White, "The item of this tier the alpha drops when killed, which players keep. None for no item.");
         }
         public override void Preload()
         {
@@ -66,6 +69,29 @@ namespace RandomEvents
         public override void Hook()
         {
             RoR2Application.onFixedUpdate += RoR2Application_onFixedUpdate;
+            GlobalEventManager.onCharacterDeathServer += GlobalEventManager_onCharacterDeathServer;
+        }
+
+        // a killed alpha drops a normal item, not one of the event's
+        private void GlobalEventManager_onCharacterDeathServer(DamageReport damageReport)
+        {
+            if (!NetworkServer.active || !IsActive() || alpha == null || damageReport.victimMaster != alpha || damageReport.victimBody == null || Run.instance == null)
+            {
+                return;
+            }
+            List<PickupIndex> dropList;
+            switch (Drop.Value)
+            {
+                case AlphaDrop.White: dropList = Run.instance.availableTier1DropList; break;
+                case AlphaDrop.Green: dropList = Run.instance.availableTier2DropList; break;
+                case AlphaDrop.Red: dropList = Run.instance.availableTier3DropList; break;
+                default: return;
+            }
+            if (dropList != null && dropList.Count > 0)
+            {
+                var pickupIndex = dropList[RoR2Application.rng.RangeInt(0, dropList.Count)];
+                PickupDropletController.CreatePickupDroplet(new UniquePickup(pickupIndex), damageReport.victimBody.corePosition, Vector3.up * 20f, false);
+            }
         }
 
         private void RoR2Application_onFixedUpdate()
