@@ -1,5 +1,6 @@
 ﻿using BepInEx.Configuration;
 using RoR2;
+using RoR2.ExpansionManagement;
 using RoR2.Navigation;
 using System;
 using System.Collections.Generic;
@@ -12,8 +13,16 @@ namespace RandomEvents
     public class EventDroneUprising : AbstractEvent
     {
         private ConfigEntry<float> DamageReduction;
-        // a spawn card for each drone, made once
-        private readonly Dictionary<DroneDef, CharacterSpawnCard> spawnCards = new Dictionary<DroneDef, CharacterSpawnCard>();
+        // the drones and turrets that items, equipment and survivors bring, which the drone catalog lacks
+        private static readonly string[] SummonedBodies =
+        {
+            "BackupDroneBody", "DroneCommanderBody", "DTGunnerDroneBody", "DTHaulerDroneBody", "DTHealingDroneBody", "EngiTurretBody", "EngiWalkerTurretBody"
+        };
+        // attacks less often, since its freezing is so strong
+        private const string FreezeDroneBody = "CopycatDroneBody";
+        private const float FreezeDroneAttackSlowdown = 4f;
+        // a spawn card for each drone's master, made once
+        private readonly Dictionary<GameObject, CharacterSpawnCard> spawnCards = new Dictionary<GameObject, CharacterSpawnCard>();
         private readonly HashSet<BodyIndex> droneBodies = new HashSet<BodyIndex>();
 
         public override bool LoadCondition()
@@ -39,7 +48,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Hostile drones spawn instead of monsters. They deal half their normal damage and leave no wreck.";
+            return "Hostile drones spawn instead of monsters, also those of items and survivors. They deal half their normal damage and leave no wreck.";
         }
         public override string GetConditionDescription()
         {
@@ -58,38 +67,56 @@ namespace RandomEvents
             On.EntityStates.Drone.DeathState.OnImpactServer += DeathState_OnImpactServer;
         }
 
-        // the drones that can be found on stages, without the Equipment Drone, which would have no equipment
-        private static List<DroneDef> GetDroneCandidates()
+        // All drones of the run's expansions with their cost: those of the drone catalog, also those not found on
+        // stages, and those that items and survivors bring. The Equipment Drone gets one of EquipmentOnly's equipment.
+        private static List<(GameObject masterPrefab, int cost)> GetDroneCandidates()
         {
-            return DroneCatalog.allDroneDefs
-                .Where(droneDef => droneDef != null && droneDef != RoR2Content.DroneDefs.EquipmentDrone && droneDef.droneBrokenSpawnCard != null
-                    && droneDef.masterPrefab != null && droneDef.CheckRequiredExpansionEnabled())
+            var candidates = DroneCatalog.allDroneDefs
+                .Where(droneDef => droneDef != null && droneDef.masterPrefab != null && droneDef.CheckRequiredExpansionEnabled())
+                // about the cost of monsters of similar strength
+                .Select(droneDef => (droneDef.masterPrefab, droneDef.tier == ItemTier.Tier3 ? 120 : droneDef.tier == ItemTier.Tier2 ? 40 : 15))
                 .ToList();
+            foreach (var bodyName in SummonedBodies)
+            {
+                var bodyIndex = BodyCatalog.FindBodyIndex(bodyName);
+                var masterIndex = bodyIndex != BodyIndex.None ? MasterCatalog.FindAiMasterIndexForBody(bodyIndex) : MasterCatalog.MasterIndex.none;
+                var masterPrefab = masterIndex != MasterCatalog.MasterIndex.none ? MasterCatalog.GetMasterPrefab(masterIndex) : null;
+                if (masterPrefab != null && IsExpansionEnabled(masterPrefab) && IsExpansionEnabled(BodyCatalog.GetBodyPrefab(bodyIndex)))
+                {
+                    candidates.Add((masterPrefab, 40));
+                }
+            }
+            return candidates.GroupBy(candidate => candidate.masterPrefab).Select(group => group.First()).ToList();
         }
 
-        private CharacterSpawnCard GetSpawnCard(DroneDef droneDef)
+        private static bool IsExpansionEnabled(GameObject prefab)
         {
-            if (spawnCards.TryGetValue(droneDef, out var spawnCard))
+            var requirement = prefab != null ? prefab.GetComponent<ExpansionRequirementComponent>() : null;
+            return requirement == null || requirement.requiredExpansion == null || (Run.instance != null && Run.instance.IsExpansionEnabled(requirement.requiredExpansion));
+        }
+
+        private CharacterSpawnCard GetSpawnCard(GameObject masterPrefab, int cost)
+        {
+            if (spawnCards.TryGetValue(masterPrefab, out var spawnCard))
             {
                 return spawnCard;
             }
-            var master = droneDef.masterPrefab.GetComponent<CharacterMaster>();
+            var master = masterPrefab.GetComponent<CharacterMaster>();
             var body = master != null && master.bodyPrefab != null ? master.bodyPrefab.GetComponent<CharacterBody>() : null;
             if (body == null)
             {
                 return null;
             }
             spawnCard = ScriptableObject.CreateInstance<CharacterSpawnCard>();
-            spawnCard.name = "cscHostile" + droneDef.name;
-            spawnCard.prefab = droneDef.masterPrefab;
+            spawnCard.name = "cscHostile" + masterPrefab.name;
+            spawnCard.prefab = masterPrefab;
             spawnCard.sendOverNetwork = true;
             spawnCard.hullSize = body.hullClassification;
             // turrets stand on the ground, the other drones fly
             spawnCard.nodeGraphType = (body.bodyFlags & CharacterBody.BodyFlags.Turret) != 0 || body.GetComponent<CharacterMotor>() != null ? MapNodeGroup.GraphType.Ground : MapNodeGroup.GraphType.Air;
             spawnCard.forbiddenFlags = NodeFlags.NoCharacterSpawn;
-            // about the cost of monsters of similar strength
-            spawnCard.directorCreditCost = droneDef.tier == ItemTier.Tier3 ? 120 : droneDef.tier == ItemTier.Tier2 ? 40 : 15;
-            spawnCards[droneDef] = spawnCard;
+            spawnCard.directorCreditCost = cost;
+            spawnCards[masterPrefab] = spawnCard;
             droneBodies.Add(body.bodyIndex);
             return spawnCard;
         }
@@ -108,6 +135,15 @@ namespace RandomEvents
             if (reduceDamage > 0)
             {
                 body.inventory.GiveItemPermanent(DLC4Content.Items.ReduceDamage, reduceDamage);
+            }
+            if (body.bodyIndex == BodyCatalog.FindBodyIndex(FreezeDroneBody))
+            {
+                SlowAttacks.Apply(body, FreezeDroneAttackSlowdown);
+            }
+            if (body.bodyIndex == BodyCatalog.FindBodyIndex("EquipmentDroneBody") && body.inventory.currentEquipmentIndex == EquipmentIndex.None)
+            {
+                var equipment = EventEquipmentOnly.EventEquipment;
+                body.inventory.SetEquipmentIndex(equipment[RoR2Application.rng.RangeInt(0, equipment.Length)].equipmentIndex, body.inventory.activeEquipmentLocation);
             }
         }
 
@@ -129,9 +165,9 @@ namespace RandomEvents
         public override void Start(List<AbstractEvent> activeOtherEvents)
         {
             var selection = new WeightedSelection<DirectorCard>();
-            foreach (var droneDef in GetDroneCandidates())
+            foreach (var (masterPrefab, cost) in GetDroneCandidates())
             {
-                var spawnCard = GetSpawnCard(droneDef);
+                var spawnCard = GetSpawnCard(masterPrefab, cost);
                 if (spawnCard != null)
                 {
                     selection.AddChoice(new DirectorCard

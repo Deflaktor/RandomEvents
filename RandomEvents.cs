@@ -51,6 +51,7 @@ namespace RandomEvents
                 TemporaryEquipment.Hook();
                 HereticTransformation.Hook();
                 EventLoot.Hook();
+                SlowAttacks.Hook();
 
                 ModConfig.Init();
                 InitAndHookEvent(new EventBouncy());
