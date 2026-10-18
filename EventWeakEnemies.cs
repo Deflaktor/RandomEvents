@@ -9,6 +9,10 @@ namespace RandomEvents
 {
     public class EventWeakEnemies : AbstractEvent
     {
+        // the Simulacrum wave the event changed, and its elite bias before
+        private InfiniteTowerWaveController changedWave;
+        private float originalEliteBias;
+
         public override bool LoadCondition()
         {
             return true;
@@ -66,10 +70,13 @@ namespace RandomEvents
         public override void Start(List<AbstractEvent> activeOtherEvents)
         {
             // ModCompatibilityServerSideTweaks.SetOverridePowerBias(0f);
-            if (Run.instance is InfiniteTowerRun infiniteTowerRun)
+            changedWave = null;
+            if (Run.instance is InfiniteTowerRun infiniteTowerRun && infiniteTowerRun.waveController != null && infiniteTowerRun.waveController.combatDirector != null)
             {
-                infiniteTowerRun.waveController.combatDirector.eliteBias = 0f;
-                infiniteTowerRun.waveController.combatDirector.monsterCredit = 0f;
+                changedWave = infiniteTowerRun.waveController;
+                originalEliteBias = changedWave.combatDirector.eliteBias;
+                changedWave.combatDirector.eliteBias = 0f;
+                changedWave.combatDirector.monsterCredit = 0f;
             }
             var costs = MonsterPool.GetChoices()
                 .Where(choice => choice.weight > 0 && choice.value != null)
@@ -91,6 +98,12 @@ namespace RandomEvents
         {
             // ModCompatibilityServerSideTweaks.ResetOverridePowerBias();
             MonsterPool.Restore(this);
+            // the wave keeps going after the event, so it goes back to normal; a later wave is unchanged anyway
+            if (changedWave != null && changedWave.combatDirector != null)
+            {
+                changedWave.combatDirector.eliteBias = originalEliteBias;
+            }
+            changedWave = null;
         }
     }
 }
