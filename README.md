@@ -19,7 +19,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | CasinoItem | Ancient relic cycling through its many powers | Gives all players 10 of a random item, which changes every 10 seconds. |  |
 | ChestMimics | Not every chest is what it seems | Chests bought with gold may turn into a monster instead of giving their item. | Not in Simulacrum, and the stage has an unopened chest bought with gold. |
 | CursedSpoils | Spoils come at a price | Every kill gives each player a temporary item, but taking damage from monsters brings hexes that disable items. | Hallowed Concepts is enabled. |
-| DroneEscort | Backup has arrived | Gives each player a random drone until the event ends. |  |
+| DroneEscort | Backup has arrived | Gives each player a random drone with their items until the event ends. It deals half damage. |  |
 | DroneUprising | The drones have turned | Hostile drones spawn instead of monsters. They deal half their normal damage and leave no wreck. | Not a Simulacrum boss wave, and events "Mitosis", "RitualHelmets", "FallingEnemies", "Bouncy" and "LynxPups" inactive. |
 | Egocentrism | All eyes on you | All monsters get an Egocentrism, but players take 75% less damage. | Survivors of the Void is enabled. |
 | EliteSurge | Every foe is elite | Every monster gains random elite types, usually one, sometimes two or three, with stronger ones rarer and without an elite's extra health and damage. A quarter fewer monsters spawn, and every player gets a Wake of Vultures. |  |
