@@ -63,6 +63,18 @@ namespace RandomEvents
             CharacterBody.onBodyStartGlobal += CharacterBody_onBodyStartGlobal;
             On.RoR2.CharacterMaster.OnBodyDeath += CharacterMaster_OnBodyDeath;
             On.RoR2.CharacterMaster.RespawnSeekerRevive += CharacterMaster_RespawnSeekerRevive;
+            On.RoR2.CharacterMaster.IsDeadAndOutOfLivesServer += CharacterMaster_IsDeadAndOutOfLivesServer;
+        }
+
+        // An infected monster that hasn't come back yet still has a life. The death reaches e.g. a Simulacrum wave before
+        // the revive is scheduled, which would otherwise no longer count it.
+        private bool CharacterMaster_IsDeadAndOutOfLivesServer(On.RoR2.CharacterMaster.orig_IsDeadAndOutOfLivesServer orig, CharacterMaster self)
+        {
+            if (self.seekerSelfRevive && !self.cannotRevive && self.TryGetComponent(out ZombieComponent zombieComponent) && !zombieComponent.revived)
+            {
+                return false;
+            }
+            return orig(self);
         }
 
         private void CharacterBody_onBodyStartGlobal(CharacterBody body)
