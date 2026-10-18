@@ -94,6 +94,7 @@ namespace RandomEvents
                 InitAndHookEvent(new EventTheAlpha());
                 InitAndHookEvent(new EventTimeWarp());
                 InitAndHookEvent(new EventUmbraAmbush());
+                InitAndHookEvent(new EventUnitedWeStand());
                 InitAndHookEvent(new EventVengefulSpirits());
                 InitAndHookEvent(new EventWeakEnemies());
                 InitAndHookEvent(new EventZombies());

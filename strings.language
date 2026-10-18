@@ -99,7 +99,8 @@
         "ANNOUNCE_EVENT_DRONE_UPRISING": "The drones have turned",
         "ANNOUNCE_EVENT_ELITE_SURGE": "Every foe is elite",
         "ANNOUNCE_EVENT_BOUNCY": "Everything bounces",
-        "ANNOUNCE_EVENT_LYNX_PUPS": "The pups have grown"
+        "ANNOUNCE_EVENT_LYNX_PUPS": "The pups have grown",
+        "ANNOUNCE_EVENT_UNITED_WE_STAND": "United we stand"
         
     }
 }

@@ -16,7 +16,7 @@ namespace RandomEvents
 
         private static HashSet<ItemIndex> kept;
 
-        private static bool IsSwappable(ItemIndex itemIndex)
+        public static bool IsSwappable(ItemIndex itemIndex)
         {
             var itemDef = ItemCatalog.GetItemDef(itemIndex);
             return itemDef != null && !itemDef.hidden && !GetKeptItems().Contains(itemIndex);
@@ -72,7 +72,7 @@ namespace RandomEvents
         }
 
         // the swappable permanent items; temporary items, e.g. of other events, stay where they are
-        private static int[] GetItems(Inventory inventory)
+        public static int[] GetItems(Inventory inventory)
         {
             var stacks = new int[ItemCatalog.itemCount];
             inventory.WriteAllPermanentItemStacks(stacks);
