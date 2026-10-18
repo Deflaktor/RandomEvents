@@ -23,11 +23,17 @@ namespace RandomEvents
             On.RoR2.PickupPickerController.CreatePickup_UniquePickup += PickupPickerController_CreatePickup;
             On.RoR2.GenericPickupController.CreatePickup += GenericPickupController_CreatePickup;
             On.RoR2.GenericPickupController.AttemptGrant += GenericPickupController_AttemptGrant;
+            // ShareSuite would give the event's items to everyone, for good
+            if (ModCompatibilityShareSuite.enabled)
+            {
+                ModCompatibilityShareSuite.AddPickupEventHandler((pickup, picker) => GetMarker(pickup) == null);
+            }
         }
 
         public static void Drop(AbstractEvent owner, PickupIndex pickupIndex, Vector3 position, Vector3 velocity, bool monstersCanPickUp = false)
         {
-            PickupDropletController.CreatePickupDroplet(new UniquePickup { pickupIndex = pickupIndex }, position, velocity, false);
+            // it looks like a temporary item, which it is
+            PickupDropletController.CreatePickupDroplet(new UniquePickup { pickupIndex = pickupIndex, decayValue = 1f }, position, velocity, false);
             // the droplet just created is the last one tracked
             var droplets = InstanceTracker.GetInstancesList<PickupDropletController>();
             if (droplets.Count > 0)
@@ -155,6 +161,7 @@ namespace RandomEvents
                 }
                 return;
             }
+            var pickupState = self.pickup;
             var before = body.inventory.GetItemCountPermanent(itemIndex);
             orig(self, body);
             var granted = body.inventory.GetItemCountPermanent(itemIndex) - before;
@@ -162,6 +169,12 @@ namespace RandomEvents
             {
                 body.inventory.RemoveItemPermanent(itemIndex, granted);
                 GetInventory(owner, body).GiveTemporaryItem(itemIndex, granted);
+            }
+            // a pickup that looks temporary gives the game's temporary item, which would decay and outlast the event
+            else if (pickupState.isTempItem && self.consumed)
+            {
+                body.inventory.RemoveItemTemp(itemIndex, pickupState.decayValue);
+                GetInventory(owner, body).GiveTemporaryItem(itemIndex);
             }
         }
 

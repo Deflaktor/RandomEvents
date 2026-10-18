@@ -39,6 +39,10 @@
       <HintPath>..\libs\InLobbyConfig.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="ShareSuite">
+      <HintPath>..\libs\ShareSuite.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>
