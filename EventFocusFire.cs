@@ -9,7 +9,7 @@ namespace RandomEvents
     public class EventFocusFire : AbstractEvent
     {
         private ConfigEntry<float> HealthMultiplier;
-        private ConfigEntry<float> DamageGrowth;
+        private ConfigEntry<float> DamageTakenMultiplierPerStack;
         private ConfigEntry<float> DamagePerStack;
         // damage toward each monster's next stack, as a share of its health
         private readonly Dictionary<CharacterBody, float> progress = new Dictionary<CharacterBody, float>();
@@ -55,7 +55,7 @@ namespace RandomEvents
             DecayDelay = config.Bind(GetEventConfigName(), "Decay Delay", 3f, "Seconds without damage from players after which a monster starts losing stacks.");
             DecayInterval = config.Bind(GetEventConfigName(), "Decay Interval", 1f, "Seconds between two stacks a monster loses.");
             DamagePerStack = config.Bind(GetEventConfigName(), "Damage Per Stack", 0.01f, "Damage that gives a monster a stack, as a share of its health, before the stacks multiply it.");
-            DamageGrowth = config.Bind(GetEventConfigName(), "Damage Growth", 0.1f, "How much more damage each stack makes a monster take, compounding: 0.1 means 1.1 to the power of the stacks.");
+            DamageTakenMultiplierPerStack = config.Bind(GetEventConfigName(), "Damage Taken Multiplier Per Stack", 1.1f, "The damage a monster takes is multiplied by this for each stack, compounding: 1.1 means 1.1 to the power of the stacks.");
         }
         public override void Preload()
         {
@@ -127,7 +127,7 @@ namespace RandomEvents
             }
             // the damage before the stacks multiply it, so that they don't feed themselves
             var baseDamage = damageInfo.damage;
-            damageInfo.damage *= Mathf.Pow(1f + Mathf.Max(0f, DamageGrowth.Value), count);
+            damageInfo.damage *= Mathf.Pow(Mathf.Max(1f, DamageTakenMultiplierPerStack.Value), count);
             orig(self, damageInfo);
             // Stacks by damage dealt rather than by hits, so survivors that hit rarely but hard aren't at a disadvantage.
             // From players or their allies, also over time.

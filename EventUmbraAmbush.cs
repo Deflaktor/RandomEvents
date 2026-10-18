@@ -44,9 +44,9 @@ namespace RandomEvents
         private static readonly string[] FasterAttackItems = { "Syringe", "AttackSpeedOnCrit", "AlienHead" };
         private ConfigEntry<float> HealthMultiplier;
         private ConfigEntry<float> ItemMultiplier;
-        private ConfigEntry<float> DamageReduction;
-        private ConfigEntry<float> AttackSlowdown;
-        private ConfigEntry<float> MoveSlowdown;
+        private ConfigEntry<float> DamageMultiplier;
+        private ConfigEntry<float> AttackSpeedMultiplier;
+        private ConfigEntry<float> MoveSpeedMultiplier;
         private readonly Dictionary<string, ConfigEntry<string>> survivorItems = new Dictionary<string, ConfigEntry<string>>();
         private readonly List<CharacterMaster> hunters = new List<CharacterMaster>();
 
@@ -78,9 +78,9 @@ namespace RandomEvents
         protected override void AddConfig(ConfigFile config)
         {
             HealthMultiplier = config.Bind(GetEventConfigName(), "Health Multiplier", 10f, "The hunters' health, relative to their survivor's normal health.");
-            DamageReduction = config.Bind(GetEventConfigName(), "Damage Reduction", 0.75f, "How much less damage the hunters deal than their survivor normally does.");
-            AttackSlowdown = config.Bind(GetEventConfigName(), "Attack Slowdown", 4f, "How many times less often the hunters attack: their attack speed is divided and their cooldowns multiplied by it.");
-            MoveSlowdown = config.Bind(GetEventConfigName(), "Move Slowdown", 2f, "How many times slower the hunters move.");
+            DamageMultiplier = config.Bind(GetEventConfigName(), "Damage Multiplier", 0.25f, "The damage the hunters deal, relative to their survivor's normal damage.");
+            AttackSpeedMultiplier = config.Bind(GetEventConfigName(), "Attack Speed Multiplier", 0.25f, "How often the hunters attack, relative to normal: it multiplies their attack speed and divides their cooldowns.");
+            MoveSpeedMultiplier = config.Bind(GetEventConfigName(), "Move Speed Multiplier", 0.5f, "The hunters' movement speed, relative to normal.");
             ItemMultiplier = config.Bind(GetEventConfigName(), "Item Multiplier", 0.5f, "The number of items per tier in a hunter's kit, relative to the player it hunts.");
             foreach (var (survivor, items) in DefaultSurvivorItems)
             {
@@ -216,7 +216,7 @@ namespace RandomEvents
                     hunter.inventory.GiveItemPermanent(RoR2Content.Items.BoostHp, boostHp);
                 }
                 // an item without a name, which lowers the damage by 1% per stack
-                var reduceDamage = Mathf.RoundToInt(Mathf.Clamp01(DamageReduction.Value) * 100f);
+                var reduceDamage = Mathf.RoundToInt((1f - Mathf.Clamp01(DamageMultiplier.Value)) * 100f);
                 if (reduceDamage > 0)
                 {
                     hunter.inventory.GiveItemPermanent(DLC4Content.Items.ReduceDamage, reduceDamage);
@@ -225,7 +225,7 @@ namespace RandomEvents
                 var hunterBody = hunter.GetBody();
                 if (hunterBody != null)
                 {
-                    Slowdown.Apply(hunterBody, AttackSlowdown.Value, MoveSlowdown.Value);
+                    Slowdown.Apply(hunterBody, AttackSpeedMultiplier.Value, MoveSpeedMultiplier.Value);
                 }
                 JoinMonsters(hunter);
                 foreach (var ai in hunter.AiComponents)

@@ -8,7 +8,7 @@ namespace RandomEvents
 {
     public class EventEgocentrism : AbstractEvent
     {
-        private ConfigEntry<float> DamageReduction;
+        private ConfigEntry<float> DamageTakenMultiplier;
 
         public override bool LoadCondition()
         {
@@ -41,7 +41,7 @@ namespace RandomEvents
         }
         protected override void AddConfig(ConfigFile config)
         {
-            DamageReduction = config.Bind(GetEventConfigName(), "Damage Reduction", 0.75f, "How much less damage players take during the event.");
+            DamageTakenMultiplier = config.Bind(GetEventConfigName(), "Damage Taken Multiplier", 0.25f, "The damage players take during the event, relative to normal.");
         }
         public override void Preload()
         {
@@ -75,7 +75,7 @@ namespace RandomEvents
         {
             if (NetworkServer.active && IsActive() && damageInfo != null && self.body != null && self.body.isPlayerControlled)
             {
-                damageInfo.damage *= Mathf.Clamp01(1f - DamageReduction.Value);
+                damageInfo.damage *= Mathf.Max(0f, DamageTakenMultiplier.Value);
             }
             orig(self, damageInfo);
         }

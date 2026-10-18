@@ -12,7 +12,7 @@ namespace RandomEvents
 {
     public class EventDroneUprising : AbstractEvent
     {
-        private ConfigEntry<float> DamageReduction;
+        private ConfigEntry<float> DamageMultiplier;
         // the drones and turrets that items, equipment and survivors bring, which the drone catalog lacks
         private static readonly string[] SummonedBodies =
         {
@@ -55,7 +55,7 @@ namespace RandomEvents
         }
         protected override void AddConfig(ConfigFile config)
         {
-            DamageReduction = config.Bind(GetEventConfigName(), "Damage Reduction", 0.5f, "How much less damage the hostile drones deal than they normally do.");
+            DamageMultiplier = config.Bind(GetEventConfigName(), "Damage Multiplier", 0.5f, "The damage the hostile drones deal, relative to normal.");
         }
         public override void Preload()
         {
@@ -133,7 +133,7 @@ namespace RandomEvents
             }
             body.master.gameObject.AddComponent<HostileDrone>();
             // an item without a name, which lowers the damage by 1% per stack
-            var reduceDamage = Mathf.RoundToInt(Mathf.Clamp01(DamageReduction.Value) * 100f);
+            var reduceDamage = Mathf.RoundToInt((1f - Mathf.Clamp01(DamageMultiplier.Value)) * 100f);
             if (reduceDamage > 0)
             {
                 body.inventory.GiveItemPermanent(DLC4Content.Items.ReduceDamage, reduceDamage);

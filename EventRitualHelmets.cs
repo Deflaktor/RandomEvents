@@ -10,7 +10,7 @@ namespace RandomEvents
 {
     public class EventRitualHelmets : AbstractEvent
     {
-        private ConfigEntry<float> DamageReduction;
+        private ConfigEntry<float> DamageTakenMultiplier;
         private ConfigEntry<bool> ForceSprint;
         private const float ChargeInterval = 0.25f;
         private readonly HashSet<CharacterBody> helmeted = new HashSet<CharacterBody>();
@@ -72,7 +72,7 @@ namespace RandomEvents
         }
         protected override void AddConfig(ConfigFile config)
         {
-            DamageReduction = config.Bind(GetEventConfigName(), "Damage Reduction", 0.66f, "How much less damage players take during the event.");
+            DamageTakenMultiplier = config.Bind(GetEventConfigName(), "Damage Taken Multiplier", 0.34f, "The damage players take during the event, relative to normal.");
             ForceSprint = config.Bind(GetEventConfigName(), "Force Sprint", true, "Makes monsters with the helmet sprint wherever they can. Its skull only hits while sprinting, which most monsters never do on their own.");
         }
         public override void Preload()
@@ -132,7 +132,7 @@ namespace RandomEvents
         {
             if (NetworkServer.active && IsActive() && damageInfo != null && self.body != null && self.body.isPlayerControlled)
             {
-                damageInfo.damage *= Mathf.Clamp01(1f - DamageReduction.Value);
+                damageInfo.damage *= Mathf.Max(0f, DamageTakenMultiplier.Value);
             }
             orig(self, damageInfo);
         }

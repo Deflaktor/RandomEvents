@@ -4,23 +4,23 @@ using UnityEngine;
 
 namespace RandomEvents
 {
-    // Makes a monster attack less often, with lower attack speed and longer skill cooldowns, and move slower. Its AI runs
-    // on the host, so the host's stats are the ones that count.
+    // Multiplies how often a monster attacks, through its attack speed and skill cooldowns, and how fast it moves. Its AI
+    // runs on the host, so the host's stats are the ones that count.
     public class Slowdown : MonoBehaviour
     {
-        public float attackFactor = 1f;
-        public float moveFactor = 1f;
+        public float attackSpeedMultiplier = 1f;
+        public float moveSpeedMultiplier = 1f;
 
         public static void Hook()
         {
             On.RoR2.CharacterBody.RecalculateStats += CharacterBody_RecalculateStats;
         }
 
-        public static void Apply(CharacterBody body, float attackFactor, float moveFactor = 1f)
+        public static void Apply(CharacterBody body, float attackSpeedMultiplier, float moveSpeedMultiplier = 1f)
         {
             var slowdown = body.gameObject.EnsureComponent<Slowdown>();
-            slowdown.attackFactor = attackFactor;
-            slowdown.moveFactor = moveFactor;
+            slowdown.attackSpeedMultiplier = attackSpeedMultiplier;
+            slowdown.moveSpeedMultiplier = moveSpeedMultiplier;
             body.MarkAllStatsDirty();
         }
 
@@ -32,15 +32,15 @@ namespace RandomEvents
             {
                 return;
             }
-            if (slowdown.moveFactor > 1f)
+            if (slowdown.moveSpeedMultiplier > 0f && slowdown.moveSpeedMultiplier != 1f)
             {
-                self.moveSpeed /= slowdown.moveFactor;
+                self.moveSpeed *= slowdown.moveSpeedMultiplier;
             }
-            if (slowdown.attackFactor <= 1f)
+            if (slowdown.attackSpeedMultiplier <= 0f || slowdown.attackSpeedMultiplier == 1f)
             {
                 return;
             }
-            self.attackSpeed /= slowdown.attackFactor;
+            self.attackSpeed *= slowdown.attackSpeedMultiplier;
             var skillLocator = self.skillLocator;
             if (skillLocator != null)
             {
@@ -48,7 +48,7 @@ namespace RandomEvents
                 {
                     if (skill != null)
                     {
-                        skill.cooldownScale *= slowdown.attackFactor;
+                        skill.cooldownScale /= slowdown.attackSpeedMultiplier;
                     }
                 }
             }
