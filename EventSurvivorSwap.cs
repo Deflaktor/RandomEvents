@@ -12,6 +12,9 @@ namespace RandomEvents
     public class EventSurvivorSwap : AbstractEvent
     {
         private readonly ItemSwap itemSwap = new ItemSwap();
+        private readonly BuffTracker buffs = new BuffTracker();
+        // the player who is alone and became a random survivor, who has armor to make up for their unknown kit
+        private CharacterMaster aloneMaster;
 
         public override bool LoadCondition()
         {
@@ -46,6 +49,10 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
+            return "Players swap survivors and items with each other until the event ends. Alone, you become a random survivor with 100 armor.";
+        }
+        public override string GetPopupDescription()
+        {
             return "Players swap survivors and items with each other until the event ends. Alone, you become a random survivor.";
         }
         public override string GetConditionDescription()
@@ -61,12 +68,22 @@ namespace RandomEvents
         public override void Hook()
         {
             On.RoR2.CharacterMaster.RestoreOriginalBodyPrefab += CharacterMaster_RestoreOriginalBodyPrefab;
+            CharacterBody.onBodyStartGlobal += CharacterBody_onBodyStartGlobal;
             On.RoR2.Artifacts.EnigmaArtifactManager.OnPlayerCharacterBodyStartServer += EnigmaArtifactManager_OnPlayerCharacterBodyStartServer;
         }
 
         public override bool SuppressesHereticTransformation => true;
 
         // revives during the event, e.g. by Dio's Best Friend, bring back the swapped survivor, as with Monster Transform
+        // also the bodies after the swap's respawn or a revive
+        private void CharacterBody_onBodyStartGlobal(CharacterBody body)
+        {
+            if (NetworkServer.active && IsActive() && aloneMaster != null && body.master == aloneMaster)
+            {
+                buffs.Add(body, RoR2Content.Buffs.SmallArmorBoost);
+            }
+        }
+
         private void CharacterMaster_RestoreOriginalBodyPrefab(On.RoR2.CharacterMaster.orig_RestoreOriginalBodyPrefab orig, CharacterMaster self)
         {
             if (NetworkServer.active && self.TryGetComponent(out SurvivorSwapComponent survivorSwap) && survivorSwap.enabled)
@@ -151,6 +168,7 @@ namespace RandomEvents
                     var survivorDef = candidates[RoR2Application.rng.RangeInt(0, candidates.Count)];
                     ChatHelper.SendEventMessage("EVENT_SURVIVOR_SWAP_RANDOM", ChatHelper.GetColoredPlayerName(bodies[0]), GetSurvivorName(survivorDef.bodyPrefab));
                     // with the player's own loadout for that survivor
+                    aloneMaster = master;
                     Swap(master, survivorDef.bodyPrefab, null);
                 }
             }
@@ -159,6 +177,8 @@ namespace RandomEvents
         public override void Stop()
         {
             itemSwap.Return();
+            aloneMaster = null;
+            buffs.RemoveAll();
             foreach (var pc in PlayerCharacterMasterController.instances)
             {
                 if (pc.master != null && pc.master.TryGetComponent(out SurvivorSwapComponent survivorSwap))
