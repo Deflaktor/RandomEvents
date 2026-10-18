@@ -38,6 +38,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | ItemZone | Zone fuels your arsenal | Item zones appear that give players standing in them temporary items. | Simulacrum mode only |
 | LinkedSouls | Your souls are bound together | Damage a player takes is split among all living players. | At least two players are alive. |
 | LynxPups | The pups have grown | Half of the monsters that spawn are Lynx Pups, three times as big and with ten times the health. | Hallowed Concepts is enabled, not a Simulacrum boss wave, and events "DroneUprising", "Mitosis", "StrongEnemies" and "WeakEnemies" inactive. |
+| MirroredEnemies | Mirror, mirror | Some monsters are mirrored: their health decays, their hits heal players and hurt themselves, and players' direct hits on them hurt the players instead, by the same share of health, up to 20% per second. |  |
 | Mitosis | Divide and multiply | Only monsters with a weaker relative spawn, and they split into several of them when they die. | Not a Simulacrum boss wave, the stage's monsters include such a pair, and events "StrongEnemies", "WeakEnemies", "DroneUprising" and "LynxPups" inactive. |
 | MonsterTransform | Players embrace their monstrous forms | Players transform into monsters. | Events "SkillsOnly" and "SurvivorSwap" inactive and currently not a boss wave. |
 | NeutroniumWeights | A heavy burden | All monsters get a Neutronium Weight until the event ends. | Alloyed Collective is enabled. |

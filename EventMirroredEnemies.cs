@@ -1,0 +1,275 @@
+﻿using BepInEx.Configuration;
+using RoR2;
+using RoR2.CharacterAI;
+using RoR2.Orbs;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.Networking;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
+
+namespace RandomEvents
+{
+    public class EventMirroredEnemies : AbstractEvent
+    {
+        private ConfigEntry<float> MirrorChance;
+        private ConfigEntry<float> HealthLossPerHit;
+        private ConfigEntry<float> HealMultiplier;
+        private ConfigEntry<float> ReflectedDamageCap;
+        private ConfigEntry<int> DecayTime;
+        private readonly HashSet<CharacterBody> mirrored = new HashSet<CharacterBody>();
+        // the shattering glass of a brittle death, at most this often per mirrored monster
+        private const float ShatterInterval = 0.3f;
+        private AsyncOperationHandle<GameObject> ShatterEffect;
+        private readonly Dictionary<CharacterBody, float> lastShatter = new Dictionary<CharacterBody, float>();
+        // the share of their health each player was dealt back in the current second, which is capped
+        private readonly Dictionary<CharacterBody, (float start, float fraction)> reflectedThisSecond = new Dictionary<CharacterBody, (float start, float fraction)>();
+
+        public override bool LoadCondition()
+        {
+            return true;
+        }
+        public override bool Condition(List<AbstractEvent> activeOtherEvents)
+        {
+            return true;
+        }
+        public override string GetEventConfigName()
+        {
+            return "MirroredEnemies";
+        }
+        public override string GetAnnouncement()
+        {
+            return Language.GetStringFormatted("ANNOUNCE_EVENT_MIRRORED_ENEMIES");
+        }
+        public override string GetDescription()
+        {
+            return "Some monsters are mirrored: their health decays, their hits heal players and hurt themselves, and players' direct hits on them hurt the players instead, by the same share of health, up to 20% per second.";
+        }
+        public override string GetPopupDescription()
+        {
+            return "Mirrored monsters heal you when they hit you and hurt themselves. Shooting them hurts you.";
+        }
+        public override string GetConditionDescription()
+        {
+            return "";
+        }
+        protected override void AddConfig(ConfigFile config)
+        {
+            MirrorChance = config.Bind(GetEventConfigName(), "Mirror Chance", 0.3f, "Chance for a monster to be mirrored.");
+            HealthLossPerHit = config.Bind(GetEventConfigName(), "Health Loss Per Hit", 0.2f, "How much of its maximum health a mirrored monster loses with each hit on a player.");
+            HealMultiplier = config.Bind(GetEventConfigName(), "Heal Multiplier", 1f, "How much a player is healed by a mirrored monster's hit, relative to the damage it would have dealt.");
+            DecayTime = config.Bind(GetEventConfigName(), "Decay Time", 60, "In how many seconds a mirrored monster's health decays from full to nothing, like a ghost's. Ghosts take 30. 0 for no decay.");
+            ReflectedDamageCap = config.Bind(GetEventConfigName(), "Reflected Damage Cap", 0.2f, "A player's direct hit on a mirrored monster takes the same share of the player's health as it would have taken of the monster's, up to this share per second. Mirrored monsters take no damage from players.");
+        }
+        public override void Preload()
+        {
+            ShatterEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/BrittleDeath.prefab");
+        }
+        public override void Hook()
+        {
+            CharacterBody.onBodyStartGlobal += CharacterBody_onBodyStartGlobal;
+            On.RoR2.HealthComponent.TakeDamage += HealthComponent_TakeDamage;
+            On.RoR2.BullseyeSearch.RefreshCandidates += BullseyeSearch_RefreshCandidates;
+            On.RoR2.SphereSearch.SearchData.FilterByHurtBoxTeam += SearchData_FilterByHurtBoxTeam;
+            On.RoR2.CharacterAI.BaseAI.ManagedFixedUpdate += BaseAI_ManagedFixedUpdate;
+        }
+
+        // Searches for the players' enemies, which leave out the players' team, skip mirrored monsters: player allies
+        // picking an enemy, and items that find their own targets, e.g. Ukulele, AtG Missiles or Ceremonial Daggers.
+        // These run on the host.
+        private void BullseyeSearch_RefreshCandidates(On.RoR2.BullseyeSearch.orig_RefreshCandidates orig, BullseyeSearch self)
+        {
+            orig(self);
+            if (mirrored.Count > 0 && IsActive() && !self.teamMaskFilter.HasTeam(TeamIndex.Player))
+            {
+                foreach (var body in mirrored)
+                {
+                    if (body != null)
+                    {
+                        self.FilterOutGameObject(body.gameObject);
+                    }
+                }
+            }
+        }
+
+        // the same for the other kind of search, e.g. of the projectiles that find their own target
+        private void SearchData_FilterByHurtBoxTeam(On.RoR2.SphereSearch.SearchData.orig_FilterByHurtBoxTeam orig, ref SphereSearch.SearchData self, TeamMask teamMask)
+        {
+            orig(ref self, teamMask);
+            if (mirrored.Count > 0 && IsActive() && !teamMask.HasTeam(TeamIndex.Player))
+            {
+                for (int i = self.candidatesCount - 1; i >= 0; i--)
+                {
+                    var hurtBox = self.GetCandidate(i).hurtBox;
+                    if (hurtBox != null && hurtBox.healthComponent != null && mirrored.Contains(hurtBox.healthComponent.body))
+                    {
+                        self.RemoveCandidate(i);
+                    }
+                }
+            }
+        }
+
+        // and drop one they got otherwise, e.g. by copying their leader's target or being hit by it
+        private void BaseAI_ManagedFixedUpdate(On.RoR2.CharacterAI.BaseAI.orig_ManagedFixedUpdate orig, BaseAI self, float deltaTime)
+        {
+            if (mirrored.Count > 0 && IsActive() && self.currentEnemy != null && self.currentEnemy.characterBody != null && mirrored.Contains(self.currentEnemy.characterBody)
+                && self.master != null && self.master.teamIndex == TeamIndex.Player)
+            {
+                self.currentEnemy.Reset();
+            }
+            orig(self, deltaTime);
+        }
+
+        // monsters spawning during the event may be mirrored too
+        private void CharacterBody_onBodyStartGlobal(CharacterBody body)
+        {
+            if (NetworkServer.active && IsActive())
+            {
+                TryMirror(body);
+            }
+        }
+
+        // the Lunar Chimera's shell and the shine of invulnerable Solus Wing parts mark them, and their health decays like
+        // a ghost's
+        private void TryMirror(CharacterBody body)
+        {
+            if (body != null && body.healthComponent != null && body.teamComponent.teamIndex != TeamIndex.Player && body.teamComponent.teamIndex != TeamIndex.Neutral
+                && !mirrored.Contains(body) && RoR2Application.rng.nextNormalizedFloat < MirrorChance.Value)
+            {
+                mirrored.Add(body);
+                body.AddBuff(RoR2Content.Buffs.LunarShell);
+                body.AddBuff(DLC3Content.Buffs.SolusWingInvulnerability);
+                if (DecayTime.Value > 0 && body.inventory != null)
+                {
+                    EventLoot.GetInventory(this, body).GiveTemporaryItem(RoR2Content.Items.HealthDecay.itemIndex, DecayTime.Value);
+                }
+            }
+        }
+
+        private void HealthComponent_TakeDamage(On.RoR2.HealthComponent.orig_TakeDamage orig, HealthComponent self, DamageInfo damageInfo)
+        {
+            if (!NetworkServer.active || !IsActive() || damageInfo == null || damageInfo.rejected || damageInfo.damage <= 0f || damageInfo.attacker == null)
+            {
+                orig(self, damageInfo);
+                return;
+            }
+            var attackerBody = damageInfo.attacker.GetComponent<CharacterBody>();
+            // only its hits, not the ticks of its burns and the like
+            if (attackerBody != null && mirrored.Contains(attackerBody) && damageInfo.dotIndex == DotController.DotIndex.None && damageInfo.procChainMask.mask == 0 && self.body != null && self.body.isPlayerControlled && attackerBody.healthComponent.alive)
+            {
+                // the hit heals the player and hurts the monster instead
+                self.Heal(damageInfo.damage * HealMultiplier.Value, damageInfo.procChainMask);
+                LoseHealth(attackerBody.healthComponent, self.body);
+                return;
+            }
+            if (attackerBody != null && mirrored.Contains(self.body) && attackerBody.teamComponent.teamIndex == TeamIndex.Player)
+            {
+                // The monster takes nothing, and the attacker loses the share of their health that a direct hit would
+                // have taken of the monster's. Blocked hits trigger no items, so item effects never started by hitting it
+                // and aren't sent back.
+                EffectManager.SpawnEffect(HealthComponent.AssetReferences.damageRejectedPrefab, new EffectData { origin = damageInfo.position }, true);
+                Shatter(self.body, damageInfo.position);
+                var directHit = damageInfo.procChainMask.mask == 0 && damageInfo.dotIndex == DotController.DotIndex.None;
+                var fraction = directHit && attackerBody.healthComponent != null && attackerBody.healthComponent.alive ? GetReflectedFraction(attackerBody, damageInfo.damage / self.fullCombinedHealth) : 0f;
+                if (fraction > 0f && attackerBody.mainHurtBox != null)
+                {
+                    // sent back like a Plasma Shrimp's missile; marked so that it doesn't count as the monster's hit
+                    var orb = new MissileVoidOrb
+                    {
+                        origin = damageInfo.position,
+                        damageValue = fraction * attackerBody.healthComponent.fullCombinedHealth,
+                        isCrit = damageInfo.crit,
+                        teamIndex = self.body.teamComponent.teamIndex,
+                        attacker = self.gameObject,
+                        procCoefficient = 0f,
+                        damageColorIndex = DamageColorIndex.Void,
+                        damageType = DamageType.BypassArmor | DamageType.BypassBlock,
+                        target = attackerBody.mainHurtBox
+                    };
+                    orb.procChainMask.AddProc(ProcType.Missile);
+                    OrbManager.instance.AddOrb(orb);
+                }
+                return;
+            }
+            orig(self, damageInfo);
+        }
+
+        private void Shatter(CharacterBody body, Vector3 position)
+        {
+            var now = Time.fixedTime;
+            if (lastShatter.TryGetValue(body, out var last) && now - last < ShatterInterval)
+            {
+                return;
+            }
+            lastShatter[body] = now;
+            var prefab = ShatterEffect.WaitForCompletion();
+            if (prefab != null)
+            {
+                EffectManager.SpawnEffect(prefab, new EffectData { origin = position, scale = body.radius }, true);
+            }
+        }
+
+        // the share of health within what is left of the player's cap for the current second
+        private float GetReflectedFraction(CharacterBody player, float fraction)
+        {
+            var now = Time.fixedTime;
+            if (!reflectedThisSecond.TryGetValue(player, out var reflected) || now - reflected.start >= 1f)
+            {
+                reflected = (now, 0f);
+            }
+            fraction = Mathf.Clamp(fraction, 0f, Mathf.Max(0f, ReflectedDamageCap.Value - reflected.fraction));
+            reflectedThisSecond[player] = (reflected.start, reflected.fraction + fraction);
+            return fraction;
+        }
+
+        // the shell would limit damage, so the health goes directly; the player gets the kill
+        private void LoseHealth(HealthComponent healthComponent, CharacterBody player)
+        {
+            var loss = healthComponent.fullCombinedHealth * HealthLossPerHit.Value;
+            if (loss >= healthComponent.combinedHealth)
+            {
+                healthComponent.Suicide(player.gameObject, player.gameObject);
+                return;
+            }
+            var fromBarrier = Mathf.Min(loss, healthComponent.barrier);
+            healthComponent.Networkbarrier = healthComponent.barrier - fromBarrier;
+            loss -= fromBarrier;
+            var fromShield = Mathf.Min(loss, healthComponent.shield);
+            healthComponent.Networkshield = healthComponent.shield - fromShield;
+            loss -= fromShield;
+            healthComponent.Networkhealth = healthComponent.health - loss;
+        }
+
+        public override void Prepare()
+        {
+        }
+
+        public override void Start(List<AbstractEvent> activeOtherEvents)
+        {
+            mirrored.Clear();
+            foreach (var body in CharacterBody.readOnlyInstancesList)
+            {
+                TryMirror(body);
+            }
+        }
+
+        public override void Stop()
+        {
+            reflectedThisSecond.Clear();
+            lastShatter.Clear();
+            foreach (var body in mirrored)
+            {
+                if (body != null && body.HasBuff(RoR2Content.Buffs.LunarShell))
+                {
+                    body.RemoveBuff(RoR2Content.Buffs.LunarShell);
+                }
+                if (body != null && body.HasBuff(DLC3Content.Buffs.SolusWingInvulnerability))
+                {
+                    body.RemoveBuff(DLC3Content.Buffs.SolusWingInvulnerability);
+                }
+            }
+            mirrored.Clear();
+            EventLoot.Clear(this);
+        }
+    }
+}
