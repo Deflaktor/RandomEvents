@@ -122,9 +122,13 @@ namespace RandomEvents
 
         public override void Stop()
         {
-            artifacts.ForEach(artifact => {
-                RunArtifactManager.instance.SetArtifactEnabled(artifact, false);
-            });
+            // the run's artifact manager is gone once the run has ended
+            if (RunArtifactManager.instance != null)
+            {
+                artifacts.ForEach(artifact => {
+                    RunArtifactManager.instance.SetArtifactEnabled(artifact, false);
+                });
+            }
             artifacts.Clear();
         }
     }
