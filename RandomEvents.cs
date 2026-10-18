@@ -438,6 +438,13 @@ namespace RandomEvents
             {
                 var carrier = result.spawnedInstance.GetComponent<CharacterMaster>();
                 carrier.inventory.GiveItemPermanent(RoR2Content.Items.InvadingDoppelganger);
+                // far above the map, where the game would teleport a body with that item back near the players;
+                // looked up by name, since the item is newer than the game libraries the mod is built against
+                var ignoreMapZones = ItemCatalog.FindItemIndex("IgnoreMapZonesUntilRemoval");
+                if (ignoreMapZones != ItemIndex.None)
+                {
+                    carrier.inventory.GiveItemPermanent(ignoreMapZones);
+                }
                 // it only carries the item; its AI is switched on when its body starts, so it's switched off after that
                 carrier.onBodyStart += body =>
                 {
