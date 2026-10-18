@@ -210,20 +210,37 @@ namespace RandomEvents
         public static CharacterMaster SpawnMonster(SpawnCard spawnCard, Vector3 position, EliteDef eliteDef = null)
         {
             var director = FindCombatDirector();
-            if (director == null)
+            var spawnedByDirector = director != null ? SpawnWithDirector(director, spawnCard, position, eliteDef) : null;
+            if (spawnedByDirector != null)
             {
-                var spawnRequest = new DirectorSpawnRequest(spawnCard, new DirectorPlacementRule
-                {
-                    placementMode = DirectorPlacementRule.PlacementMode.Direct,
-                    position = position
-                }, RoR2Application.rng)
-                {
-                    teamIndexOverride = TeamIndex.Monster,
-                    ignoreTeamMemberLimit = true
-                };
-                var spawnedObject = DirectorCore.instance != null ? DirectorCore.instance.TrySpawnObject(spawnRequest) : null;
-                return spawnedObject != null ? spawnedObject.GetComponent<CharacterMaster>() : null;
+                return spawnedByDirector;
             }
+            // without a director, or where it failed, e.g. at its limit of monsters
+            var spawnRequest = new DirectorSpawnRequest(spawnCard, new DirectorPlacementRule
+            {
+                placementMode = DirectorPlacementRule.PlacementMode.Direct,
+                position = position
+            }, RoR2Application.rng)
+            {
+                teamIndexOverride = TeamIndex.Monster,
+                ignoreTeamMemberLimit = true
+            };
+            var spawnedObject = DirectorCore.instance != null ? DirectorCore.instance.TrySpawnObject(spawnRequest) : null;
+            var master = spawnedObject != null ? spawnedObject.GetComponent<CharacterMaster>() : null;
+            if (master != null && eliteDef != null && eliteDef.eliteEquipmentDef != null)
+            {
+                master.inventory.SetEquipmentIndex(eliteDef.eliteEquipmentDef.equipmentIndex, master.inventory.activeEquipmentLocation);
+            }
+            // like the director's own monsters, e.g. a Simulacrum wave needs it killed too
+            if (master != null && director != null && director.combatSquad != null)
+            {
+                director.combatSquad.AddMember(master);
+            }
+            return master;
+        }
+
+        private static CharacterMaster SpawnWithDirector(CombatDirector director, SpawnCard spawnCard, Vector3 position, EliteDef eliteDef)
+        {
             var target = new GameObject("RandomEventsSpawnTarget");
             target.transform.position = position;
             GameObject spawned = null;
