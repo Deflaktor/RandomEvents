@@ -75,6 +75,7 @@ namespace RandomEvents
                 InitAndHookEvent(new EventLinkedSouls());
                 InitAndHookEvent(new EventMitosis());
                 InitAndHookEvent(new EventMonsterTransform());
+                InitAndHookEvent(new EventOssification());
                 InitAndHookEvent(new EventRandomArtifact());
                 InitAndHookEvent(new EventRandomTeams());
                 InitAndHookEvent(new EventRedLightGreenLight());

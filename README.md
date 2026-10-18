@@ -35,6 +35,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | LinkedSouls | Your souls are bound together | Damage a player takes is split among all living players. | At least two players are alive. |
 | Mitosis | Divide and multiply | Only monsters with a weaker relative spawn, and they split into several of them when they die. | The stage's monsters include such a pair, and events "StrongEnemies" and "WeakEnemies" inactive. |
 | MonsterTransform | Players embrace their monstrous forms | Players transform into monsters. | Events "SkillsOnly" and "SurvivorSwap" inactive and currently not a boss wave. |
+| Ossification | Every kill shields both sides | All players get 5 Hexes of Ossification, so their kills give nearby monsters barrier, but also enough Topaz Brooches for each kill to fill their own barrier. | Hallowed Concepts is enabled. |
 | RandomArtifact |  | Turns on up to three random artifacts until the event ends. | There is at least one artifact which can be enabled and is not blacklisted. |
 | RandomTeams | Enemies turn against each other | Makes some enemies fight each other as well as the players. |  |
 | RedLightGreenLight | Red light, green light | Red and green light take turns. During red light, monsters freeze, players who stand still can't be hurt, and players who move get Tonic Afflictions until the event ends. |  |
