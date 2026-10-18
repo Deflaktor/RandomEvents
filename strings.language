@@ -97,7 +97,8 @@
         "ANNOUNCE_EVENT_BREACHING_FINS": "Up, up and away",
         "ANNOUNCE_EVENT_OSSIFICATION": "Every kill shields both sides",
         "ANNOUNCE_EVENT_DRONE_UPRISING": "The drones have turned",
-        "ANNOUNCE_EVENT_ELITE_SURGE": "Every foe is elite"
+        "ANNOUNCE_EVENT_ELITE_SURGE": "Every foe is elite",
+        "ANNOUNCE_EVENT_BOUNCY": "Everything bounces"
         
     }
 }

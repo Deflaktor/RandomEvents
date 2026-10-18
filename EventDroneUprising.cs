@@ -25,7 +25,8 @@ namespace RandomEvents
             // they pick from the stage's own monsters, which this event replaces
             return GetDroneCandidates().Count > 0 && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("Mitosis", StringComparison.InvariantCultureIgnoreCase)
                 || e.GetEventConfigName().Equals("RitualHelmets", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("FallingEnemies", StringComparison.InvariantCultureIgnoreCase));
+                || e.GetEventConfigName().Equals("FallingEnemies", StringComparison.InvariantCultureIgnoreCase)
+                || e.GetEventConfigName().Equals("Bouncy", StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
         {
@@ -41,7 +42,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Events \"Mitosis\", \"RitualHelmets\" and \"FallingEnemies\" inactive.";
+            return "Events \"Mitosis\", \"RitualHelmets\", \"FallingEnemies\" and \"Bouncy\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {

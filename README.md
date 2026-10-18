@@ -13,13 +13,14 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 
 | Event Name | Announcement | Description | Condition |
 |------------|--------------|-------------|-----------|
+| Bouncy | Everything bounces | All players get 3 Earthbound Vessels. Only walking monsters spawn, and they jump at random, also in mid-air. | Hallowed Concepts is enabled, the stage has walking monsters, and event "DroneUprising" inactive. |
 | BreachingFins | Up, up and away | All players get a Breaching Fin without a cooldown until the event ends, and monsters fall three times as fast. | Seekers of the Storm is enabled. |
 | BulletHell | Projectile density dialed to eleven | Increases the fire rate of enemies but lowers their damage. |  |
 | CasinoItem | Ancient relic cycling through its many powers | Gives all players 10 of a random item, which changes every 10 seconds. |  |
 | ChestMimics | Not every chest is what it seems | Chests bought with gold may turn into a monster instead of giving their item. | Not in Simulacrum, and the stage has an unopened chest bought with gold. |
 | CursedSpoils | Spoils come at a price | Every kill gives each player a temporary item, but taking damage from monsters brings hexes that disable items. | Hallowed Concepts is enabled. |
 | DroneEscort | Backup has arrived | Gives each player a random drone until the event ends. |  |
-| DroneUprising | The drones have turned | Hostile drones spawn instead of monsters. They deal half their normal damage and leave no wreck. | Events "Mitosis", "RitualHelmets" and "FallingEnemies" inactive. |
+| DroneUprising | The drones have turned | Hostile drones spawn instead of monsters. They deal half their normal damage and leave no wreck. | Events "Mitosis", "RitualHelmets", "FallingEnemies" and "Bouncy" inactive. |
 | EliteSurge | Every foe is elite | Every monster gains random elite types, usually one, sometimes two or three, with stronger ones rarer and without an elite's extra health and damage. A quarter fewer monsters spawn, and every player gets a Wake of Vultures. |  |
 | EquipmentOnly | Equipment-exclusive combat | Disables all skills, but gives all players a random equipment with a short cooldown. | Events "SkillsOnly", "FuelArray" inactive. Artifact of Enigma inactive. |
 | ExplodingCorpses | Exploding corpses | All enemies explode upon death. | Players have sufficient means to do ranged damage. |

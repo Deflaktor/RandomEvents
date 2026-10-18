@@ -53,6 +53,7 @@ namespace RandomEvents
                 EventLoot.Hook();
 
                 ModConfig.Init();
+                InitAndHookEvent(new EventBouncy());
                 InitAndHookEvent(new EventBreachingFins());
                 InitAndHookEvent(new EventBulletHell());
                 InitAndHookEvent(new EventCasinoItem());
