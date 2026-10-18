@@ -138,7 +138,7 @@ namespace RandomEvents
             }
             if (body.bodyIndex == BodyCatalog.FindBodyIndex(FreezeDroneBody))
             {
-                SlowAttacks.Apply(body, FreezeDroneAttackSlowdown);
+                Slowdown.Apply(body, FreezeDroneAttackSlowdown);
             }
             if (body.bodyIndex == BodyCatalog.FindBodyIndex("EquipmentDroneBody") && body.inventory.currentEquipmentIndex == EquipmentIndex.None)
             {

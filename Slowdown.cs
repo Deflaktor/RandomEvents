@@ -4,20 +4,23 @@ using UnityEngine;
 
 namespace RandomEvents
 {
-    // Makes a monster attack less often: lower attack speed and longer skill cooldowns. Its AI runs on the host, so the
-    // host's stats are the ones that count.
-    public class SlowAttacks : MonoBehaviour
+    // Makes a monster attack less often, with lower attack speed and longer skill cooldowns, and move slower. Its AI runs
+    // on the host, so the host's stats are the ones that count.
+    public class Slowdown : MonoBehaviour
     {
-        public float factor = 1f;
+        public float attackFactor = 1f;
+        public float moveFactor = 1f;
 
         public static void Hook()
         {
             On.RoR2.CharacterBody.RecalculateStats += CharacterBody_RecalculateStats;
         }
 
-        public static void Apply(CharacterBody body, float factor)
+        public static void Apply(CharacterBody body, float attackFactor, float moveFactor = 1f)
         {
-            body.gameObject.EnsureComponent<SlowAttacks>().factor = factor;
+            var slowdown = body.gameObject.EnsureComponent<Slowdown>();
+            slowdown.attackFactor = attackFactor;
+            slowdown.moveFactor = moveFactor;
             body.MarkAllStatsDirty();
         }
 
@@ -25,11 +28,19 @@ namespace RandomEvents
         private static void CharacterBody_RecalculateStats(On.RoR2.CharacterBody.orig_RecalculateStats orig, CharacterBody self)
         {
             orig(self);
-            if (!self.TryGetComponent(out SlowAttacks slowAttacks) || slowAttacks.factor <= 1f)
+            if (!self.TryGetComponent(out Slowdown slowdown))
             {
                 return;
             }
-            self.attackSpeed /= slowAttacks.factor;
+            if (slowdown.moveFactor > 1f)
+            {
+                self.moveSpeed /= slowdown.moveFactor;
+            }
+            if (slowdown.attackFactor <= 1f)
+            {
+                return;
+            }
+            self.attackSpeed /= slowdown.attackFactor;
             var skillLocator = self.skillLocator;
             if (skillLocator != null)
             {
@@ -37,7 +48,7 @@ namespace RandomEvents
                 {
                     if (skill != null)
                     {
-                        skill.cooldownScale *= slowAttacks.factor;
+                        skill.cooldownScale *= slowdown.attackFactor;
                     }
                 }
             }

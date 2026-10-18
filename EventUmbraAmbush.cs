@@ -44,6 +44,7 @@ namespace RandomEvents
         private ConfigEntry<float> ItemMultiplier;
         private ConfigEntry<float> DamageReduction;
         private ConfigEntry<float> AttackSlowdown;
+        private ConfigEntry<float> MoveSlowdown;
         private readonly Dictionary<string, ConfigEntry<string>> survivorItems = new Dictionary<string, ConfigEntry<string>>();
         private readonly List<CharacterMaster> hunters = new List<CharacterMaster>();
 
@@ -65,7 +66,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Each player is hunted by a tough enemy survivor with items, which attacks slowly.";
+            return "Each player is hunted by a tough enemy survivor with items, which attacks and moves slowly.";
         }
         public override string GetConditionDescription()
         {
@@ -76,6 +77,7 @@ namespace RandomEvents
             HealthMultiplier = config.Bind(GetEventConfigName(), "Health Multiplier", 10f, "The hunters' health, relative to their survivor's normal health.");
             DamageReduction = config.Bind(GetEventConfigName(), "Damage Reduction", 0.75f, "How much less damage the hunters deal than their survivor normally does.");
             AttackSlowdown = config.Bind(GetEventConfigName(), "Attack Slowdown", 4f, "How many times less often the hunters attack: their attack speed is divided and their cooldowns multiplied by it.");
+            MoveSlowdown = config.Bind(GetEventConfigName(), "Move Slowdown", 2f, "How many times slower the hunters move.");
             ItemMultiplier = config.Bind(GetEventConfigName(), "Item Multiplier", 0.5f, "The number of items per tier in a hunter's kit, relative to the player it hunts.");
             foreach (var (survivor, items) in DefaultSurvivorItems)
             {
@@ -219,7 +221,7 @@ namespace RandomEvents
                 var hunterBody = hunter.GetBody();
                 if (hunterBody != null)
                 {
-                    SlowAttacks.Apply(hunterBody, AttackSlowdown.Value);
+                    Slowdown.Apply(hunterBody, AttackSlowdown.Value, MoveSlowdown.Value);
                 }
                 JoinMonsters(hunter);
                 foreach (var ai in hunter.AiComponents)

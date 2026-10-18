@@ -52,7 +52,7 @@ namespace RandomEvents
                 TemporaryEquipment.Hook();
                 HereticTransformation.Hook();
                 EventLoot.Hook();
-                SlowAttacks.Hook();
+                Slowdown.Hook();
 
                 ModConfig.Init();
                 InitAndHookEvent(new EventBouncy());
