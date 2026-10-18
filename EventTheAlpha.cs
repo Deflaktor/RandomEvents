@@ -17,7 +17,17 @@ namespace RandomEvents
         private CharacterMaster alpha;
         private int addedBoostHp;
         // half again as big, so the alpha stands out; each stack adds 1% of its size
-        private const int AddedScale = 50;
+        // +1% size per stack, more for smaller monsters, e.g. survivors, so every alpha stands out
+        private static int GetAddedScale(CharacterBody body)
+        {
+            switch (body.hullClassification)
+            {
+                case HullClassification.Human: return 150;
+                case HullClassification.Golem: return 50;
+                default: return 25;
+            }
+        }
+        private int addedScale;
         private GameObject squad;
         private bool alphaFallen;
         private float updateTimer;
@@ -108,7 +118,8 @@ namespace RandomEvents
             // ten times its health, including an elite's extra health: each Boost Hp adds 10% of the base health
             addedBoostHp = 90 + 9 * alpha.inventory.GetItemCountPermanent(RoR2Content.Items.BoostHp);
             alpha.inventory.GiveItemPermanent(RoR2Content.Items.BoostHp, addedBoostHp);
-            alpha.inventory.GiveItemPermanent(DLC4Content.Items.BoostCharacterScale, AddedScale);
+            addedScale = GetAddedScale(alphaBody);
+            alpha.inventory.GiveItemPermanent(DLC4Content.Items.BoostCharacterScale, addedScale);
             // a boss health bar for every player; the alpha drops no boss loot
             squad = GameObject.Instantiate(BossCombatSquad.WaitForCompletion());
             squad.GetComponent<BossGroup>().dropPosition = null;
@@ -147,7 +158,7 @@ namespace RandomEvents
             if (alpha != null && alpha.inventory != null)
             {
                 alpha.inventory.RemoveItemPermanent(RoR2Content.Items.BoostHp, addedBoostHp);
-                alpha.inventory.RemoveItemPermanent(DLC4Content.Items.BoostCharacterScale, AddedScale);
+                alpha.inventory.RemoveItemPermanent(DLC4Content.Items.BoostCharacterScale, addedScale);
             }
             // destroying the squad also removes the health bar and the alpha's boss status
             if (squad != null)
