@@ -60,6 +60,25 @@ namespace RandomEvents
             stage.monsterSelection = filtered;
         }
 
+        // replaces the pool, e.g. with monsters the stage doesn't have; events that filter it afterwards filter these
+        public static void Replace(AbstractEvent user, WeightedSelection<DirectorCard> selection)
+        {
+            var stage = ClassicStageInfo.instance;
+            if (stage == null || selection == null || selection.Count == 0)
+            {
+                return;
+            }
+            if (stage != stageInfo || stage.monsterSelection != filteredSelection)
+            {
+                stageInfo = stage;
+                originalSelection = stage.monsterSelection;
+                users.Clear();
+            }
+            users.Add(user);
+            filteredSelection = selection;
+            stage.monsterSelection = selection;
+        }
+
         public static void Restore(AbstractEvent user)
         {
             if (!users.Remove(user) || users.Count > 0)
