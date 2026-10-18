@@ -8,10 +8,7 @@ namespace RandomEvents
 {
     public class EventBreachingFins : AbstractEvent
     {
-        private ConfigEntry<float> MonsterGravity;
         private ConfigEntry<float> GroundedWeight;
-        // the monsters' own gravity, to put back when the event ends
-        private readonly Dictionary<CharacterMotor, float> gravityScales = new Dictionary<CharacterMotor, float>();
 
         public override bool LoadCondition()
         {
@@ -33,7 +30,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "All players get a Breaching Fin without a cooldown until the event ends, and monsters fall three times as fast. More walking monsters spawn.";
+            return "All players get a Breaching Fin without a cooldown until the event ends. More walking monsters spawn.";
         }
         public override string GetConditionDescription()
         {
@@ -41,7 +38,6 @@ namespace RandomEvents
         }
         protected override void AddConfig(ConfigFile config)
         {
-            MonsterGravity = config.Bind(GetEventConfigName(), "Monster Gravity", 3f, "How fast monsters fall during the event, relative to normal, so launched ones come back down quickly.");
             GroundedWeight = config.Bind(GetEventConfigName(), "Grounded Monster Weight", 2f, "How much more often monsters that walk spawn during the event, since the fins launch them.");
         }
         public override void Preload()
@@ -58,7 +54,6 @@ namespace RandomEvents
             if (NetworkServer.active && IsActive())
             {
                 GiveFin(body);
-                MakeHeavy(body);
             }
         }
 
@@ -79,34 +74,17 @@ namespace RandomEvents
             PurchaseInteraction.CreateItemTakenOrb(body.corePosition, body.gameObject, DLC2Content.Items.KnockBackHitEnemies.itemIndex);
         }
 
-        // the host moves the monsters, so their faster fall reaches every player
-        private void MakeHeavy(CharacterBody body)
-        {
-            var motor = body != null ? body.characterMotor : null;
-            if (motor == null || body.isPlayerControlled || body.teamComponent.teamIndex == TeamIndex.Player || gravityScales.ContainsKey(motor))
-            {
-                return;
-            }
-            gravityScales[motor] = motor.gravityScale;
-            motor.gravityScale *= Mathf.Max(0f, MonsterGravity.Value);
-        }
-
         public override void Prepare()
         {
         }
 
         public override void Start(List<AbstractEvent> activeOtherEvents)
         {
-            gravityScales.Clear();
             MonsterPool.Reweight(this, choice => choice.value != null && choice.value.spawnCard != null
                 && choice.value.spawnCard.nodeGraphType == RoR2.Navigation.MapNodeGroup.GraphType.Ground ? Mathf.Max(0f, GroundedWeight.Value) : 1f);
             foreach (var body in Helper.GetLivingPlayerBodies())
             {
                 GiveFin(body);
-            }
-            foreach (var body in CharacterBody.readOnlyInstancesList)
-            {
-                MakeHeavy(body);
             }
         }
 
@@ -114,14 +92,6 @@ namespace RandomEvents
         {
             MonsterPool.Restore(this);
             EventLoot.Clear(this);
-            foreach (var (motor, gravityScale) in gravityScales)
-            {
-                if (motor != null)
-                {
-                    motor.gravityScale = gravityScale;
-                }
-            }
-            gravityScales.Clear();
         }
     }
 }

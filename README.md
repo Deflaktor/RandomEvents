@@ -14,7 +14,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | Event Name | Announcement | Description | Condition |
 |------------|--------------|-------------|-----------|
 | Bouncy | Everything bounces | All players get 3 Earthbound Vessels. Only walking monsters spawn, and they jump at random, also in mid-air. | Hallowed Concepts is enabled, not a Simulacrum boss wave, the stage has walking monsters, and event "DroneUprising" inactive. |
-| BreachingFins | Up, up and away | All players get a Breaching Fin without a cooldown until the event ends, and monsters fall three times as fast. More walking monsters spawn. | Seekers of the Storm is enabled. |
+| BreachingFins | Up, up and away | All players get a Breaching Fin without a cooldown until the event ends. More walking monsters spawn. | Seekers of the Storm is enabled. |
 | BulletHell | Projectile density dialed to eleven | Increases the fire rate of enemies but lowers their damage. | Event "UmbraAmbush" inactive. |
 | CasinoItem | Ancient relic cycling through its many powers | Gives all players 10 of a random item, which changes every 10 seconds. |  |
 | ChestMimics | Not every chest is what it seems | Chests bought with gold may turn into a monster instead of giving their item. | Not in Simulacrum, and the stage has an unopened chest bought with gold. |
