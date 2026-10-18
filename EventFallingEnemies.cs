@@ -21,7 +21,7 @@ namespace RandomEvents
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
             // its drones mostly fly
-            return !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("DroneUprising", StringComparison.InvariantCultureIgnoreCase));
+            return !Helper.IsSimulacrumBossWaveNext() && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("DroneUprising", StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
         {
@@ -37,7 +37,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Event \"DroneUprising\" inactive.";
+            return "Not a Simulacrum boss wave, and event \"DroneUprising\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {

@@ -23,7 +23,7 @@ namespace RandomEvents
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
             // the Ritual Helmet comes with that expansion
-            return DLC4Content.DLC4 != null && Run.instance != null && Run.instance.IsExpansionEnabled(DLC4Content.DLC4)
+            return !Helper.IsSimulacrumBossWaveNext() && DLC4Content.DLC4 != null && Run.instance != null && Run.instance.IsExpansionEnabled(DLC4Content.DLC4)
                 && MonsterPool.GetChoices().Any(CanRun)
                 // its drones can't sprint
                 && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("DroneUprising", System.StringComparison.InvariantCultureIgnoreCase));
@@ -68,7 +68,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Hallowed Concepts is enabled, the stage has monsters that can sprint, and event \"DroneUprising\" inactive.";
+            return "Hallowed Concepts is enabled, not a Simulacrum boss wave, the stage has monsters that can sprint, and event \"DroneUprising\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {

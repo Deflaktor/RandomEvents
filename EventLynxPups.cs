@@ -26,7 +26,7 @@ namespace RandomEvents
         {
             // The Lynx Pup comes with that expansion. DroneUprising replaces the monsters as well, and the other events
             // would filter the pups out.
-            return DLC4Content.DLC4 != null && Run.instance != null && Run.instance.IsExpansionEnabled(DLC4Content.DLC4)
+            return !Helper.IsSimulacrumBossWaveNext() && DLC4Content.DLC4 != null && Run.instance != null && Run.instance.IsExpansionEnabled(DLC4Content.DLC4)
                 && MonsterPool.GetChoices().Count > 0
                 && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("DroneUprising", StringComparison.InvariantCultureIgnoreCase)
                     || e.GetEventConfigName().Equals("Mitosis", StringComparison.InvariantCultureIgnoreCase)
@@ -47,7 +47,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Hallowed Concepts is enabled and events \"DroneUprising\", \"Mitosis\", \"StrongEnemies\" and \"WeakEnemies\" inactive.";
+            return "Hallowed Concepts is enabled, not a Simulacrum boss wave, and events \"DroneUprising\", \"Mitosis\", \"StrongEnemies\" and \"WeakEnemies\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {

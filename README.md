@@ -13,18 +13,18 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 
 | Event Name | Announcement | Description | Condition |
 |------------|--------------|-------------|-----------|
-| Bouncy | Everything bounces | All players get 3 Earthbound Vessels. Only walking monsters spawn, and they jump at random, also in mid-air. | Hallowed Concepts is enabled, the stage has walking monsters, and event "DroneUprising" inactive. |
+| Bouncy | Everything bounces | All players get 3 Earthbound Vessels. Only walking monsters spawn, and they jump at random, also in mid-air. | Hallowed Concepts is enabled, not a Simulacrum boss wave, the stage has walking monsters, and event "DroneUprising" inactive. |
 | BreachingFins | Up, up and away | All players get a Breaching Fin without a cooldown until the event ends, and monsters fall three times as fast. | Seekers of the Storm is enabled. |
 | BulletHell | Projectile density dialed to eleven | Increases the fire rate of enemies but lowers their damage. |  |
 | CasinoItem | Ancient relic cycling through its many powers | Gives all players 10 of a random item, which changes every 10 seconds. |  |
 | ChestMimics | Not every chest is what it seems | Chests bought with gold may turn into a monster instead of giving their item. | Not in Simulacrum, and the stage has an unopened chest bought with gold. |
 | CursedSpoils | Spoils come at a price | Every kill gives each player a temporary item, but taking damage from monsters brings hexes that disable items. | Hallowed Concepts is enabled. |
 | DroneEscort | Backup has arrived | Gives each player a random drone until the event ends. |  |
-| DroneUprising | The drones have turned | Hostile drones spawn instead of monsters. They deal half their normal damage and leave no wreck. | Events "Mitosis", "RitualHelmets", "FallingEnemies", "Bouncy" and "LynxPups" inactive. |
+| DroneUprising | The drones have turned | Hostile drones spawn instead of monsters. They deal half their normal damage and leave no wreck. | Not a Simulacrum boss wave, and events "Mitosis", "RitualHelmets", "FallingEnemies", "Bouncy" and "LynxPups" inactive. |
 | EliteSurge | Every foe is elite | Every monster gains random elite types, usually one, sometimes two or three, with stronger ones rarer and without an elite's extra health and damage. A quarter fewer monsters spawn, and every player gets a Wake of Vultures. |  |
 | EquipmentOnly | Equipment-exclusive combat | Disables all skills, but gives all players a random equipment with a short cooldown. | Events "SkillsOnly", "FuelArray" inactive. Artifact of Enigma inactive. |
 | ExplodingCorpses | Exploding corpses | All enemies explode upon death. | Players have sufficient means to do ranged damage. |
-| FallingEnemies | Enemies fall down from the heavens | Enemies fall from the sky. Only walking enemies spawn. | Event "DroneUprising" inactive. |
+| FallingEnemies | Enemies fall down from the heavens | Enemies fall from the sky. Only walking enemies spawn. | Not a Simulacrum boss wave, and event "DroneUprising" inactive. |
 | FocusFire | Focus your fire | Monsters have ten times their health, but take more and more damage the more they are hurt. This wears off if they aren't hurt for 3 seconds. |  |
 | FuelArray | Stay above 50% health or face disaster | Heals all players and gives them a Fuel Array until the event ends, but they take less damage. | Event "EquipmentOnly" inactive. |
 | Ghosts | Ghostly apparitions haunt the battlefield | Some monsters spawn as ghosts that fade after a while. | Currently not a boss wave. |
@@ -36,19 +36,19 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | ItemRush | Grab them before they do | Items appear around the players until the event ends. Monsters can pick them up too. | At least one item is not in the setting Unsafe Items. |
 | ItemZone | Zone fuels your arsenal | Item zones appear that give players standing in them temporary items. | Simulacrum mode only |
 | LinkedSouls | Your souls are bound together | Damage a player takes is split among all living players. | At least two players are alive. |
-| LynxPups | The pups have grown | Half of the monsters that spawn are Lynx Pups, three times as big and with ten times the health. | Hallowed Concepts is enabled and events "DroneUprising", "Mitosis", "StrongEnemies" and "WeakEnemies" inactive. |
-| Mitosis | Divide and multiply | Only monsters with a weaker relative spawn, and they split into several of them when they die. | The stage's monsters include such a pair, and events "StrongEnemies", "WeakEnemies", "DroneUprising" and "LynxPups" inactive. |
+| LynxPups | The pups have grown | Half of the monsters that spawn are Lynx Pups, three times as big and with ten times the health. | Hallowed Concepts is enabled, not a Simulacrum boss wave, and events "DroneUprising", "Mitosis", "StrongEnemies" and "WeakEnemies" inactive. |
+| Mitosis | Divide and multiply | Only monsters with a weaker relative spawn, and they split into several of them when they die. | Not a Simulacrum boss wave, the stage's monsters include such a pair, and events "StrongEnemies", "WeakEnemies", "DroneUprising" and "LynxPups" inactive. |
 | MonsterTransform | Players embrace their monstrous forms | Players transform into monsters. | Events "SkillsOnly" and "SurvivorSwap" inactive and currently not a boss wave. |
 | Ossification | Every kill shields both sides | All players get 5 Hexes of Ossification, so their kills give nearby monsters barrier, but also enough Topaz Brooches for each kill to fill their own barrier. | Hallowed Concepts is enabled. |
 | RandomArtifact |  | Turns on up to three random artifacts until the event ends. | There is at least one artifact which can be enabled and is not blacklisted. |
 | RandomTeams | Enemies turn against each other | Makes some enemies fight each other as well as the players. |  |
 | RedLightGreenLight | Red light, green light | Red and green light take turns. During red light, monsters freeze, players who stand still can't be hurt, and players who move get Tonic Afflictions until the event ends. |  |
-| RitualHelmets | Skulls on the charge | Only monsters that can sprint spawn, all with an always charged Ritual Helmet, but players take 66% less damage. | Hallowed Concepts is enabled, the stage has monsters that can sprint, and event "DroneUprising" inactive. |
+| RitualHelmets | Skulls on the charge | Only monsters that can sprint spawn, all with an always charged Ritual Helmet, but players take 66% less damage. | Hallowed Concepts is enabled, not a Simulacrum boss wave, the stage has monsters that can sprint, and event "DroneUprising" inactive. |
 | SecondWind | Fragile, but never finished | Revives dead players. Everyone else drops to 10% health, but anyone who dies is revived once. |  |
 | SkillsOnly | Primary sealed, skills unleashed | Disables primary skills, but the other skills recharge faster. | Events "EquipmentOnly", "MonsterTransform" inactive and none of the players have a Bandolier. |
 | SmallArena | Confined space | Halves the safe zone, but the wave is easier. | Simulacrum mode only |
 | StealthMission | Vanish from their sight | Players are cloaked. Attacking reveals them for 2 seconds. | Event "Hunted" inactive. |
-| StrongEnemies | Fear the few | Only strong enemies spawn. | Events "WeakEnemies", "Mitosis" and "LynxPups" inactive. |
+| StrongEnemies | Fear the few | Only strong enemies spawn. | Not a Simulacrum boss wave, and events "WeakEnemies", "Mitosis" and "LynxPups" inactive. |
 | SupplyDrop | Supplies inbound | Drops a random Captain beacon next to each player. |  |
 | SurvivorSwap | Walk in another's shoes | Players swap survivors and items with each other until the event ends. Alone, you become a random survivor. | Events "MonsterTransform" and "InventoryRoulette" inactive and currently not a boss wave. |
 | TheAlpha | The pack has a leader | A random monster becomes a big alpha with ten times its health. While it lives, all other monsters are in a frenzy. |  |

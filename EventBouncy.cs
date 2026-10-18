@@ -27,7 +27,7 @@ namespace RandomEvents
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
             // Earthbound Vessel comes with that expansion; DroneUprising's drones mostly fly
-            return DLC4Content.DLC4 != null && Run.instance != null && Run.instance.IsExpansionEnabled(DLC4Content.DLC4)
+            return !Helper.IsSimulacrumBossWaveNext() && DLC4Content.DLC4 != null && Run.instance != null && Run.instance.IsExpansionEnabled(DLC4Content.DLC4)
                 && MonsterPool.GetChoices().Any(IsWalker)
                 && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("DroneUprising", StringComparison.InvariantCultureIgnoreCase));
         }
@@ -45,7 +45,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Hallowed Concepts is enabled, the stage has walking monsters, and event \"DroneUprising\" inactive.";
+            return "Hallowed Concepts is enabled, not a Simulacrum boss wave, the stage has walking monsters, and event \"DroneUprising\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {

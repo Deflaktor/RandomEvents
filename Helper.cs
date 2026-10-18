@@ -241,6 +241,13 @@ namespace RandomEvents
             return spawned != null ? spawned.GetComponent<CharacterMaster>() : null;
         }
 
+        // Whether the next Simulacrum wave is a boss wave, which may also be one that only spawns Mithrix or a
+        // Scavenger, so that events that change which monsters spawn would do nothing
+        public static bool IsSimulacrumBossWaveNext()
+        {
+            return Run.instance is InfiniteTowerRun infiniteTowerRun && (infiniteTowerRun.waveIndex + 1) % 5 == 0;
+        }
+
         // the bodies of connected players who are alive
         public static List<CharacterBody> GetLivingPlayerBodies()
         {

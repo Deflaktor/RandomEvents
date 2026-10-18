@@ -39,7 +39,7 @@ namespace RandomEvents
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
             // they would pick other monsters from the pool
-            return FindSplits().Count > 0
+            return !Helper.IsSimulacrumBossWaveNext() && FindSplits().Count > 0
                 && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("StrongEnemies", StringComparison.InvariantCultureIgnoreCase)
                     || e.GetEventConfigName().Equals("WeakEnemies", StringComparison.InvariantCultureIgnoreCase)
                     || e.GetEventConfigName().Equals("DroneUprising", StringComparison.InvariantCultureIgnoreCase)
@@ -59,7 +59,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "The stage's monsters include such a pair, and events \"StrongEnemies\", \"WeakEnemies\", \"DroneUprising\" and \"LynxPups\" inactive.";
+            return "Not a Simulacrum boss wave, the stage's monsters include such a pair, and events \"StrongEnemies\", \"WeakEnemies\", \"DroneUprising\" and \"LynxPups\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {
