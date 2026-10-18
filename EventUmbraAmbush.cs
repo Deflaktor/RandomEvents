@@ -14,21 +14,21 @@ namespace RandomEvents
         // Unsafe Items.
         private static readonly Dictionary<string, string> DefaultSurvivorItems = new Dictionary<string, string>
         {
-            { "Default", "Syringe, CritGlasses, Hoof, Bear, Crowbar, BossDamageBonus, StickyBomb, ArmorPlate, FlatHealth, Tooth, ChainLightning, Missile, AttackSpeedOnCrit, Seed, Infusion, IceRing, FireRing, SprintArmor, ExplodeOnDeath, Behemoth, ShockNearby, BounceNearby, Dagger, AlienHead, BarrierOnOverHeal, Knurl, SprintWisp, LightningStrikeOnHit, FireballsOnHit, BleedOnHitAndExplode" },
-            { "CommandoBody", "Syringe, CritGlasses, BossDamageBonus, StickyBomb, ChainLightning, AttackSpeedOnCrit, Missile, Behemoth, BounceNearby, LightningStrikeOnHit" },
-            { "HuntressBody", "Syringe, CritGlasses, Hoof, Missile, AttackSpeedOnCrit, ChainLightning, Dagger, BounceNearby, HeadHunter, LightningStrikeOnHit" },
-            { "Bandit2Body", "CritGlasses, Crowbar, BleedOnHit, SecondarySkillMagazine, AttackSpeedOnCrit, ExecuteLowHealthElite, Behemoth, Dagger, BleedOnHitAndExplode" },
-            { "MercBody", "Syringe, Hoof, BleedOnHit, Bear, Seed, AttackSpeedOnCrit, ChainLightning, ShockNearby, BleedOnHitAndExplode, SprintWisp" },
+            { "Default", "CritGlasses, Hoof, Bear, Crowbar, BossDamageBonus, StickyBomb, ArmorPlate, FlatHealth, Tooth, ChainLightning, Missile, Seed, Infusion, IceRing, FireRing, SprintArmor, ExplodeOnDeath, Behemoth, ShockNearby, BounceNearby, Dagger, BarrierOnOverHeal, Knurl, SprintWisp, LightningStrikeOnHit, FireballsOnHit, BleedOnHitAndExplode" },
+            { "CommandoBody", "CritGlasses, BossDamageBonus, StickyBomb, ChainLightning, Missile, Behemoth, BounceNearby, LightningStrikeOnHit" },
+            { "HuntressBody", "CritGlasses, Hoof, Missile, ChainLightning, Dagger, BounceNearby, HeadHunter, LightningStrikeOnHit" },
+            { "Bandit2Body", "CritGlasses, Crowbar, BleedOnHit, SecondarySkillMagazine, ExecuteLowHealthElite, Behemoth, Dagger, BleedOnHitAndExplode" },
+            { "MercBody", "Hoof, BleedOnHit, Bear, Seed, ChainLightning, ShockNearby, BleedOnHitAndExplode, SprintWisp" },
             { "LoaderBody", "ArmorPlate, Bear, Crowbar, FlatHealth, Infusion, SprintArmor, Thorns, BarrierOnOverHeal, ShockNearby, Knurl" },
-            { "CrocoBody", "Syringe, Hoof, Bear, Tooth, Seed, Infusion, ChainLightning, Behemoth, ShockNearby, Knurl" },
-            { "MageBody", "CritGlasses, IgniteOnKill, FireRing, IceRing, ChainLightning, Missile, Behemoth, Icicle, FireballsOnHit, AlienHead" },
-            { "EngiBody", "ArmorPlate, Bear, Syringe, ChainLightning, Missile, Thorns, AlienHead, ShockNearby, Knurl" },
-            { "ToolbotBody", "Syringe, CritGlasses, StickyBomb, ChainLightning, AttackSpeedOnCrit, Missile, Behemoth, BounceNearby, Knurl" },
+            { "CrocoBody", "Hoof, Bear, Tooth, Seed, Infusion, ChainLightning, Behemoth, ShockNearby, Knurl" },
+            { "MageBody", "CritGlasses, IgniteOnKill, FireRing, IceRing, ChainLightning, Missile, Behemoth, Icicle, FireballsOnHit" },
+            { "EngiBody", "ArmorPlate, Bear, ChainLightning, Missile, Thorns, ShockNearby, Knurl" },
+            { "ToolbotBody", "CritGlasses, StickyBomb, ChainLightning, Missile, Behemoth, BounceNearby, Knurl" },
             { "TreebotBody", "FlatHealth, Tooth, Seed, Infusion, IceRing, Behemoth, BarrierOnOverHeal, Knurl" },
-            { "CaptainBody", "CritGlasses, StickyBomb, ChainLightning, Missile, AttackSpeedOnCrit, Behemoth, ShockNearby, LightningStrikeOnHit" },
-            { "RailgunnerBody", "CritGlasses, BossDamageBonus, Crowbar, AttackSpeedOnCrit, Missile, Behemoth, Dagger, LightningStrikeOnHit" },
-            { "VoidSurvivorBody", "Syringe, CritGlasses, ChainLightning, AttackSpeedOnCrit, Behemoth, ShockNearby, Knurl" },
-            { "SeekerBody", "Syringe, Hoof, Bear, ChainLightning, Seed, BarrierOnOverHeal, ShockNearby, SprintWisp" },
+            { "CaptainBody", "CritGlasses, StickyBomb, ChainLightning, Missile, Behemoth, ShockNearby, LightningStrikeOnHit" },
+            { "RailgunnerBody", "CritGlasses, BossDamageBonus, Crowbar, Missile, Behemoth, Dagger, LightningStrikeOnHit" },
+            { "VoidSurvivorBody", "CritGlasses, ChainLightning, Behemoth, ShockNearby, Knurl" },
+            { "SeekerBody", "Hoof, Bear, ChainLightning, Seed, BarrierOnOverHeal, ShockNearby, SprintWisp" },
             { "FalseSonBody", "ArmorPlate, FlatHealth, Bear, Infusion, Thorns, BarrierOnOverHeal, Knurl" },
             { "ChefBody", "IgniteOnKill, StickyBomb, FireRing, ChainLightning, Behemoth, FireballsOnHit" },
         };
@@ -40,6 +40,8 @@ namespace RandomEvents
             { ItemTier.Tier3, ItemTier.Tier3 }, { ItemTier.VoidTier3, ItemTier.Tier3 },
             { ItemTier.Boss, ItemTier.Boss }, { ItemTier.VoidBoss, ItemTier.Boss },
         };
+        // never in a kit, since they would undo the hunters' slowdown
+        private static readonly string[] FasterAttackItems = { "Syringe", "AttackSpeedOnCrit", "AlienHead" };
         private ConfigEntry<float> HealthMultiplier;
         private ConfigEntry<float> ItemMultiplier;
         private ConfigEntry<float> DamageReduction;
@@ -54,7 +56,8 @@ namespace RandomEvents
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            return GetSurvivorCandidates().Count > 0;
+            // its faster attacks would undo the hunters' slowdown
+            return GetSurvivorCandidates().Count > 0 && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("BulletHell", System.StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
         {
@@ -70,7 +73,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "";
+            return "Event \"BulletHell\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {
@@ -149,6 +152,7 @@ namespace RandomEvents
         private void GiveItems(Inventory hunterInventory, string survivor, Dictionary<ItemTier, int> counts)
         {
             var safeItems = new HashSet<ItemIndex>(SafeItems.Get());
+            safeItems.ExceptWith(FasterAttackItems.Select(ItemCatalog.FindItemIndex));
             var survivorList = ParseItems(survivor).Where(safeItems.Contains).ToList();
             var defaultList = ParseItems("Default").Where(safeItems.Contains).ToList();
             foreach (var (tier, count) in counts)

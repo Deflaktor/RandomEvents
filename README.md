@@ -15,7 +15,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 |------------|--------------|-------------|-----------|
 | Bouncy | Everything bounces | All players get 3 Earthbound Vessels. Only walking monsters spawn, and they jump at random, also in mid-air. | Hallowed Concepts is enabled, not a Simulacrum boss wave, the stage has walking monsters, and event "DroneUprising" inactive. |
 | BreachingFins | Up, up and away | All players get a Breaching Fin without a cooldown until the event ends, and monsters fall three times as fast. More walking monsters spawn. | Seekers of the Storm is enabled. |
-| BulletHell | Projectile density dialed to eleven | Increases the fire rate of enemies but lowers their damage. |  |
+| BulletHell | Projectile density dialed to eleven | Increases the fire rate of enemies but lowers their damage. | Event "UmbraAmbush" inactive. |
 | CasinoItem | Ancient relic cycling through its many powers | Gives all players 10 of a random item, which changes every 10 seconds. |  |
 | ChestMimics | Not every chest is what it seems | Chests bought with gold may turn into a monster instead of giving their item. | Not in Simulacrum, and the stage has an unopened chest bought with gold. |
 | CursedSpoils | Spoils come at a price | Every kill gives each player a temporary item, but taking damage from monsters brings hexes that disable items. | Hallowed Concepts is enabled. |
@@ -56,7 +56,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | SurvivorSwap | Walk in another's shoes | Players swap survivors and items with each other until the event ends. Alone, you become a random survivor with 100 armor. | Events "MonsterTransform" and "InventoryRoulette" inactive and currently not a boss wave. |
 | TheAlpha | The pack has a leader | A random monster becomes a big alpha with ten times its health. While it lives, all other monsters are in a frenzy. |  |
 | TimeWarp | Time slows for your foes | Slows all monsters to about a third of their speed. |  |
-| UmbraAmbush | Umbras emerge from the shadows | Each player is hunted by a tough enemy survivor with items, which attacks and moves slowly. |  |
+| UmbraAmbush | Umbras emerge from the shadows | Each player is hunted by a tough enemy survivor with items, which attacks and moves slowly. | Event "BulletHell" inactive. |
 | UnitedWeStand | United we stand | Players close to each other share all their items. | At least two players are alive. |
 | VengefulSpirits | Spirits stand guard | All monsters get a Vengeful Spirit, but half as many spawn. | Hallowed Concepts is enabled. |
 | WeakEnemies | Horde of the many | Only weak enemies spawn. | Events "StrongEnemies", "Mitosis" and "LynxPups" inactive. |

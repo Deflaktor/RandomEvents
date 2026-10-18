@@ -19,7 +19,8 @@ namespace RandomEvents
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            return true;
+            // the faster attacks would undo the hunters' slowdown
+            return !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("UmbraAmbush", StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
         {
@@ -35,7 +36,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "";
+            return "Event \"UmbraAmbush\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {
