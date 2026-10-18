@@ -59,6 +59,7 @@ namespace RandomEvents
                 InitAndHookEvent(new EventChestMimics());
                 InitAndHookEvent(new EventCursedSpoils());
                 InitAndHookEvent(new EventDroneEscort());
+                InitAndHookEvent(new EventDroneUprising());
                 InitAndHookEvent(new EventEquipmentOnly());
                 InitAndHookEvent(new EventExplodingCorpses());
                 InitAndHookEvent(new EventFallingEnemies());

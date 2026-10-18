@@ -20,7 +20,8 @@ namespace RandomEvents
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            return true;
+            // its drones mostly fly
+            return !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("DroneUprising", StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
         {
@@ -36,7 +37,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "";
+            return "Event \"DroneUprising\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {
