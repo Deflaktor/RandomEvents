@@ -31,7 +31,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "All players get 3 Brilliant Behemoths and every monster gets one, but monsters deal half damage.";
+            return "All players and monsters get 3 Brilliant Behemoths, but monsters deal half damage.";
         }
         public override string GetConditionDescription()
         {
@@ -40,7 +40,7 @@ namespace RandomEvents
         protected override void AddConfig(ConfigFile config)
         {
             PlayerBehemoths = config.Bind(GetEventConfigName(), "Player Behemoths", 3, "How many Brilliant Behemoths each player gets.");
-            MonsterBehemoths = config.Bind(GetEventConfigName(), "Monster Behemoths", 1, "How many Brilliant Behemoths each monster gets.");
+            MonsterBehemoths = config.Bind(GetEventConfigName(), "Monster Behemoths", 3, "How many Brilliant Behemoths each monster gets.");
             MonsterDamageMultiplier = config.Bind(GetEventConfigName(), "Monster Damage Multiplier", 0.5f, "The damage monsters deal during the event, relative to normal.");
         }
         public override void Preload()
