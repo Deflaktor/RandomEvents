@@ -149,6 +149,8 @@ namespace RandomEvents
             // a boss health bar for every player; the alpha drops no boss loot
             squad = GameObject.Instantiate(BossCombatSquad.WaitForCompletion());
             squad.GetComponent<BossGroup>().dropPosition = null;
+            // never defeated, which would count as a teleporter boss, e.g. for ReadyUp's vote; it's destroyed instead
+            squad.GetComponent<CombatSquad>().delayDefeat = true;
             NetworkServer.Spawn(squad);
             squad.GetComponent<CombatSquad>().AddMember(alpha);
             ChatHelper.SendEventMessage("EVENT_THE_ALPHA_CHOSEN", Util.GetBestBodyName(alphaBody.gameObject));
