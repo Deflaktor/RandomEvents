@@ -14,7 +14,6 @@ namespace RandomEvents
         {
             public AbstractEvent user;
             public Func<WeightedSelection<DirectorCard>.ChoiceInfo, bool> keep;
-            public Func<WeightedSelection<DirectorCard>.ChoiceInfo, float> weightFactor;
             public WeightedSelection<DirectorCard> replacement;
         }
 
@@ -72,12 +71,6 @@ namespace RandomEvents
         public static void Filter(AbstractEvent user, Func<WeightedSelection<DirectorCard>.ChoiceInfo, bool> keep)
         {
             Add(new Change { user = user, keep = keep });
-        }
-
-        // multiplies the weight of each card by the factor for it
-        public static void Reweight(AbstractEvent user, Func<WeightedSelection<DirectorCard>.ChoiceInfo, float> weightFactor)
-        {
-            Add(new Change { user = user, weightFactor = weightFactor });
         }
 
         // replaces the pool, e.g. with monsters the stage doesn't have; events that filter it afterwards filter these
@@ -151,11 +144,7 @@ namespace RandomEvents
                 var filtered = new WeightedSelection<DirectorCard>();
                 foreach (var choice in GetChoices(selection))
                 {
-                    if (change.weightFactor != null)
-                    {
-                        filtered.AddChoice(choice.value, choice.weight * change.weightFactor(choice));
-                    }
-                    else if (change.keep(choice))
+                    if (change.keep(choice))
                     {
                         filtered.AddChoice(choice);
                     }

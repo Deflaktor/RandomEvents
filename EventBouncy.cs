@@ -16,6 +16,11 @@ namespace RandomEvents
         private ConfigEntry<int> MonsterFeathers;
         private ConfigEntry<float> MinHopInterval;
         private ConfigEntry<float> MaxHopInterval;
+        private ConfigEntry<float> LeashLength;
+        // how strongly a stretched leash pulls a monster back, per meter beyond its length
+        private const float LeashSpring = 15f;
+        // where each walking monster last stood, which its leash is tied to
+        private readonly Dictionary<CharacterMotor, Vector3> anchors = new Dictionary<CharacterMotor, Vector3>();
         // when each monster jumps next
         private readonly Dictionary<CharacterBody, float> nextHops = new Dictionary<CharacterBody, float>();
         // monsters that walk, and so can jump
@@ -26,8 +31,8 @@ namespace RandomEvents
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            // Earthbound Vessel comes with that expansion; DroneUprising's drones mostly fly
-            return !Helper.IsSimulacrumBossWaveNext() && DLC4Content.DLC4 != null && Run.instance != null && Run.instance.IsExpansionEnabled(DLC4Content.DLC4)
+            // the players' Earthbound Vessels or Breaching Fins; DroneUprising's drones mostly fly
+            return !Helper.IsSimulacrumBossWaveNext() && (VesselsAvailable() || FinsAvailable())
                 && MonsterPool.GetChoices().Any(IsWalker)
                 && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("DroneUprising", StringComparison.InvariantCultureIgnoreCase));
         }
@@ -41,11 +46,11 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "All players get 3 Earthbound Vessels. Only walking monsters spawn, and they jump at random, also in mid-air.";
+            return "All players get 3 Earthbound Vessels and a Breaching Fin without a cooldown. Only walking monsters spawn, which jump at random, also in mid-air, and are on a leash.";
         }
         public override string GetConditionDescription()
         {
-            return "Hallowed Concepts is enabled, not a Simulacrum boss wave, the stage has walking monsters, and event \"DroneUprising\" inactive.";
+            return "Hallowed Concepts or Seekers of the Storm is enabled, not a Simulacrum boss wave, the stage has walking monsters, and event \"DroneUprising\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {
@@ -53,6 +58,7 @@ namespace RandomEvents
             MonsterFeathers = config.Bind(GetEventConfigName(), "Monster Feathers", 1, "How many Hopoo Feathers each monster gets, each an extra jump in mid-air.");
             MinHopInterval = config.Bind(GetEventConfigName(), "Min Jump Interval", 1f, "The shortest time between two jumps of a monster, in seconds.");
             MaxHopInterval = config.Bind(GetEventConfigName(), "Max Jump Interval", 4f, "The longest time between two jumps of a monster, in seconds.");
+            LeashLength = config.Bind(GetEventConfigName(), "Leash Length", 10f, "How far a launched monster gets from where it last stood before its leash pulls it back, in meters.");
         }
         public override void Preload()
         {
@@ -61,6 +67,62 @@ namespace RandomEvents
         {
             CharacterBody.onBodyStartGlobal += CharacterBody_onBodyStartGlobal;
             On.RoR2.CharacterAI.BaseAI.UpdateBodyInputs += BaseAI_UpdateBodyInputs;
+            RoR2Application.onFixedUpdate += RoR2Application_onFixedUpdate;
+        }
+
+        // Earthbound Vessel comes with Hallowed Concepts, Breaching Fin with Seekers of the Storm
+        private static bool VesselsAvailable()
+        {
+            return DLC4Content.DLC4 != null && Run.instance != null && Run.instance.IsExpansionEnabled(DLC4Content.DLC4);
+        }
+
+        private static bool FinsAvailable()
+        {
+            var fin = DLC2Content.Items.KnockBackHitEnemies;
+            return fin != null && Run.instance != null && (fin.requiredExpansion == null || Run.instance.IsExpansionEnabled(fin.requiredExpansion));
+        }
+
+        // Each walking monster is tied to where it last stood. Beyond the leash's length, it can't get any further away
+        // and is pulled back like on a bungee cord, so the fins don't launch it far away. The host moves the monsters,
+        // so every player sees it.
+        private void RoR2Application_onFixedUpdate()
+        {
+            if (!NetworkServer.active || !IsActive())
+            {
+                return;
+            }
+            foreach (var body in CharacterBody.readOnlyInstancesList)
+            {
+                var motor = body != null ? body.characterMotor : null;
+                if (motor == null || body.isPlayerControlled || body.teamComponent.teamIndex == TeamIndex.Player || !motor.hasEffectiveAuthority
+                    || !body.healthComponent.alive)
+                {
+                    continue;
+                }
+                var position = body.transform.position;
+                if (motor.isGrounded || !anchors.TryGetValue(motor, out var anchor))
+                {
+                    anchors[motor] = position;
+                    continue;
+                }
+                var offset = position - anchor;
+                var distance = offset.magnitude;
+                var length = Mathf.Max(0f, LeashLength.Value);
+                if (distance <= length || distance <= 0f)
+                {
+                    continue;
+                }
+                var direction = offset / distance;
+                var velocity = motor.velocity;
+                // the taut leash stops it from going further
+                var outward = Vector3.Dot(velocity, direction);
+                if (outward > 0f)
+                {
+                    velocity -= direction * outward;
+                }
+                velocity -= direction * LeashSpring * (distance - length) * Time.fixedDeltaTime;
+                motor.velocity = velocity;
+            }
         }
 
         // ground monsters that can move
@@ -78,13 +140,31 @@ namespace RandomEvents
             if (NetworkServer.active && IsActive())
             {
                 GiveVessels(body);
+                GiveFin(body);
                 GiveFeathers(body);
             }
         }
 
+        private void GiveFin(CharacterBody body)
+        {
+            if (body == null || !body.isPlayerControlled || body.inventory == null || !FinsAvailable())
+            {
+                return;
+            }
+            var inventory = EventLoot.GetInventory(this, body);
+            if (inventory.temporaryItems.ContainsKey(DLC2Content.Items.KnockBackHitEnemies.itemIndex))
+            {
+                return;
+            }
+            inventory.GiveTemporaryItem(DLC2Content.Items.KnockBackHitEnemies.itemIndex);
+            // an item without a name that takes away the fin's cooldown
+            inventory.GiveTemporaryItem(DLC4Content.Items.KnockBackHitEnemiesNoCooldown.itemIndex);
+            PurchaseInteraction.CreateItemTakenOrb(body.corePosition, body.gameObject, DLC2Content.Items.KnockBackHitEnemies.itemIndex);
+        }
+
         private void GiveVessels(CharacterBody body)
         {
-            if (body == null || !body.isPlayerControlled || body.inventory == null || VesselCount.Value <= 0)
+            if (body == null || !body.isPlayerControlled || body.inventory == null || VesselCount.Value <= 0 || !VesselsAvailable())
             {
                 return;
             }
@@ -156,6 +236,7 @@ namespace RandomEvents
             foreach (var body in CharacterBody.readOnlyInstancesList)
             {
                 GiveVessels(body);
+                GiveFin(body);
                 GiveFeathers(body);
             }
         }
@@ -165,6 +246,7 @@ namespace RandomEvents
             MonsterPool.Restore(this);
             EventLoot.Clear(this);
             nextHops.Clear();
+            anchors.Clear();
         }
     }
 }
