@@ -65,7 +65,7 @@ namespace RandomEvents
 
         private void CharacterBody_onBodyStartGlobal(CharacterBody body)
         {
-            if (ModConfig.Enabled.Value && NetworkServer.active && IsActive() && body.teamComponent.teamIndex != TeamIndex.Player && !body.isBoss && body.master?.gameObject.GetComponent<EventZombies.ZombieComponent>() == null && Run.instance.runRNG.nextNormalizedFloat < GhostProbability.Value)
+            if (ModConfig.Enabled.Value && NetworkServer.active && IsActive() && body.teamComponent.teamIndex != TeamIndex.Player && !body.isBoss && body.master?.gameObject.GetComponent<EventZombies.ZombieComponent>() == null && body.master?.gameObject.GetComponent<EventMitosis.MitosisSplit>() == null && Run.instance.runRNG.nextNormalizedFloat < GhostProbability.Value)
             {
                 body.gameObject.EnsureComponent<GhostComponent>();
             }
@@ -80,7 +80,7 @@ namespace RandomEvents
         {
             foreach (var body in CharacterBody.instancesList)
             {
-                if (body != null && body.teamComponent.teamIndex != TeamIndex.Player && !body.isBoss && body.master?.gameObject.GetComponent<EventZombies.ZombieComponent>() == null && Run.instance.runRNG.nextNormalizedFloat < GhostProbability.Value)
+                if (body != null && body.teamComponent.teamIndex != TeamIndex.Player && !body.isBoss && body.master?.gameObject.GetComponent<EventZombies.ZombieComponent>() == null && body.master?.gameObject.GetComponent<EventMitosis.MitosisSplit>() == null && Run.instance.runRNG.nextNormalizedFloat < GhostProbability.Value)
                 {
                     body.gameObject.EnsureComponent<GhostComponent>();
                 }

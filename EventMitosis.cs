@@ -139,6 +139,10 @@ namespace RandomEvents
             {
                 var offset = Quaternion.AngleAxis(360f / splitCount * i, Vector3.up) * Vector3.forward * (body.radius * 0.5f);
                 var split = Helper.SpawnMonster(weakCard, position + offset, eliteDef);
+                if (split != null)
+                {
+                    split.gameObject.AddComponent<MitosisSplit>();
+                }
                 // briefly invincible, as after Dio's Best Friend, so a blast that killed the monster doesn't kill them too
                 var splitBody = split != null ? split.GetBody() : null;
                 if (splitBody != null)
@@ -146,6 +150,11 @@ namespace RandomEvents
                     splitBody.AddTimedBuff(RoR2Content.Buffs.Immune, SplitImmunity);
                 }
             }
+        }
+
+        // marks the weaker monsters a monster split into, e.g. so they don't become ghosts
+        public class MitosisSplit : MonoBehaviour
+        {
         }
 
         public override void Prepare()
