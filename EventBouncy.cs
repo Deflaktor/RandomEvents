@@ -159,7 +159,7 @@ namespace RandomEvents
             inventory.GiveTemporaryItem(DLC2Content.Items.KnockBackHitEnemies.itemIndex);
             // an item without a name that takes away the fin's cooldown
             inventory.GiveTemporaryItem(DLC4Content.Items.KnockBackHitEnemiesNoCooldown.itemIndex);
-            PurchaseInteraction.CreateItemTakenOrb(body.corePosition, body.gameObject, DLC2Content.Items.KnockBackHitEnemies.itemIndex);
+            ItemOrb.Fly(body.corePosition, body.gameObject, DLC2Content.Items.KnockBackHitEnemies.itemIndex);
         }
 
         private void GiveVessels(CharacterBody body)
@@ -174,7 +174,7 @@ namespace RandomEvents
                 return;
             }
             inventory.GiveTemporaryItem(DLC4Content.Items.RechargeableJump.itemIndex, VesselCount.Value);
-            PurchaseInteraction.CreateItemTakenOrb(body.corePosition + Vector3.up * 4f, body.gameObject, DLC4Content.Items.RechargeableJump.itemIndex);
+            ItemOrb.Fly(body.corePosition + Vector3.up * 4f, body.gameObject, DLC4Content.Items.RechargeableJump.itemIndex);
         }
 
         // a Feather for a jump in mid-air, as the monsters only jump the normal way

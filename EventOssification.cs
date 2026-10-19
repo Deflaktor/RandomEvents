@@ -76,14 +76,14 @@ namespace RandomEvents
             if (hexes > 0)
             {
                 inventory.GiveTemporaryItem(DLC4Content.Items.BarrierEnemiesOnKill.itemIndex, hexes);
-                PurchaseInteraction.CreateItemTakenOrb(body.corePosition + Vector3.up * 4f, body.gameObject, DLC4Content.Items.BarrierEnemiesOnKill.itemIndex);
+                ItemOrb.Fly(body.corePosition + Vector3.up * 4f, body.gameObject, DLC4Content.Items.BarrierEnemiesOnKill.itemIndex);
             }
             // the health with the items and stats the player has as the event starts
             var brooches = Mathf.RoundToInt(body.healthComponent.fullCombinedHealth / Mathf.Max(1f, HealthPerBrooch.Value));
             if (brooches > 0)
             {
                 inventory.GiveTemporaryItem(RoR2Content.Items.BarrierOnKill.itemIndex, brooches);
-                PurchaseInteraction.CreateItemTakenOrb(body.corePosition + Vector3.up * 4f, body.gameObject, RoR2Content.Items.BarrierOnKill.itemIndex);
+                ItemOrb.Fly(body.corePosition + Vector3.up * 4f, body.gameObject, RoR2Content.Items.BarrierOnKill.itemIndex);
             }
         }
 

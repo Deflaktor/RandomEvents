@@ -120,7 +120,7 @@ namespace RandomEvents
                         index = (index + 1) % itemCandidates.Count;
                         var nextItem = itemCandidates[index];
                         inventory.GiveTemporaryItem(nextItem, 10);
-                        PurchaseInteraction.CreateItemTakenOrb(body.transform.position, body.gameObject, nextItem);
+                        ItemOrb.Fly(body.transform.position, body.gameObject, nextItem);
                     }
                     timer = 0;
                 }

@@ -67,7 +67,7 @@ namespace RandomEvents
                     return;
                 }
                 EventLoot.GetInventory(this, body).GiveTemporaryItem(itemIndex);
-                PurchaseInteraction.CreateItemTakenOrb(damageReport.victimBody.corePosition, body.gameObject, itemIndex);
+                ItemOrb.FlySilently(damageReport.victimBody.corePosition, body.gameObject, itemIndex);
             }
         }
 
@@ -113,7 +113,7 @@ namespace RandomEvents
                 var origin = damageReport.attackerBody != null ? damageReport.attackerBody.corePosition : body.corePosition + Vector3.up * 4f;
                 for (int i = 0; i < hexes; i++)
                 {
-                    PurchaseInteraction.CreateItemTakenOrb(origin, body.gameObject, DLC4Content.Items.RoamingItemDisable.itemIndex);
+                    ItemOrb.FlySilently(origin, body.gameObject, DLC4Content.Items.RoamingItemDisable.itemIndex);
                 }
             }
         }

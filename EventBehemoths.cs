@@ -95,7 +95,7 @@ namespace RandomEvents
             }
             if (body.isPlayerControlled)
             {
-                PurchaseInteraction.CreateItemTakenOrb(body.corePosition, body.gameObject, RoR2Content.Items.Behemoth.itemIndex);
+                ItemOrb.Fly(body.corePosition, body.gameObject, RoR2Content.Items.Behemoth.itemIndex);
             }
         }
 

@@ -140,7 +140,7 @@ namespace RandomEvents
                     if (itemIndex != ItemIndex.None && amount > 0)
                     {
                         inventory.GiveTemporaryItem(itemIndex, amount);
-                        PurchaseInteraction.CreateItemTakenOrb(body.corePosition, body.gameObject, itemIndex);
+                        ItemOrb.Fly(body.corePosition, body.gameObject, itemIndex);
                     }
                 }
             }

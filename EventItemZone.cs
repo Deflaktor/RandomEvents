@@ -192,7 +192,7 @@ namespace RandomEvents
                         inventories.Add(inventory);
                     }
                     inventory.GiveTemporaryItem(itemIndex, itemsPerPulse);
-                    PurchaseInteraction.CreateItemTakenOrb(transform.position, player.gameObject, itemIndex);
+                    ItemOrb.FlySilently(transform.position, player.gameObject, itemIndex);
                 }
                 foreach (var player in result.playersNotInRadius)
                 {

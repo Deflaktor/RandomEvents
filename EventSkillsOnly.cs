@@ -143,11 +143,11 @@ namespace RandomEvents
                         inventory = gameObject.AddComponent<TemporaryInventory>();
                     }
                     inventory.GiveTemporaryItem(RoR2Content.Items.SecondarySkillMagazine.itemIndex, 3);
-                    PurchaseInteraction.CreateItemTakenOrb(body.transform.position, body.gameObject, RoR2Content.Items.SecondarySkillMagazine.itemIndex);
+                    ItemOrb.Fly(body.transform.position, body.gameObject, RoR2Content.Items.SecondarySkillMagazine.itemIndex);
                     inventory.GiveTemporaryItem(RoR2Content.Items.UtilitySkillMagazine.itemIndex, 1);
-                    PurchaseInteraction.CreateItemTakenOrb(body.transform.position, body.gameObject, RoR2Content.Items.UtilitySkillMagazine.itemIndex);
+                    ItemOrb.Fly(body.transform.position, body.gameObject, RoR2Content.Items.UtilitySkillMagazine.itemIndex);
                     inventory.GiveTemporaryItem(RoR2Content.Items.AlienHead.itemIndex, 10);
-                    PurchaseInteraction.CreateItemTakenOrb(body.transform.position, body.gameObject, RoR2Content.Items.AlienHead.itemIndex);
+                    ItemOrb.Fly(body.transform.position, body.gameObject, RoR2Content.Items.AlienHead.itemIndex);
                     // on this component, so it stops when the body dies or the event ends
                     StartCoroutine(DelayGivePrimaryReplacement(body));
                 }
@@ -156,7 +156,7 @@ namespace RandomEvents
             {
                 yield return new WaitForSeconds(2.0f);
                 inventory.GiveTemporaryItem(RoR2Content.Items.LunarPrimaryReplacement.itemIndex, 9000);
-                PurchaseInteraction.CreateItemTakenOrb(body.transform.position, body.gameObject, RoR2Content.Items.LunarPrimaryReplacement.itemIndex);
+                ItemOrb.Fly(body.transform.position, body.gameObject, RoR2Content.Items.LunarPrimaryReplacement.itemIndex);
             }
 
             public void SetupEquipment()

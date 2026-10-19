@@ -158,7 +158,7 @@ namespace RandomEvents
                 return;
             }
             inventory.GiveTemporaryItem(RoR2Content.Items.HeadHunter.itemIndex);
-            PurchaseInteraction.CreateItemTakenOrb(body.corePosition + Vector3.up * 4f, body.gameObject, RoR2Content.Items.HeadHunter.itemIndex);
+            ItemOrb.Fly(body.corePosition + Vector3.up * 4f, body.gameObject, RoR2Content.Items.HeadHunter.itemIndex);
         }
 
         // a random aspect the monster doesn't have yet

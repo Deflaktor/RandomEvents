@@ -1,6 +1,5 @@
 ﻿using BepInEx.Configuration;
 using RoR2;
-using RoR2.Orbs;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -190,18 +189,8 @@ namespace RandomEvents
             }
             nextAfflictions[body] = now + AfflictionInterval;
             EventLoot.GetInventory(this, body).GiveTemporaryItem(RoR2Content.Items.TonicAffliction.itemIndex);
-            // the affliction flies into the player from above with the whoosh of an item being handed over, e.g. by a
-            // printer; the orb itself gives nothing
-            if (body.mainHurtBox != null)
-            {
-                OrbManager.instance.AddOrb(new ItemTransferOrb
-                {
-                    origin = body.corePosition + Vector3.up * OrbHeight,
-                    target = body.mainHurtBox,
-                    itemIndex = RoR2Content.Items.TonicAffliction.itemIndex,
-                    onArrival = orb => { }
-                });
-            }
+            // the affliction flies into the player from above
+            ItemOrb.Fly(body.corePosition + Vector3.up * OrbHeight, body.gameObject, RoR2Content.Items.TonicAffliction.itemIndex);
             EffectManager.SpawnEffect(AfflictionEffect.WaitForCompletion(), new EffectData
             {
                 origin = body.corePosition,
@@ -266,7 +255,7 @@ namespace RandomEvents
                 if (count % CleanPhasesPerPearl == 0)
                 {
                     EventLoot.GetInventory(this, body).GiveTemporaryItem(RoR2Content.Items.ShinyPearl.itemIndex);
-                    PurchaseInteraction.CreateItemTakenOrb(body.corePosition + Vector3.up * OrbHeight, body.gameObject, RoR2Content.Items.ShinyPearl.itemIndex);
+                    ItemOrb.Fly(body.corePosition + Vector3.up * OrbHeight, body.gameObject, RoR2Content.Items.ShinyPearl.itemIndex);
                 }
             }
         }

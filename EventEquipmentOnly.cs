@@ -215,7 +215,7 @@ namespace RandomEvents
                     //PurchaseInteraction.CreateItemTakenOrb(body.transform.position, body.gameObject, RoR2Content.Items.LunarSecondaryReplacement.itemIndex);
                     //PurchaseInteraction.CreateItemTakenOrb(body.transform.position, body.gameObject, RoR2Content.Items.LunarUtilityReplacement.itemIndex);
                     //PurchaseInteraction.CreateItemTakenOrb(body.transform.position, body.gameObject, RoR2Content.Items.LunarSpecialReplacement.itemIndex);
-                    PurchaseInteraction.CreateItemTakenOrb(body.transform.position, body.gameObject, RoR2Content.Items.Feather.itemIndex);
+                    ItemOrb.Fly(body.transform.position, body.gameObject, RoR2Content.Items.Feather.itemIndex);
                     body.inventory.RestockEquipmentCharges(body.inventory.activeEquipmentLocation, 1);
                 }
             }

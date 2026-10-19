@@ -465,7 +465,7 @@ namespace RandomEvents
                                 continue;
                             }
                             temporaryInventory.GiveTemporaryItem(itemIndex, itemAmount);
-                            PurchaseInteraction.CreateItemTakenOrb(body.transform.position, body.gameObject, itemIndex);
+                            ItemOrb.Fly(body.transform.position, body.gameObject, itemIndex);
                         }
                     }
                 }

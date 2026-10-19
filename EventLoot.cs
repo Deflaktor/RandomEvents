@@ -113,7 +113,7 @@ namespace RandomEvents
             }
             marker.taken = true;
             GetInventory(marker.owner, body).GiveTemporaryItem(itemIndex);
-            PurchaseInteraction.CreateItemTakenOrb(pickup.transform.position, body.gameObject, itemIndex);
+            ItemOrb.FlySilently(pickup.transform.position, body.gameObject, itemIndex);
             Object.Destroy(pickup.gameObject);
             return true;
         }
