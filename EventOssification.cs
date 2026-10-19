@@ -1,6 +1,8 @@
 ﻿using BepInEx.Configuration;
 using RoR2;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -18,7 +20,8 @@ namespace RandomEvents
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
             // Hex of Ossification comes with that expansion
-            return DLC4Content.DLC4 != null && Run.instance != null && Run.instance.IsExpansionEnabled(DLC4Content.DLC4);
+            return DLC4Content.DLC4 != null && Run.instance != null && Run.instance.IsExpansionEnabled(DLC4Content.DLC4)
+                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("Ghosts", StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
         {
@@ -34,7 +37,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Hallowed Concepts is enabled.";
+            return "Hallowed Concepts is enabled, and event \"Ghosts\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {

@@ -28,7 +28,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | FallingEnemies | Enemies fall down from the heavens | Enemies fall from the sky. Only walking enemies spawn. | Not a Simulacrum boss wave, and event "DroneUprising" inactive. |
 | FocusFire | Focus your fire | Monsters have twenty times their health, but take more and more damage the more they are hurt. This wears off if they aren't hurt for 3 seconds. |  |
 | FuelArray | Stay above 50% health or face disaster | Heals all players and gives them a Fuel Array until the event ends, but they take less damage. | Event "EquipmentOnly" inactive. |
-| Ghosts | Ghostly apparitions haunt the battlefield | Some monsters spawn as ghosts that fade after a while. | Currently not a boss wave. |
+| Ghosts | Ghostly apparitions haunt the battlefield | Some monsters spawn as ghosts that fade after a while. | Currently not a boss wave, and event "Ossification" inactive. |
 | Haste | The world accelerates | All beings become faster. |  |
 | HotPotato | Hot potato | A player carries a bomb that explodes after 20 seconds and costs them half their health. Touch another player to pass it on. | At least two players are alive. |
 | Hunted | The hunt is on | All monsters chase one random player, who gets 100 armor. | At least two players are alive and event "StealthMission" inactive. |
@@ -42,7 +42,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | Mitosis | Divide and multiply | Only monsters with a weaker relative spawn, and they split into several of them when they die. | Not a Simulacrum boss wave, the stage's monsters include such a pair, and events "StrongEnemies", "WeakEnemies", "DroneUprising" and "LynxPups" inactive. |
 | MonsterTransform | Players embrace their monstrous forms | Players transform into monsters. | Events "SkillsOnly" and "SurvivorSwap" inactive and currently not a boss wave. |
 | NeutroniumWeights | A heavy burden | All monsters get a Neutronium Weight until the event ends. | Alloyed Collective is enabled. |
-| Ossification | Every kill shields both sides | All players get 5 Hexes of Ossification, so their kills give nearby monsters barrier, but also enough Topaz Brooches for each kill to fill their own barrier. | Hallowed Concepts is enabled. |
+| Ossification | Every kill shields both sides | All players get 5 Hexes of Ossification, so their kills give nearby monsters barrier, but also enough Topaz Brooches for each kill to fill their own barrier. | Hallowed Concepts is enabled, and event "Ghosts" inactive. |
 | RandomArtifact |  | Turns on up to three random artifacts until the event ends. | There is at least one artifact which can be enabled and is not blacklisted. |
 | RandomTeams | Enemies turn against each other | Makes some enemies fight each other as well as the players. |  |
 | RedLightGreenLight | Red light, green light | Red and green light take turns. During red light, monsters freeze, players who stand still can't be hurt, and players who move get Tonic Afflictions until the event ends. |  |

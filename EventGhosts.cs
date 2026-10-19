@@ -29,7 +29,8 @@ namespace RandomEvents
                     return false;
                 }
             }
-            return true;
+            // ghosts' fading health and the monsters' barrier from Ossification don't mix well
+            return !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("Ossification", StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
         {
@@ -45,7 +46,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Currently not a boss wave.";
+            return "Currently not a boss wave, and event \"Ossification\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {
