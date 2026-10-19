@@ -53,6 +53,7 @@ namespace RandomEvents
                 HereticTransformation.Hook();
                 EventLoot.Hook();
                 Slowdown.Hook();
+                MonsterPool.Hook();
 
                 ModConfig.Init();
                 InitAndHookEvent(new EventBehemoths());

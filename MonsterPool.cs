@@ -23,6 +23,32 @@ namespace RandomEvents
         private static WeightedSelection<DirectorCard> changedSelection;
         private static readonly List<Change> changes = new List<Change>();
 
+        public static void Hook()
+        {
+            On.RoR2.CombatDirector.SetNextSpawnAsBoss += CombatDirector_SetNextSpawnAsBoss;
+        }
+
+        // The teleporter's boss comes from the stage's own monsters, whatever the events changed: their pools may have no
+        // champion to pick, e.g. DroneUprising's drones.
+        private static void CombatDirector_SetNextSpawnAsBoss(On.RoR2.CombatDirector.orig_SetNextSpawnAsBoss orig, CombatDirector self)
+        {
+            var stage = ClassicStageInfo.instance;
+            if (!IsChanged(stage))
+            {
+                orig(self);
+                return;
+            }
+            stage.monsterSelection = originalSelection;
+            try
+            {
+                orig(self);
+            }
+            finally
+            {
+                stage.monsterSelection = changedSelection;
+            }
+        }
+
         // the cards of the stage's monster pool, without the selection's spare capacity
         public static List<WeightedSelection<DirectorCard>.ChoiceInfo> GetChoices()
         {
