@@ -66,10 +66,10 @@ namespace RandomEvents
             AfflictionEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC1/PermanentDebuffOnHit/PermanentDebuffEffect.prefab");
             // the red burst of a monster leveling up
             RedLightEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/LevelUpEffectEnemy.prefab");
-            // the red flash of a teleporter's activation, with a rift's
-            RedLightFlash = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC4/survival/common/RiftActivation.prefab");
             // the flash and chime of a Solus portal appearing
-            GreenLightFlash = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC3/SolusWebPortalSpawnEffect.prefab");
+            RedLightFlash = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC3/SolusWebPortalSpawnEffect.prefab");
+            // the flash of a rift's activation
+            GreenLightFlash = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC4/survival/common/RiftActivation.prefab");
         }
         public override void Hook()
         {
