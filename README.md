@@ -24,7 +24,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | DroneUprising | The drones have turned | Hostile drones spawn instead of monsters, also those of items and survivors. They deal half their normal damage, move at half speed and leave no wreck. | Not a Simulacrum boss wave, and events "Mitosis", "RitualHelmets", "FallingEnemies", "Bouncy" and "LynxPups" inactive. |
 | Egocentrism | All eyes on you | All monsters get an Egocentrism, but players take 75% less damage. | Survivors of the Void is enabled. |
 | EliteSurge | Every foe is elite | Every monster gains random elite types, usually one, sometimes two or three, with stronger ones rarer and without an elite's extra health and damage. A quarter fewer monsters spawn, and every player gets a Wake of Vultures. |  |
-| EquipmentOnly | Equipment-exclusive combat | Disables all skills, but gives all players a random equipment with a short cooldown. | Events "SkillsOnly", "FuelArray" inactive. Artifact of Enigma inactive. |
+| EquipmentOnly | Equipment-exclusive combat | Disables all skills, but gives all players a random equipment with a short cooldown, or a Crowdfunder that fires nonstop for free. | Events "SkillsOnly", "FuelArray" inactive. Artifact of Enigma inactive. |
 | ExplodingCorpses | Exploding corpses | All enemies explode upon death. | Players have sufficient means to do ranged damage. |
 | FallingEnemies | Enemies fall down from the heavens | Enemies fall from the sky. Only walking enemies spawn. | Not a Simulacrum boss wave, and event "DroneUprising" inactive. |
 | FocusFire | Focus your fire | Monsters have twenty times their health, but take more and more damage the more they are hurt. This wears off if they aren't hurt for 3 seconds. |  |

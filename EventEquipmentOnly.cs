@@ -49,7 +49,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Disables all skills, but gives all players a random equipment with a short cooldown.";
+            return "Disables all skills, but gives all players a random equipment with a short cooldown, or a Crowdfunder that fires nonstop for free.";
         }
         public override string GetConditionDescription()
         {
@@ -67,6 +67,22 @@ namespace RandomEvents
         public override void Hook()
         {
             CharacterBody.onBodyStartGlobal += CharacterBody_onBodyStartGlobal;
+            On.EntityStates.GoldGat.GoldGatFire.FireBullet += GoldGatFire_FireBullet;
+        }
+
+        // the Crowdfunder costs no gold: the host takes it for each bullet, and gives it back
+        private void GoldGatFire_FireBullet(On.EntityStates.GoldGat.GoldGatFire.orig_FireBullet orig, EntityStates.GoldGat.GoldGatFire self)
+        {
+            var master = self.bodyMaster;
+            var body = master != null ? master.GetBody() : null;
+            if (!NetworkServer.active || !IsActive() || body == null || body.GetComponent<EquipmentOnlyComponent>() == null)
+            {
+                orig(self);
+                return;
+            }
+            var money = master.money;
+            orig(self);
+            master.money = money;
         }
 
         public override bool SuppressesHereticTransformation => true;
@@ -109,6 +125,7 @@ namespace RandomEvents
             weightedSelection.AddChoice(RoR2Content.Equipment.CommandMissile, 1f);
             weightedSelection.AddChoice(RoR2Content.Equipment.Lightning, 1f);
             weightedSelection.AddChoice(RoR2Content.Equipment.Saw, 1f);
+            weightedSelection.AddChoice(RoR2Content.Equipment.GoldGat, 1f);
             weightedSelection.AddChoice(null, 3f);
             commonEquipment = weightedSelection.Evaluate(RoR2Application.rng.nextNormalizedFloat);
 
@@ -142,6 +159,7 @@ namespace RandomEvents
             TemporaryInventory inventory;
             TemporaryEquipment equipment;
             int timer = 0;
+            bool crowdfunder = false;
             // a body that spawns as the event starts is set up both by Start and by onBodyStartGlobal
             bool isSetUp = false;
             public void Setup(EquipmentDef equipmentDef)
@@ -167,6 +185,7 @@ namespace RandomEvents
                         weightedSelection.AddChoice(RoR2Content.Equipment.CommandMissile, 1f);
                         weightedSelection.AddChoice(RoR2Content.Equipment.Lightning, 1f);
                         weightedSelection.AddChoice(RoR2Content.Equipment.Saw, 1f);
+                        weightedSelection.AddChoice(RoR2Content.Equipment.GoldGat, 1f);
                         equipmentDef = weightedSelection.Evaluate(RoR2Application.rng.nextNormalizedFloat);
                     }
 
@@ -176,6 +195,10 @@ namespace RandomEvents
                         equipment.cooldownScale = 1.0f / DLC1Content.Equipment.Molotov.cooldown;
                     } else if (equipmentDef == RoR2Content.Equipment.Lightning) {
                         equipment.cooldownScale = 0.5f / RoR2Content.Equipment.Lightning.cooldown;
+                    } else if (equipmentDef == RoR2Content.Equipment.GoldGat) {
+                        // fired nonstop by the player's own game while they hold a Gesture of the Drowned
+                        crowdfunder = true;
+                        inventory.GiveTemporaryItem(RoR2Content.Items.AutoCastEquipment.itemIndex);
                     } else { 
                         equipment.cooldownScale = 2f / equipmentDef.cooldown;
                     }
@@ -210,6 +233,12 @@ namespace RandomEvents
 
             private void FixedUpdate()
             {
+                // the Crowdfunder stops without gold
+                var master = crowdfunder && NetworkServer.active ? GetComponent<CharacterBody>()?.master : null;
+                if (master != null && master.money == 0)
+                {
+                    master.money = 1;
+                }
                 timer++;
                 if (timer > 50)
                 {
