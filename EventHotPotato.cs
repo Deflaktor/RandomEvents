@@ -1,5 +1,6 @@
 ﻿using BepInEx.Configuration;
 using RoR2;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -33,7 +34,9 @@ namespace RandomEvents
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            return Helper.GetLivingPlayerBodies().Count >= 2;
+            // Tag Team marks its tagged player the same way
+            return Helper.GetLivingPlayerBodies().Count >= 2
+                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("TagTeam", StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
         {
@@ -49,7 +52,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "At least two players are alive.";
+            return "At least two players are alive and event \"TagTeam\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {

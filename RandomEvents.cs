@@ -99,6 +99,7 @@ namespace RandomEvents
                 InitAndHookEvent(new EventStrongEnemies());
                 InitAndHookEvent(new EventSupplyDrop());
                 InitAndHookEvent(new EventSurvivorSwap());
+                InitAndHookEvent(new EventTagTeam());
                 InitAndHookEvent(new EventTheAlpha());
                 InitAndHookEvent(new EventTimeWarp());
                 InitAndHookEvent(new EventUmbraAmbush());

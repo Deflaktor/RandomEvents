@@ -44,6 +44,7 @@
         "EVENT_HOT_POTATO_PASSED": "{0} passed the bomb to {1}!",
         "EVENT_HOT_POTATO_WARNING": "The bomb of {0} explodes in {1} seconds!",
         "EVENT_HOT_POTATO_EXPLODED": "The bomb exploded on {0}!",
+        "EVENT_TAG_TEAM_TAGGED": "{0} is tagged in! Only they deal damage for the next {1} seconds.",
         "EVENT_RED_LIGHT": "<color=#ed4c40>Red light!</color> Don't move!",
         "EVENT_GREEN_LIGHT": "<color=#7ed957>Green light!</color> Move!",
         "EVENT_RED_LIGHT_CAUGHT": "{0} moved during red light!",
@@ -106,7 +107,8 @@
         "ANNOUNCE_EVENT_BEHEMOTHS": "Everything goes boom",
         "ANNOUNCE_EVENT_GIANT_BALLOONS": "Balloon animals",
         "ANNOUNCE_EVENT_REDUCED_GRAVITY": "One small step",
-        "ANNOUNCE_EVENT_VAMPIRES": "A thirst for blood"
+        "ANNOUNCE_EVENT_VAMPIRES": "A thirst for blood",
+        "ANNOUNCE_EVENT_TAG_TEAM": "Tag, you're it"
         
     }
 }
