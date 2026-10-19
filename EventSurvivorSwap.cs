@@ -13,6 +13,8 @@ namespace RandomEvents
     {
         private readonly ItemSwap itemSwap = new ItemSwap();
         private readonly BuffTracker buffs = new BuffTracker();
+        // 20 armor each
+        private const int ArmorBuffs = 2;
         // the player who is alone and became a random survivor, who has armor to make up for their unknown kit
         private CharacterMaster aloneMaster;
 
@@ -49,7 +51,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Players swap survivors and items with each other until the event ends. Alone, you become a random survivor with 100 armor.";
+            return "Players swap survivors and items with each other until the event ends. Alone, you become a random survivor with 40 armor.";
         }
         public override string GetPopupDescription()
         {
@@ -80,7 +82,10 @@ namespace RandomEvents
         {
             if (NetworkServer.active && IsActive() && aloneMaster != null && body.master == aloneMaster)
             {
-                buffs.Add(body, RoR2Content.Buffs.SmallArmorBoost);
+                for (int i = 0; i < ArmorBuffs; i++)
+                {
+                    buffs.Add(body, DLC4Content.Buffs.MinorArmorBuff);
+                }
             }
         }
 
