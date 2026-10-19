@@ -34,6 +34,11 @@ namespace RandomEvents
         private bool redLight;
         private float phaseTimer;
         private float graceTimer;
+        // players who stood still stay invincible this long into green light
+        private const float ImmunityAfterRedLight = 1f;
+        private float immunityTimer;
+        // the orbs of the afflictions and pearls fly into the player from this high above
+        private const float OrbHeight = 10f;
         private float checkTimer;
 
         public override bool LoadCondition()
@@ -115,6 +120,14 @@ namespace RandomEvents
                 }
                 return;
             }
+            if (immunityTimer > 0f)
+            {
+                immunityTimer -= Time.fixedDeltaTime;
+                if (immunityTimer <= 0f)
+                {
+                    immunities.RemoveAll();
+                }
+            }
             if (!redLight)
             {
                 return;
@@ -177,7 +190,7 @@ namespace RandomEvents
             nextAfflictions[body] = now + AfflictionInterval;
             EventLoot.GetInventory(this, body).GiveTemporaryItem(RoR2Content.Items.TonicAffliction.itemIndex);
             // the affliction flies into the player from above, like a picked up item
-            PurchaseInteraction.CreateItemTakenOrb(body.corePosition + Vector3.up * 4f, body.gameObject, RoR2Content.Items.TonicAffliction.itemIndex);
+            PurchaseInteraction.CreateItemTakenOrb(body.corePosition + Vector3.up * OrbHeight, body.gameObject, RoR2Content.Items.TonicAffliction.itemIndex);
             EffectManager.SpawnEffect(AfflictionEffect.WaitForCompletion(), new EffectData
             {
                 origin = body.corePosition,
@@ -242,7 +255,7 @@ namespace RandomEvents
                 if (count % CleanPhasesPerPearl == 0)
                 {
                     EventLoot.GetInventory(this, body).GiveTemporaryItem(RoR2Content.Items.ShinyPearl.itemIndex);
-                    PurchaseInteraction.CreateItemTakenOrb(body.corePosition + Vector3.up * 4f, body.gameObject, RoR2Content.Items.ShinyPearl.itemIndex);
+                    PurchaseInteraction.CreateItemTakenOrb(body.corePosition + Vector3.up * OrbHeight, body.gameObject, RoR2Content.Items.ShinyPearl.itemIndex);
                 }
             }
         }
@@ -256,7 +269,7 @@ namespace RandomEvents
             redLight = false;
             phaseTimer = RoR2Application.rng.RangeFloat(4f, 8f);
             roots.RemoveAll();
-            immunities.RemoveAll();
+            immunityTimer = ImmunityAfterRedLight;
             lastPositions.Clear();
             ChatHelper.SendEventMessage("EVENT_GREEN_LIGHT");
             Flash(GreenLightFlash);
