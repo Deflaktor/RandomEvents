@@ -50,7 +50,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | ReducedGravity | One small step | Everyone falls at half the gravity until the event ends. | Hallowed Concepts is enabled. |
 | RitualHelmets | Skulls on the charge | Only monsters that can sprint spawn, all with an always charged Ritual Helmet, but players take 66% less damage. | Hallowed Concepts is enabled, not a Simulacrum boss wave, the stage has monsters that can sprint, and event "DroneUprising" inactive. |
 | SecondWind | Fragile, but never finished | Revives dead players. Everyone else drops to 1% health, but anyone who dies is revived once. |  |
-| SkillsOnly | Primary sealed, skills unleashed | Disables primary skills, but the other skills recharge faster. | Events "EquipmentOnly", "MonsterTransform" inactive and none of the players have a Bandolier. |
+| SkillsOnly | Primary sealed, skills unleashed | Disables primary skills, but the other skills recharge faster. Each Eclipse Lite becomes 2 Topaz Brooches. | Events "EquipmentOnly", "MonsterTransform" inactive and none of the players have a Bandolier. |
 | SmallArena | Confined space | Halves the safe zone, but the wave is easier. | Simulacrum mode only |
 | StealthMission | Vanish from their sight | Players are cloaked. Attacking reveals them for 2 seconds. | Event "Hunted" inactive. |
 | StrongEnemies | Fear the few | Only strong enemies spawn. | Not a Simulacrum boss wave, and events "WeakEnemies", "Mitosis" and "LynxPups" inactive. |

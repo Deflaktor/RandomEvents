@@ -55,7 +55,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Disables primary skills, but the other skills recharge faster.";
+            return "Disables primary skills, but the other skills recharge faster. Each Eclipse Lite becomes 2 Topaz Brooches.";
         }
         public override string GetConditionDescription()
         {
@@ -133,6 +133,9 @@ namespace RandomEvents
             TemporaryInventory inventory;
             TemporaryEquipment equipment;
             int timer;
+            // the player's Eclipse Lites, switched off for the event
+            int disabledEclipseLites;
+            const int BroochesPerEclipseLite = 2;
             private void OnEnable()
             {
                 var body = GetComponent<CharacterBody>();
@@ -148,6 +151,14 @@ namespace RandomEvents
                     ItemOrb.Fly(body.transform.position, body.gameObject, RoR2Content.Items.UtilitySkillMagazine.itemIndex);
                     inventory.GiveTemporaryItem(RoR2Content.Items.AlienHead.itemIndex, 10);
                     ItemOrb.Fly(body.transform.position, body.gameObject, RoR2Content.Items.AlienHead.itemIndex);
+                    // the fast cooldowns would make Eclipse Lite's barrier endless, so Topaz Brooches stand in for it
+                    disabledEclipseLites = body.inventory.GetItemCountEffective(DLC3Content.Items.BarrierOnCooldown);
+                    if (disabledEclipseLites > 0)
+                    {
+                        body.inventory.GiveItemChanneled(DLC3Content.Items.BarrierOnCooldown.itemIndex, -disabledEclipseLites);
+                        inventory.GiveTemporaryItem(RoR2Content.Items.BarrierOnKill.itemIndex, BroochesPerEclipseLite * disabledEclipseLites);
+                        ItemOrb.Fly(body.transform.position, body.gameObject, RoR2Content.Items.BarrierOnKill.itemIndex);
+                    }
                     // on this component, so it stops when the body dies or the event ends
                     StartCoroutine(DelayGivePrimaryReplacement(body));
                 }
@@ -171,6 +182,12 @@ namespace RandomEvents
 
             private void OnDisable()
             {
+                var body = GetComponent<CharacterBody>();
+                if (disabledEclipseLites > 0 && body != null && body.inventory != null)
+                {
+                    body.inventory.GiveItemChanneled(DLC3Content.Items.BarrierOnCooldown.itemIndex, disabledEclipseLites);
+                }
+                disabledEclipseLites = 0;
                 Destroy(inventory);
                 if(equipment != null)
                     Destroy(equipment);
