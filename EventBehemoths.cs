@@ -11,6 +11,10 @@ namespace RandomEvents
         private ConfigEntry<int> PlayerBehemoths;
         private ConfigEntry<int> MonsterBehemoths;
         private ConfigEntry<float> MonsterDamageMultiplier;
+        private ConfigEntry<int> VoidsentFlames;
+        private ConfigEntry<float> FlameDamageTakenMultiplier;
+        private ConfigEntry<int> WillOTheWisps;
+        private ConfigEntry<float> WispDamageTakenMultiplier;
         private readonly HashSet<CharacterBody> armed = new HashSet<CharacterBody>();
 
         public override bool LoadCondition()
@@ -31,7 +35,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "All players and monsters get 3 Brilliant Behemoths, but monsters deal half damage.";
+            return "All players and monsters get 3 Brilliant Behemoths, a Will-o'-the-wisp and a Voidsent Flame, but monsters deal half damage, and players take half the damage from the wisps and flames.";
         }
         public override string GetConditionDescription()
         {
@@ -42,12 +46,18 @@ namespace RandomEvents
             PlayerBehemoths = config.Bind(GetEventConfigName(), "Player Behemoths", 3, "How many Brilliant Behemoths each player gets.");
             MonsterBehemoths = config.Bind(GetEventConfigName(), "Monster Behemoths", 3, "How many Brilliant Behemoths each monster gets.");
             MonsterDamageMultiplier = config.Bind(GetEventConfigName(), "Monster Damage Multiplier", 0.5f, "The damage monsters deal during the event, relative to normal.");
+            VoidsentFlames = config.Bind(GetEventConfigName(), "Voidsent Flames", 1, "How many Voidsent Flames each player and monster gets.");
+            WillOTheWisps = config.Bind(GetEventConfigName(), "Wisps", 1, "How many Will-o'-the-wisps each player and monster gets.");
+            WispDamageTakenMultiplier = config.Bind(GetEventConfigName(), "Wisp Damage Taken Multiplier", 0.5f, "The damage players take from the monsters' Will-o'-the-wisps, relative to normal, on top of the Monster Damage Multiplier.");
+            FlameDamageTakenMultiplier = config.Bind(GetEventConfigName(), "Voidsent Flame Damage Taken Multiplier", 0.5f, "The damage players take from the monsters' Voidsent Flames, relative to normal, on top of the Monster Damage Multiplier.");
         }
         public override void Preload()
         {
         }
         public override void Hook()
         {
+            On.RoR2.DelayBlast.Detonate += DelayBlast_Detonate;
+            On.RoR2.Inventory.ItemTransformation.TryTransform += ItemTransformation_TryTransform;
             CharacterBody.onBodyStartGlobal += CharacterBody_onBodyStartGlobal;
             On.RoR2.HealthComponent.TakeDamage += HealthComponent_TakeDamage;
         }
@@ -73,7 +83,16 @@ namespace RandomEvents
                 return;
             }
             armed.Add(body);
-            EventLoot.GetInventory(this, body).GiveTemporaryItem(RoR2Content.Items.Behemoth.itemIndex, count);
+            var inventory = EventLoot.GetInventory(this, body);
+            inventory.GiveTemporaryItem(RoR2Content.Items.Behemoth.itemIndex, count);
+            if (VoidsentFlames.Value > 0)
+            {
+                inventory.GiveTemporaryItem(DLC1Content.Items.ExplodeOnDeathVoid.itemIndex, VoidsentFlames.Value);
+            }
+            if (WillOTheWisps.Value > 0)
+            {
+                inventory.GiveTemporaryItem(RoR2Content.Items.ExplodeOnDeath.itemIndex, WillOTheWisps.Value);
+            }
             if (body.isPlayerControlled)
             {
                 PurchaseInteraction.CreateItemTakenOrb(body.corePosition, body.gameObject, RoR2Content.Items.Behemoth.itemIndex);
@@ -89,6 +108,38 @@ namespace RandomEvents
                 damageInfo.damage *= Mathf.Max(0f, MonsterDamageMultiplier.Value);
             }
             orig(self, damageInfo);
+        }
+
+        // A monster's Voidsent Flame or Will-o'-the-wisp blast hits only players and their allies, so a smaller blast
+        // hurts them less.
+        private void DelayBlast_Detonate(On.RoR2.DelayBlast.orig_Detonate orig, DelayBlast self)
+        {
+            if (NetworkServer.active && IsActive() && self.attacker != null && self.attacker.TryGetComponent(out CharacterBody attackerBody)
+                && attackerBody.teamComponent.teamIndex != TeamIndex.Player)
+            {
+                var flame = HealthComponent.AssetReferences.explodeOnDeathVoidExplosionPrefab;
+                var wisp = GlobalEventManager.CommonAssets.explodeOnDeathPrefab;
+                if (flame != null && self.name.StartsWith(flame.name))
+                {
+                    self.baseDamage *= Mathf.Max(0f, FlameDamageTakenMultiplier.Value);
+                }
+                else if (wisp != null && self.name.StartsWith(wisp.name))
+                {
+                    self.baseDamage *= Mathf.Max(0f, WispDamageTakenMultiplier.Value);
+                }
+            }
+            orig(self);
+        }
+
+        // The event's Voidsent Flames would turn the players' own Will-o'-the-wisps into more of them for good.
+        private bool ItemTransformation_TryTransform(On.RoR2.Inventory.ItemTransformation.orig_TryTransform orig, ref Inventory.ItemTransformation self, Inventory inventory, out Inventory.ItemTransformation.TryTransformResult result)
+        {
+            if (NetworkServer.active && IsActive() && self.newItemIndex == DLC1Content.Items.ExplodeOnDeathVoid.itemIndex)
+            {
+                result = default;
+                return false;
+            }
+            return orig(ref self, inventory, out result);
         }
 
         public override void Prepare()
