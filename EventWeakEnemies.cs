@@ -9,6 +9,9 @@ namespace RandomEvents
 {
     public class EventWeakEnemies : AbstractEvent
     {
+        // the director multiplies an elite tier's cost by the bias when it picks one, so a high bias makes elites too
+        // expensive
+        private const float NoElitesBias = 1000f;
         // the Simulacrum wave the event changed, and its elite bias before
         private InfiniteTowerWaveController changedWave;
         private float originalEliteBias;
@@ -75,7 +78,7 @@ namespace RandomEvents
             {
                 changedWave = infiniteTowerRun.waveController;
                 originalEliteBias = changedWave.combatDirector.eliteBias;
-                changedWave.combatDirector.eliteBias = 0f;
+                changedWave.combatDirector.eliteBias = NoElitesBias;
                 changedWave.combatDirector.monsterCredit = 0f;
             }
             var costs = MonsterPool.GetChoices()

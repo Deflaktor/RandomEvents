@@ -10,9 +10,8 @@ namespace RandomEvents
     public class EventStrongEnemies : AbstractEvent
     {
         private const float WaveCreditsMultiplier = 2f;
-        // the Simulacrum wave the event changed, and its elite bias before
+        // the Simulacrum wave the event changed; its extra credits also buy more elites
         private InfiniteTowerWaveController changedWave;
-        private float originalEliteBias;
 
         public override bool LoadCondition()
         {
@@ -67,8 +66,6 @@ namespace RandomEvents
             if (Run.instance is InfiniteTowerRun infiniteTowerRun && infiniteTowerRun.waveController != null && infiniteTowerRun.waveController.combatDirector != null)
             {
                 changedWave = infiniteTowerRun.waveController;
-                originalEliteBias = changedWave.combatDirector.eliteBias;
-                changedWave.combatDirector.eliteBias = 3f;
                 changedWave.creditsPerSecond *= WaveCreditsMultiplier;
             }
             var costs = MonsterPool.GetChoices()
@@ -92,7 +89,6 @@ namespace RandomEvents
             // the wave keeps going after the event, so it goes back to normal; a later wave is unchanged anyway
             if (changedWave != null && changedWave.combatDirector != null)
             {
-                changedWave.combatDirector.eliteBias = originalEliteBias;
                 changedWave.creditsPerSecond /= WaveCreditsMultiplier;
             }
             changedWave = null;
