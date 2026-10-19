@@ -23,7 +23,6 @@ namespace RandomEvents
             "RoR2/Base/Captain/CaptainSupplyDrop, Plating.prefab",
         };
         private readonly List<AsyncOperationHandle<GameObject>> beaconPrefabs = new List<AsyncOperationHandle<GameObject>>();
-        private readonly List<GameObject> beacons = new List<GameObject>();
 
         public override bool LoadCondition()
         {
@@ -43,7 +42,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Drops a random Captain beacon next to each player.";
+            return "Drops a random Captain beacon next to each player, which stays for the rest of the stage.";
         }
         public override string GetConditionDescription()
         {
@@ -69,7 +68,6 @@ namespace RandomEvents
 
         public override void Start(List<AbstractEvent> activeOtherEvents)
         {
-            beacons.Clear();
             // every player a random beacon, all different while there are enough kinds
             var kinds = beaconPrefabs.OrderBy(_ => RoR2Application.rng.nextNormalizedFloat).ToList();
             var bodies = Helper.GetLivingPlayerBodies();
@@ -134,19 +132,11 @@ namespace RandomEvents
             impactDamage.force = CallSupplyDropBase.impactDamageForce;
             impactDamage.damageType = DamageType.Generic;
             NetworkServer.Spawn(beacon);
-            beacons.Add(beacon);
         }
 
+        // the beacons stay for the rest of the stage, as Captain's own do
         public override void Stop()
         {
-            foreach (var beacon in beacons)
-            {
-                if (beacon)
-                {
-                    GameObject.Destroy(beacon);
-                }
-            }
-            beacons.Clear();
         }
     }
 }

@@ -53,7 +53,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | SmallArena | Confined space | Halves the safe zone, but the wave is easier. | Simulacrum mode only |
 | StealthMission | Vanish from their sight | Players are cloaked. Attacking reveals them for 2 seconds. | Event "Hunted" inactive. |
 | StrongEnemies | Fear the few | Only strong enemies spawn. | Not a Simulacrum boss wave, and events "WeakEnemies", "Mitosis" and "LynxPups" inactive. |
-| SupplyDrop | Supplies inbound | Drops a random Captain beacon next to each player. |  |
+| SupplyDrop | Supplies inbound | Drops a random Captain beacon next to each player, which stays for the rest of the stage. |  |
 | SurvivorSwap | Walk in another's shoes | Players swap survivors and items with each other until the event ends. Alone, you become a random survivor with 100 armor. | Events "MonsterTransform" and "InventoryRoulette" inactive and currently not a boss wave. |
 | TheAlpha | The pack has a leader | A random monster becomes a big alpha with ten times its health. While it lives, all other monsters are in a frenzy. It drops an item when killed. |  |
 | TimeWarp | Time slows for your foes | Slows all monsters to about a third of their speed. |  |
