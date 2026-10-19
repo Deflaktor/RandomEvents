@@ -10,6 +10,7 @@ namespace RandomEvents
     public class EventItemRush : AbstractEvent
     {
         private ConfigEntry<float> SpawnInterval;
+        private ConfigEntry<int> ItemsPerSpawn;
         private List<ItemIndex> items = new List<ItemIndex>();
         private float spawnTimer;
 
@@ -53,7 +54,8 @@ namespace RandomEvents
         }
         protected override void AddConfig(ConfigFile config)
         {
-            SpawnInterval = config.Bind(GetEventConfigName(), "Spawn Interval", 2f, "Seconds between two items appearing.");
+            SpawnInterval = config.Bind(GetEventConfigName(), "Spawn Interval", 2f, "Seconds between two times items appear.");
+            ItemsPerSpawn = config.Bind(GetEventConfigName(), "Items Per Spawn", 3, "How many items appear each time, each around a random player.");
         }
         public override void Preload()
         {
@@ -80,14 +82,17 @@ namespace RandomEvents
             {
                 return;
             }
-            var player = players[RoR2Application.rng.RangeInt(0, players.Count)];
-            var position = Helper.FindGroundPositionNear(player.footPosition, 10f, 40f);
-            if (position == null)
+            for (int i = 0; i < ItemsPerSpawn.Value; i++)
             {
-                return;
+                var player = players[RoR2Application.rng.RangeInt(0, players.Count)];
+                var position = Helper.FindGroundPositionNear(player.footPosition, 10f, 40f);
+                if (position == null)
+                {
+                    continue;
+                }
+                var item = items[RoR2Application.rng.RangeInt(0, items.Count)];
+                EventLoot.Drop(this, PickupCatalog.FindPickupIndex(item), position.Value + Vector3.up * 2f, Vector3.up * 10f, true);
             }
-            var item = items[RoR2Application.rng.RangeInt(0, items.Count)];
-            EventLoot.Drop(this, PickupCatalog.FindPickupIndex(item), position.Value + Vector3.up * 2f, Vector3.up * 10f, true);
         }
 
         public override void Prepare()
