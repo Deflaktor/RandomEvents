@@ -33,6 +33,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | Haste | The world accelerates | All beings become faster. |  |
 | HotPotato | Hot potato | A player carries a bomb that explodes after 20 seconds and costs them half their health. Touch another player to pass it on. | At least two players are alive and event "TagTeam" inactive. |
 | Hunted | The hunt is on | All monsters chase one random player, who gets 100 armor. | At least two players are alive and event "StealthMission" inactive. |
+| IndirectDamage | Let the items do the work | Players' hits deal no damage, but their item effects and damage over time still do. All players get 10 common and 5 uncommon items with on-hit effects. | At least one common or uncommon item with an on-hit effect is available. |
 | InventoryRoulette | Spin the inventory roulette | Every player gets the items of another player until the event ends. | At least two players are alive and event "SurvivorSwap" inactive. |
 | ItemKits | Item kit: Glass Cannon | Gives all players a random item kit until the event ends, e.g. Glass Cannon. | At least one kit has items. |
 | ItemRush | Grab them before they do | Items appear around the players, in Simulacrum inside the safe zone, until the event ends. Monsters nearby take them too, and take those left lying. | At least one item is not in the setting Unsafe Items. |

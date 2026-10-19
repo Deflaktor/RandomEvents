@@ -108,7 +108,8 @@
         "ANNOUNCE_EVENT_GIANT_BALLOONS": "Balloon animals",
         "ANNOUNCE_EVENT_REDUCED_GRAVITY": "One small step",
         "ANNOUNCE_EVENT_VAMPIRES": "A thirst for blood",
-        "ANNOUNCE_EVENT_TAG_TEAM": "Tag, you're it"
+        "ANNOUNCE_EVENT_TAG_TEAM": "Tag, you're it",
+        "ANNOUNCE_EVENT_INDIRECT_DAMAGE": "Let the items do the work"
         
     }
 }
