@@ -16,6 +16,7 @@ namespace RandomEvents
         private ConfigEntry<float> HealthLossPerHit;
         private ConfigEntry<float> HealMultiplier;
         private ConfigEntry<float> ReflectedDamageCap;
+        private ConfigEntry<float> ReflectedDamageMinimum;
         private ConfigEntry<int> DecayTime;
         private readonly HashSet<CharacterBody> mirrored = new HashSet<CharacterBody>();
         // the shattering glass of a brittle death, at most this often per mirrored monster
@@ -43,7 +44,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Some monsters are mirrored: their health decays, their hits heal players and hurt themselves, and players' direct hits on them hurt the players instead, by the same share of health, up to 20% per second.";
+            return "Some monsters are mirrored: their health decays, their hits heal players and hurt themselves, and players' direct hits on them hurt the players instead, by the same share of health, at least 5% and up to 20% per second.";
         }
         public override string GetPopupDescription()
         {
@@ -59,6 +60,7 @@ namespace RandomEvents
             HealthLossPerHit = config.Bind(GetEventConfigName(), "Health Loss Per Hit", 0.2f, "How much of its maximum health a mirrored monster loses with each hit on a player.");
             HealMultiplier = config.Bind(GetEventConfigName(), "Heal Multiplier", 1f, "How much a player is healed by a mirrored monster's hit, relative to the damage it would have dealt.");
             DecayTime = config.Bind(GetEventConfigName(), "Decay Time", 60, "In how many seconds a mirrored monster's health decays from full to nothing, like a ghost's. Ghosts take 30. 0 for no decay.");
+            ReflectedDamageMinimum = config.Bind(GetEventConfigName(), "Reflected Damage Minimum", 0.05f, "A player who hits a mirrored monster directly loses at least this share of their health per second, however small the hits.");
             ReflectedDamageCap = config.Bind(GetEventConfigName(), "Reflected Damage Cap", 0.2f, "A player's direct hit on a mirrored monster takes the same share of the player's health as it would have taken of the monster's, up to this share per second. Mirrored monsters take no damage from players.");
         }
         public override void Preload()
@@ -209,7 +211,8 @@ namespace RandomEvents
             }
         }
 
-        // the share of health within what is left of the player's cap for the current second
+        // the share of health within what is left of the player's cap for the current second, and at least what is left
+        // of the minimum
         private float GetReflectedFraction(CharacterBody player, float fraction)
         {
             var now = Time.fixedTime;
@@ -217,6 +220,7 @@ namespace RandomEvents
             {
                 reflected = (now, 0f);
             }
+            fraction = Mathf.Max(fraction, ReflectedDamageMinimum.Value - reflected.fraction);
             fraction = Mathf.Clamp(fraction, 0f, Mathf.Max(0f, ReflectedDamageCap.Value - reflected.fraction));
             reflectedThisSecond[player] = (reflected.start, reflected.fraction + fraction);
             return fraction;
