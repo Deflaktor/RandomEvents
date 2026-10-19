@@ -134,6 +134,9 @@ namespace RandomEvents
                 pickupIndices.AddRange(Run.instance.availableTier3DropList);
                 pickupIndices.AddRange(Run.instance.availableBossDropList);
                 pickupIndices.AddRange(Run.instance.availableLunarItemDropList);
+                // meals and Hallowed items, while their expansions are enabled
+                pickupIndices.AddRange(Run.instance.availableFoodTierDropList);
+                pickupIndices.AddRange(Run.instance.availableCursedTierDropList);
                 List<ItemIndex> itemIndices = new List<ItemIndex>();
                 foreach (var pickupIndex in pickupIndices)
                 {

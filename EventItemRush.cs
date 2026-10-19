@@ -28,13 +28,15 @@ namespace RandomEvents
             return GetItems().Count > 0;
         }
 
-        // only items picked up by walking over them, so not lunar or void items, which need a confirmation
+        // only items picked up by walking over them, so not lunar or void items, which need a confirmation; meals and
+        // Hallowed items too
         private static List<ItemIndex> GetItems()
         {
             return SafeItems.Get().Where(item =>
             {
-                var tierDef = ItemTierCatalog.GetItemTierDef(ItemCatalog.GetItemDef(item).tier);
-                return tierDef == null || tierDef.pickupRules == ItemTierDef.PickupRules.Default;
+                var tier = ItemCatalog.GetItemDef(item).tier;
+                var tierDef = ItemTierCatalog.GetItemTierDef(tier);
+                return tierDef == null || tierDef.pickupRules == ItemTierDef.PickupRules.Default || tier == ItemTier.FoodTier || tier == ItemTier.Cursed;
             }).ToList();
         }
         public override string GetEventConfigName()

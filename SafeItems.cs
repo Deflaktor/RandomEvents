@@ -10,7 +10,9 @@ namespace RandomEvents
         private static readonly ItemTier[] Tiers =
         {
             ItemTier.Tier1, ItemTier.Tier2, ItemTier.Tier3, ItemTier.Boss, ItemTier.Lunar,
-            ItemTier.VoidTier1, ItemTier.VoidTier2, ItemTier.VoidTier3, ItemTier.VoidBoss
+            ItemTier.VoidTier1, ItemTier.VoidTier2, ItemTier.VoidTier3, ItemTier.VoidBoss,
+            // meals and Hallowed items, while their expansions are enabled
+            ItemTier.FoodTier, ItemTier.Cursed
         };
 
         // the run's items that are fine for monsters to have: none that could kill players unfairly, see the
