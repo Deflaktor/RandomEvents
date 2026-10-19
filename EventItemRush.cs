@@ -16,6 +16,12 @@ namespace RandomEvents
         private ConfigEntry<float> StealRange;
         private const float MonsterCheckInterval = 0.25f;
         private float monsterCheckTimer;
+        // how far a new item stays from the others
+        private const float ItemSpacing = 4f;
+        private const int PositionAttempts = 5;
+        // where items were dropped lately, which may still be in the air
+        private const float RecentDropTime = 5f;
+        private readonly List<(Vector3 position, float time)> recentDrops = new List<(Vector3 position, float time)>();
         private List<ItemIndex> items = new List<ItemIndex>();
         private float spawnTimer;
 
@@ -98,13 +104,26 @@ namespace RandomEvents
             {
                 return;
             }
+            recentDrops.RemoveAll(drop => Time.fixedTime - drop.time > RecentDropTime);
+            var taken = EventLoot.GetPickups(this).Select(pickup => pickup.pickup.transform.position).Concat(recentDrops.Select(drop => drop.position)).ToList();
             for (int i = 0; i < ItemsPerSpawn.Value; i++)
             {
-                var position = FindItemPosition(players[RoR2Application.rng.RangeInt(0, players.Count)]);
+                // not where an item already is
+                Vector3? position = null;
+                for (int attempt = 0; attempt < PositionAttempts && position == null; attempt++)
+                {
+                    var candidate = FindItemPosition(players[RoR2Application.rng.RangeInt(0, players.Count)]);
+                    if (candidate.HasValue && taken.All(other => (other - candidate.Value).sqrMagnitude >= ItemSpacing * ItemSpacing))
+                    {
+                        position = candidate;
+                    }
+                }
                 if (position == null)
                 {
                     continue;
                 }
+                taken.Add(position.Value);
+                recentDrops.Add((position.Value, Time.fixedTime));
                 var item = items[RoR2Application.rng.RangeInt(0, items.Count)];
                 EventLoot.Drop(this, PickupCatalog.FindPickupIndex(item), position.Value + Vector3.up * 2f, Vector3.up * 10f, true);
             }
