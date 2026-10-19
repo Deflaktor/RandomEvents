@@ -11,6 +11,7 @@ namespace RandomEvents
     {
         // the shares of a hit are damage too, which must not be split again
         private bool sharing = false;
+        private ConfigEntry<float> DamageTakenMultiplier;
 
         public override bool LoadCondition()
         {
@@ -30,7 +31,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Damage a player takes is split among all living players.";
+            return "Damage a player takes is split among all living players, but players take 25% less damage.";
         }
         public override string GetConditionDescription()
         {
@@ -38,6 +39,7 @@ namespace RandomEvents
         }
         protected override void AddConfig(ConfigFile config)
         {
+            DamageTakenMultiplier = config.Bind(GetEventConfigName(), "Damage Taken Multiplier", 0.75f, "The damage players take during the event, relative to normal, before it is split.");
         }
         public override void Preload()
         {
@@ -55,6 +57,10 @@ namespace RandomEvents
                 return;
             }
             var victim = self.body;
+            if (victim != null && victim.isPlayerControlled)
+            {
+                damageInfo.damage *= Mathf.Max(0f, DamageTakenMultiplier.Value);
+            }
             // nothing to share while invincible, and players don't pass on what they do to themselves
             if (victim == null || !victim.isPlayerControlled || !self.alive || damageInfo.attacker == victim.gameObject || IsInvincible(self))
             {
