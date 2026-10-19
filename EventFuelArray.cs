@@ -21,7 +21,8 @@ namespace RandomEvents
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            return !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("EquipmentOnly", StringComparison.InvariantCultureIgnoreCase));
+            return !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("EquipmentOnly", StringComparison.InvariantCultureIgnoreCase)
+                || e.GetEventConfigName().Equals("Vampires", StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
         {
@@ -37,7 +38,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Event \"EquipmentOnly\" inactive.";
+            return "Events \"EquipmentOnly\" and \"Vampires\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {

@@ -105,7 +105,8 @@
         "ANNOUNCE_EVENT_MIRRORED_ENEMIES": "Mirror, mirror",
         "ANNOUNCE_EVENT_BEHEMOTHS": "Everything goes boom",
         "ANNOUNCE_EVENT_GIANT_BALLOONS": "Balloon animals",
-        "ANNOUNCE_EVENT_REDUCED_GRAVITY": "One small step"
+        "ANNOUNCE_EVENT_REDUCED_GRAVITY": "One small step",
+        "ANNOUNCE_EVENT_VAMPIRES": "A thirst for blood"
         
     }
 }

@@ -103,6 +103,7 @@ namespace RandomEvents
                 InitAndHookEvent(new EventTimeWarp());
                 InitAndHookEvent(new EventUmbraAmbush());
                 InitAndHookEvent(new EventUnitedWeStand());
+                InitAndHookEvent(new EventVampires());
                 InitAndHookEvent(new EventVengefulSpirits());
                 InitAndHookEvent(new EventWeakEnemies());
                 InitAndHookEvent(new EventZombies());

@@ -27,7 +27,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | ExplodingCorpses | Exploding corpses | All enemies explode upon death. | Players have sufficient means to do ranged damage. |
 | FallingEnemies | Enemies fall down from the heavens | Enemies fall from the sky. Only walking enemies spawn. | Not a Simulacrum boss wave, and event "DroneUprising" inactive. |
 | FocusFire | Focus your fire | Monsters have twenty times their health, but take more and more damage the more they are hurt. This wears off if they aren't hurt for 3 seconds. |  |
-| FuelArray | Stay above 50% health or face disaster | Heals all players and gives them a Fuel Array until the event ends, but they take less damage. | Event "EquipmentOnly" inactive. |
+| FuelArray | Stay above 50% health or face disaster | Heals all players and gives them a Fuel Array until the event ends, but they take less damage. | Events "EquipmentOnly" and "Vampires" inactive. |
 | Ghosts | Ghostly apparitions haunt the battlefield | Some monsters spawn as ghosts that fade after a while. | Currently not a boss wave, and event "Ossification" inactive. |
 | GiantBalloons | Balloon animals | Fewer monsters spawn, but they are inflated to giant size with ten times their health. They shrink as they lose health. | Hallowed Concepts is enabled. |
 | Haste | The world accelerates | All beings become faster. |  |
@@ -60,6 +60,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | TimeWarp | Time slows for your foes | Slows all monsters to about a third of their speed. |  |
 | UmbraAmbush | Umbras emerge from the shadows | Each player is hunted by a tough enemy survivor with items, which attacks and moves slowly. | Event "BulletHell" inactive. |
 | UnitedWeStand | United we stand | Players close to each other share all their items. | At least two players are alive. |
+| Vampires | A thirst for blood | Players heal by a fifth of the damage they deal, but lose health while monsters are near. | Event "FuelArray" inactive. |
 | VengefulSpirits | Spirits stand guard | All monsters get a Vengeful Spirit, but half as many spawn. | Hallowed Concepts is enabled, and not a Simulacrum boss wave. |
 | WeakEnemies | Horde of the many | Only weak enemies spawn. | Events "StrongEnemies", "Mitosis" and "LynxPups" inactive. |
 | Zombies | The dead refuse to rest | Some monsters are infected: they infect others nearby when they die and come back once. | Currently not a boss wave. |
