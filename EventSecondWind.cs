@@ -49,7 +49,7 @@ namespace RandomEvents
         }
         public override void Hook()
         {
-            On.RoR2.CharacterMaster.OnBodyDeath += CharacterMaster_OnBodyDeath;
+            On.RoR2.CharacterMaster.TryReviveOnBodyDeath += CharacterMaster_TryReviveOnBodyDeath;
             CharacterBody.onBodyStartGlobal += CharacterBody_onBodyStartGlobal;
             On.RoR2.Inventory.ItemTransformation.TryTransform += ItemTransformation_TryTransform;
         }
@@ -74,21 +74,20 @@ namespace RandomEvents
             }
         }
 
-        private void CharacterMaster_OnBodyDeath(On.RoR2.CharacterMaster.orig_OnBodyDeath orig, CharacterMaster self, CharacterBody body)
+        // The event's revive comes first, before Dio's Best Friend and other revives, which stay for a later death. The
+        // game counts the pending revive as a life left, so the stage doesn't end the run while everyone is dead.
+        private bool CharacterMaster_TryReviveOnBodyDeath(On.RoR2.CharacterMaster.orig_TryReviveOnBodyDeath orig, CharacterMaster self, CharacterBody body)
         {
-            orig(self, body);
-            // only when no item or other effect revives them
             if (ModConfig.Enabled.Value && NetworkServer.active && IsActive() && self.playerCharacterMasterController != null
-                && self.playerCharacterMasterController.isConnected && !revived.Contains(self) && self.IsDeadAndOutOfLivesServer())
+                && self.playerCharacterMasterController.isConnected && !revived.Contains(self))
             {
                 revived.Add(self);
                 fragile.Remove(self);
                 self.Invoke(nameof(CharacterMaster.RespawnExtraLifeShrine), ReviveDelay);
-                // the death without a revive item cleared it, so the stage would end the run if everyone is dead;
-                // the respawn sets it again
-                self.preventGameOver = true;
                 ChatHelper.SendEventMessage("EVENT_SECOND_WIND_REVIVED", ChatHelper.GetColoredPlayerName(body));
+                return true;
             }
+            return orig(self, body);
         }
 
         // curse lowers the maximum health, which the health bar shows, and is reduced again afterwards
