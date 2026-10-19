@@ -116,7 +116,7 @@ namespace RandomEvents
                     }
                     
                     inventory.GiveTemporaryItem(RoR2Content.Items.Ghost.itemIndex, 1);
-                    inventory.GiveTemporaryItem(RoR2Content.Items.HealthDecay.itemIndex, Math.Max(10, Math.Min((int)Mathf.Sqrt(body.baseMaxHealth), 60)));
+                    inventory.GiveTemporaryItem(RoR2Content.Items.HealthDecay.itemIndex, Math.Max(10, Math.Min((int)Mathf.Sqrt(body.baseMaxHealth), 40)));
                 }
             }
 
