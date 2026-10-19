@@ -29,6 +29,7 @@ namespace RandomEvents
             ("VoidMegaCrabBody", "NullifierBody"),
         };
         private ConfigEntry<int> MaxSplits;
+        private const float SplitImmunity = 3f;
         // the strong monsters of the pool and the cards of their weaker relatives
         private readonly Dictionary<BodyIndex, SpawnCard> splits = new Dictionary<BodyIndex, SpawnCard>();
 
@@ -137,7 +138,13 @@ namespace RandomEvents
             for (int i = 0; i < splitCount; i++)
             {
                 var offset = Quaternion.AngleAxis(360f / splitCount * i, Vector3.up) * Vector3.forward * (body.radius * 0.5f);
-                Helper.SpawnMonster(weakCard, position + offset, eliteDef);
+                var split = Helper.SpawnMonster(weakCard, position + offset, eliteDef);
+                // briefly invincible, as after Dio's Best Friend, so a blast that killed the monster doesn't kill them too
+                var splitBody = split != null ? split.GetBody() : null;
+                if (splitBody != null)
+                {
+                    splitBody.AddTimedBuff(RoR2Content.Buffs.Immune, SplitImmunity);
+                }
             }
         }
 
