@@ -47,6 +47,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | RandomArtifact |  | Turns on up to three random artifacts until the event ends. | There is at least one artifact which can be enabled and is not blacklisted. |
 | RandomTeams | Enemies turn against each other | Makes some enemies fight each other as well as the players. |  |
 | RedLightGreenLight | Red light, green light | Red and green light take turns. During red light, monsters freeze, players who stand still can't be hurt, and players who move get Tonic Afflictions until the event ends. Players get an Irradiant Pearl until the event ends for every two red lights in a row they stay still through. |  |
+| ReducedGravity | One small step | Everyone falls at half the gravity until the event ends. | Hallowed Concepts is enabled. |
 | RitualHelmets | Skulls on the charge | Only monsters that can sprint spawn, all with an always charged Ritual Helmet, but players take 66% less damage. | Hallowed Concepts is enabled, not a Simulacrum boss wave, the stage has monsters that can sprint, and event "DroneUprising" inactive. |
 | SecondWind | Fragile, but never finished | Revives dead players. Everyone else drops to 1% health, but anyone who dies is revived once. |  |
 | SkillsOnly | Primary sealed, skills unleashed | Disables primary skills, but the other skills recharge faster. | Events "EquipmentOnly", "MonsterTransform" inactive and none of the players have a Bandolier. |
