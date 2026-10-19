@@ -84,7 +84,38 @@ namespace RandomEvents
             var marker = obj.AddComponent<EventLootMarker>();
             marker.owner = owner;
             marker.monstersCanPickUp = monstersCanPickUp;
+            marker.createdTime = Time.fixedTime;
             markers.Add(marker);
+        }
+
+        // the event's items lying on the ground, with how long each has been there
+        public static List<(GenericPickupController pickup, float age)> GetPickups(AbstractEvent owner)
+        {
+            var result = new List<(GenericPickupController pickup, float age)>();
+            foreach (var marker in markers)
+            {
+                if (marker != null && marker.owner == owner && !marker.taken && marker.TryGetComponent(out GenericPickupController pickup))
+                {
+                    result.Add((pickup, Time.fixedTime - marker.createdTime));
+                }
+            }
+            return result;
+        }
+
+        // A monster takes the item, which it keeps until the event ends; the game only lets players pick items up.
+        public static bool GiveToMonster(GenericPickupController pickup, CharacterBody body)
+        {
+            var marker = GetMarker(pickup);
+            var itemIndex = PickupCatalog.GetPickupDef(pickup.pickup.pickupIndex)?.itemIndex ?? ItemIndex.None;
+            if (marker == null || !marker.monstersCanPickUp || marker.taken || body == null || body.inventory == null || itemIndex == ItemIndex.None)
+            {
+                return false;
+            }
+            marker.taken = true;
+            GetInventory(marker.owner, body).GiveTemporaryItem(itemIndex);
+            PurchaseInteraction.CreateItemTakenOrb(pickup.transform.position, body.gameObject, itemIndex);
+            Object.Destroy(pickup.gameObject);
+            return true;
         }
 
         private static EventLootMarker GetMarker(Component component)
@@ -149,16 +180,9 @@ namespace RandomEvents
                 orig(self, body);
                 return;
             }
-            // the game only lets players pick up items
             if (body.teamComponent.teamIndex != TeamIndex.Player)
             {
-                if (marker.monstersCanPickUp && !marker.taken)
-                {
-                    marker.taken = true;
-                    GetInventory(owner, body).GiveTemporaryItem(itemIndex);
-                    PurchaseInteraction.CreateItemTakenOrb(self.transform.position, body.gameObject, itemIndex);
-                    Object.Destroy(self.gameObject);
-                }
+                GiveToMonster(self, body);
                 return;
             }
             var pickupState = self.pickup;
@@ -182,6 +206,7 @@ namespace RandomEvents
         {
             public AbstractEvent owner;
             public bool monstersCanPickUp;
+            public float createdTime;
             // a monster took the item, which the game destroys only at the end of the frame
             public bool taken;
 

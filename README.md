@@ -34,7 +34,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | Hunted | The hunt is on | All monsters chase one random player, who gets 100 armor. | At least two players are alive and event "StealthMission" inactive. |
 | InventoryRoulette | Spin the inventory roulette | Every player gets the items of another player until the event ends. | At least two players are alive and event "SurvivorSwap" inactive. |
 | ItemKits | Item kit: Glass Cannon | Gives all players a random item kit until the event ends, e.g. Glass Cannon. | At least one kit has items. |
-| ItemRush | Grab them before they do | Items appear around the players, in Simulacrum inside the safe zone, until the event ends. Monsters can pick them up too. | At least one item is not in the setting Unsafe Items. |
+| ItemRush | Grab them before they do | Items appear around the players, in Simulacrum inside the safe zone, until the event ends. Monsters nearby take them too, and take those left lying. | At least one item is not in the setting Unsafe Items. |
 | ItemZone | Zone fuels your arsenal | Item zones appear that give players standing in them temporary items. | Simulacrum mode only |
 | LinkedSouls | Your souls are bound together | Damage a player takes is split among all living players. | At least two players are alive. |
 | LynxPups | The pups have grown | Half of the monsters that spawn are Lynx Pups, three times as big and with ten times the health. | Hallowed Concepts is enabled, not a Simulacrum boss wave, and events "DroneUprising", "Mitosis", "StrongEnemies" and "WeakEnemies" inactive. |

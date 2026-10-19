@@ -11,6 +11,11 @@ namespace RandomEvents
     {
         private ConfigEntry<float> SpawnInterval;
         private ConfigEntry<int> ItemsPerSpawn;
+        private ConfigEntry<float> MonsterGrabRadius;
+        private ConfigEntry<float> StealTime;
+        private ConfigEntry<float> StealRange;
+        private const float MonsterCheckInterval = 0.25f;
+        private float monsterCheckTimer;
         private List<ItemIndex> items = new List<ItemIndex>();
         private float spawnTimer;
 
@@ -42,7 +47,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Items appear around the players, in Simulacrum inside the safe zone, until the event ends. Monsters can pick them up too.";
+            return "Items appear around the players, in Simulacrum inside the safe zone, until the event ends. Monsters nearby take them too, and take those left lying.";
         }
         public override string GetPopupDescription()
         {
@@ -55,6 +60,9 @@ namespace RandomEvents
         protected override void AddConfig(ConfigFile config)
         {
             SpawnInterval = config.Bind(GetEventConfigName(), "Spawn Interval", 2f, "Seconds between two times items appear.");
+            MonsterGrabRadius = config.Bind(GetEventConfigName(), "Monster Grab Radius", 5f, "How close a monster has to get to an item to take it, in meters.");
+            StealTime = config.Bind(GetEventConfigName(), "Steal Time", 10f, "Seconds after which an item no player took goes to the nearest monster in range. 0 for never.");
+            StealRange = config.Bind(GetEventConfigName(), "Steal Range", 30f, "How close the nearest monster has to be to take an item left lying, in meters.");
             ItemsPerSpawn = config.Bind(GetEventConfigName(), "Items Per Spawn", 3, "How many items appear each time, each around a random player.");
         }
         public override void Preload()
@@ -70,6 +78,12 @@ namespace RandomEvents
             if (!NetworkServer.active || !IsActive() || items.Count == 0)
             {
                 return;
+            }
+            monsterCheckTimer -= Time.fixedDeltaTime;
+            if (monsterCheckTimer <= 0f)
+            {
+                monsterCheckTimer = MonsterCheckInterval;
+                LetMonstersTakeItems();
             }
             spawnTimer -= Time.fixedDeltaTime;
             if (spawnTimer > 0f)
@@ -91,6 +105,33 @@ namespace RandomEvents
                 }
                 var item = items[RoR2Application.rng.RangeInt(0, items.Count)];
                 EventLoot.Drop(this, PickupCatalog.FindPickupIndex(item), position.Value + Vector3.up * 2f, Vector3.up * 10f, true);
+            }
+        }
+
+        // Monsters close to an item take it, and the nearest one in range takes an item that lay too long.
+        private void LetMonstersTakeItems()
+        {
+            var pickups = EventLoot.GetPickups(this);
+            if (pickups.Count == 0)
+            {
+                return;
+            }
+            var monsters = CharacterBody.readOnlyInstancesList.Where(body => body != null && !body.isPlayerControlled && body.healthComponent.alive
+                && body.teamComponent.teamIndex != TeamIndex.Player && body.teamComponent.teamIndex != TeamIndex.Neutral).ToList();
+            if (monsters.Count == 0)
+            {
+                return;
+            }
+            foreach (var (pickup, age) in pickups)
+            {
+                var position = pickup.transform.position;
+                var nearest = monsters.OrderBy(body => (body.corePosition - position).sqrMagnitude).First();
+                var distance = (nearest.corePosition - position).magnitude;
+                var steal = StealTime.Value > 0f && age >= StealTime.Value && distance <= StealRange.Value;
+                if (distance <= MonsterGrabRadius.Value || steal)
+                {
+                    EventLoot.GiveToMonster(pickup, nearest);
+                }
             }
         }
 
