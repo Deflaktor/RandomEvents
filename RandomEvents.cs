@@ -113,12 +113,20 @@ namespace RandomEvents
         }
         private AbstractEvent InitAndHookEvent(AbstractEvent ev)
         {
-            if (ev.LoadCondition())
+            // an event that fails to load leaves out only itself
+            try
             {
-                ev.SetupConfig(instance.Config);
-                ev.Preload();
-                ev.Hook();
-                m_loadedEvents.Add(ev);
+                if (ev.LoadCondition())
+                {
+                    ev.SetupConfig(instance.Config);
+                    ev.Preload();
+                    ev.Hook();
+                    m_loadedEvents.Add(ev);
+                }
+            }
+            catch (Exception e)
+            {
+                Log.LogError($"Event {ev.GetEventConfigName()} failed to load: {e}");
             }
             m_allEventsIncludingNotLoadedOnes.Add(ev);
             return ev;
