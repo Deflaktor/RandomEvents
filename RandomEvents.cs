@@ -73,6 +73,7 @@ namespace RandomEvents
                 InitAndHookEvent(new EventFocusFire());
                 InitAndHookEvent(new EventFuelArray());
                 InitAndHookEvent(new EventGhosts());
+                InitAndHookEvent(new EventGiantBalloons());
                 InitAndHookEvent(new EventHaste());
                 InitAndHookEvent(new EventHotPotato());
                 InitAndHookEvent(new EventHunted());

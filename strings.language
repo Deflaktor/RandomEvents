@@ -104,7 +104,8 @@
         "ANNOUNCE_EVENT_EGOCENTRISM": "All eyes on you",
         "ANNOUNCE_EVENT_NEUTRONIUM_WEIGHTS": "A heavy burden",
         "ANNOUNCE_EVENT_MIRRORED_ENEMIES": "Mirror, mirror",
-        "ANNOUNCE_EVENT_BEHEMOTHS": "Everything goes boom"
+        "ANNOUNCE_EVENT_BEHEMOTHS": "Everything goes boom",
+        "ANNOUNCE_EVENT_GIANT_BALLOONS": "Balloon animals"
         
     }
 }
