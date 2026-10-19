@@ -14,6 +14,7 @@ namespace RandomEvents
     public class EventDroneUprising : AbstractEvent
     {
         private ConfigEntry<float> DamageMultiplier;
+        private ConfigEntry<float> MoveSpeedMultiplier;
         // the drones and turrets that items, equipment and survivors bring, which the drone catalog lacks
         private static readonly string[] SummonedBodies =
         {
@@ -48,7 +49,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Hostile drones spawn instead of monsters, also those of items and survivors. They deal half their normal damage and leave no wreck.";
+            return "Hostile drones spawn instead of monsters, also those of items and survivors. They deal half their normal damage, move at half speed and leave no wreck.";
         }
         public override string GetConditionDescription()
         {
@@ -57,6 +58,7 @@ namespace RandomEvents
         protected override void AddConfig(ConfigFile config)
         {
             DamageMultiplier = config.Bind(GetEventConfigName(), "Damage Multiplier", 0.5f, "The damage the hostile drones deal, relative to normal.");
+            MoveSpeedMultiplier = config.Bind(GetEventConfigName(), "Move Speed Multiplier", 0.5f, "The hostile drones' movement speed, relative to normal.");
         }
         public override void Preload()
         {
@@ -135,6 +137,7 @@ namespace RandomEvents
             body.master.gameObject.AddComponent<HostileDrone>();
             // a destroyed drone's master can be gone by the time its wreck hits the ground
             body.gameObject.EnsureComponent<HostileDrone>();
+            Slowdown.Apply(body, 1f, MoveSpeedMultiplier.Value);
             // an item without a name, which lowers the damage by 1% per stack
             var reduceDamage = Mathf.RoundToInt((1f - Mathf.Clamp01(DamageMultiplier.Value)) * 100f);
             if (reduceDamage > 0)
