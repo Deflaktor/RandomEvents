@@ -55,6 +55,7 @@ namespace RandomEvents
                 Slowdown.Hook();
 
                 ModConfig.Init();
+                InitAndHookEvent(new EventBehemoths());
                 InitAndHookEvent(new EventBouncy());
                 InitAndHookEvent(new EventBreachingFins());
                 InitAndHookEvent(new EventBulletHell());

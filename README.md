@@ -13,6 +13,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 
 | Event Name | Announcement | Description | Condition |
 |------------|--------------|-------------|-----------|
+| Behemoths | Everything goes boom | All players get 3 Brilliant Behemoths and every monster gets one, but monsters deal half damage. |  |
 | Bouncy | Everything bounces | All players get 3 Earthbound Vessels. Only walking monsters spawn, and they jump at random, also in mid-air. | Hallowed Concepts is enabled, not a Simulacrum boss wave, the stage has walking monsters, and event "DroneUprising" inactive. |
 | BreachingFins | Up, up and away | All players get a Breaching Fin without a cooldown until the event ends. More walking monsters spawn, and they are on a leash. | Seekers of the Storm is enabled. |
 | BulletHell | Projectile density dialed to eleven | Increases the fire rate of enemies but lowers their damage. | Event "UmbraAmbush" inactive. |

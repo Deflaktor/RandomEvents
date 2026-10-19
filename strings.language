@@ -103,7 +103,8 @@
         "ANNOUNCE_EVENT_UNITED_WE_STAND": "United we stand",
         "ANNOUNCE_EVENT_EGOCENTRISM": "All eyes on you",
         "ANNOUNCE_EVENT_NEUTRONIUM_WEIGHTS": "A heavy burden",
-        "ANNOUNCE_EVENT_MIRRORED_ENEMIES": "Mirror, mirror"
+        "ANNOUNCE_EVENT_MIRRORED_ENEMIES": "Mirror, mirror",
+        "ANNOUNCE_EVENT_BEHEMOTHS": "Everything goes boom"
         
     }
 }
