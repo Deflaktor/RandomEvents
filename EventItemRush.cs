@@ -42,7 +42,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Items appear around the players until the event ends. Monsters can pick them up too.";
+            return "Items appear around the players, in Simulacrum inside the safe zone, until the event ends. Monsters can pick them up too.";
         }
         public override string GetPopupDescription()
         {
@@ -84,8 +84,7 @@ namespace RandomEvents
             }
             for (int i = 0; i < ItemsPerSpawn.Value; i++)
             {
-                var player = players[RoR2Application.rng.RangeInt(0, players.Count)];
-                var position = Helper.FindGroundPositionNear(player.footPosition, 10f, 40f);
+                var position = FindItemPosition(players[RoR2Application.rng.RangeInt(0, players.Count)]);
                 if (position == null)
                 {
                     continue;
@@ -93,6 +92,26 @@ namespace RandomEvents
                 var item = items[RoR2Application.rng.RangeInt(0, items.Count)];
                 EventLoot.Drop(this, PickupCatalog.FindPickupIndex(item), position.Value + Vector3.up * 2f, Vector3.up * 10f, true);
             }
+        }
+
+        // around the player, or in Simulacrum anywhere inside the safe zone, which the players have to stay in
+        private static Vector3? FindItemPosition(CharacterBody player)
+        {
+            if (!(Run.instance is InfiniteTowerRun infiniteTowerRun) || infiniteTowerRun.safeWardController == null)
+            {
+                return Helper.FindGroundPositionNear(player.footPosition, 10f, 40f);
+            }
+            var ward = infiniteTowerRun.safeWardController;
+            var radius = Mathf.Max(1f, ward.holdoutZoneController.currentRadius * 0.9f);
+            for (int i = 0; i < 5; i++)
+            {
+                var position = Helper.FindGroundPositionNear(ward.transform.position, 0f, radius);
+                if (position.HasValue && ward.safeZone.IsInBounds(position.Value))
+                {
+                    return position;
+                }
+            }
+            return null;
         }
 
         public override void Prepare()
