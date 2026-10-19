@@ -19,7 +19,8 @@ namespace RandomEvents
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
             // Vengeful Spirit comes with that expansion
-            return DLC4Content.DLC4 != null && Run.instance != null && Run.instance.IsExpansionEnabled(DLC4Content.DLC4);
+            // a boss's spirit would make a boss wave much harder
+            return !Helper.IsSimulacrumBossWaveNext() && DLC4Content.DLC4 != null && Run.instance != null && Run.instance.IsExpansionEnabled(DLC4Content.DLC4);
         }
         public override string GetEventConfigName()
         {
@@ -35,7 +36,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Hallowed Concepts is enabled.";
+            return "Hallowed Concepts is enabled, and not a Simulacrum boss wave.";
         }
         protected override void AddConfig(ConfigFile config)
         {

@@ -59,6 +59,6 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | TimeWarp | Time slows for your foes | Slows all monsters to about a third of their speed. |  |
 | UmbraAmbush | Umbras emerge from the shadows | Each player is hunted by a tough enemy survivor with items, which attacks and moves slowly. | Event "BulletHell" inactive. |
 | UnitedWeStand | United we stand | Players close to each other share all their items. | At least two players are alive. |
-| VengefulSpirits | Spirits stand guard | All monsters get a Vengeful Spirit, but half as many spawn. | Hallowed Concepts is enabled. |
+| VengefulSpirits | Spirits stand guard | All monsters get a Vengeful Spirit, but half as many spawn. | Hallowed Concepts is enabled, and not a Simulacrum boss wave. |
 | WeakEnemies | Horde of the many | Only weak enemies spawn. | Events "StrongEnemies", "Mitosis" and "LynxPups" inactive. |
 | Zombies | The dead refuse to rest | Some monsters are infected: they infect others nearby when they die and come back once. | Currently not a boss wave. |
