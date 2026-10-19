@@ -39,7 +39,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Monsters have ten times their health, but take more and more damage the more they are hurt. This wears off if they aren't hurt for 3 seconds.";
+            return "Monsters have twenty times their health, but take more and more damage the more they are hurt. This wears off if they aren't hurt for 3 seconds.";
         }
         public override string GetPopupDescription()
         {
@@ -51,7 +51,7 @@ namespace RandomEvents
         }
         protected override void AddConfig(ConfigFile config)
         {
-            HealthMultiplier = config.Bind(GetEventConfigName(), "Health Multiplier", 10f, "The monsters' health, relative to normal.");
+            HealthMultiplier = config.Bind(GetEventConfigName(), "Health Multiplier", 20f, "The monsters' health, relative to normal.");
             DecayDelay = config.Bind(GetEventConfigName(), "Decay Delay", 3f, "Seconds without damage from players after which a monster starts losing stacks.");
             DecayInterval = config.Bind(GetEventConfigName(), "Decay Interval", 1f, "Seconds between two stacks a monster loses.");
             DamagePerStack = config.Bind(GetEventConfigName(), "Damage Per Stack", 0.01f, "Damage that gives a monster a stack, as a share of its health, before the stacks multiply it.");

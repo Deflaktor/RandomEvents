@@ -26,7 +26,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | EquipmentOnly | Equipment-exclusive combat | Disables all skills, but gives all players a random equipment with a short cooldown. | Events "SkillsOnly", "FuelArray" inactive. Artifact of Enigma inactive. |
 | ExplodingCorpses | Exploding corpses | All enemies explode upon death. | Players have sufficient means to do ranged damage. |
 | FallingEnemies | Enemies fall down from the heavens | Enemies fall from the sky. Only walking enemies spawn. | Not a Simulacrum boss wave, and event "DroneUprising" inactive. |
-| FocusFire | Focus your fire | Monsters have ten times their health, but take more and more damage the more they are hurt. This wears off if they aren't hurt for 3 seconds. |  |
+| FocusFire | Focus your fire | Monsters have twenty times their health, but take more and more damage the more they are hurt. This wears off if they aren't hurt for 3 seconds. |  |
 | FuelArray | Stay above 50% health or face disaster | Heals all players and gives them a Fuel Array until the event ends, but they take less damage. | Event "EquipmentOnly" inactive. |
 | Ghosts | Ghostly apparitions haunt the battlefield | Some monsters spawn as ghosts that fade after a while. | Currently not a boss wave. |
 | Haste | The world accelerates | All beings become faster. |  |
