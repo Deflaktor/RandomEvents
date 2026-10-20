@@ -34,11 +34,11 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Players burn while on the ground for more than 2 seconds. All players get 2 Hopoo Feathers.";
+            return "Players burn while on the ground for more than 1 second. All players get 2 Hopoo Feathers.";
         }
         public override string GetPopupDescription()
         {
-            return "You burn while on the ground for more than 2 seconds. You get 2 Hopoo Feathers temporarily.";
+            return "You burn while on the ground for more than 1 second. You get 2 Hopoo Feathers temporarily.";
         }
         public override string GetConditionDescription()
         {
@@ -46,7 +46,7 @@ namespace RandomEvents
         }
         protected override void AddConfig(ConfigFile config)
         {
-            GraceTime = config.Bind(GetEventConfigName(), "Grace Time", 2f, "Seconds players can be on the ground before they burn.");
+            GraceTime = config.Bind(GetEventConfigName(), "Grace Time", 1f, "Seconds players can be on the ground before they burn.");
             DamagePerSecond = config.Bind(GetEventConfigName(), "Damage Per Second", 0.05f, "The share of their maximum health players lose per second while burning.");
             Feathers = config.Bind(GetEventConfigName(), "Hopoo Feathers", 2, "How many Hopoo Feathers players get during the event.");
         }
