@@ -153,11 +153,14 @@ namespace RandomEvents
                     if (movement.sqrMagnitude > AllowedMovementPerCheck * AllowedMovementPerCheck)
                     {
                         immunities.Remove(body, RoR2Content.Buffs.Immune);
+                        immunities.Remove(body, DLC3Content.Buffs.SolusWingInvulnerability);
                         Punish(body);
                     }
                     else if (!immunities.Has(body, RoR2Content.Buffs.Immune))
                     {
+                        // the shine of the Solus Wing's invulnerable elite shows it
                         immunities.Add(body, RoR2Content.Buffs.Immune);
+                        immunities.Add(body, DLC3Content.Buffs.SolusWingInvulnerability);
                     }
                 }
             }
