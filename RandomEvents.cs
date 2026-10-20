@@ -81,6 +81,7 @@ namespace RandomEvents
                 InitAndHookEvent(new EventItemKits());
                 InitAndHookEvent(new EventItemRush());
                 InitAndHookEvent(new EventItemZone());
+                InitAndHookEvent(new EventLavaFloor());
                 InitAndHookEvent(new EventLinkedSouls());
                 InitAndHookEvent(new EventLynxPups());
                 InitAndHookEvent(new EventMirroredEnemies());
