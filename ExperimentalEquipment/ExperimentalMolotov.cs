@@ -63,7 +63,8 @@ namespace RandomEvents
 
         // The experimental Molotov: where it lands, a Grandparent's sun grows for half a second and is gone. In that moment
         // it blasts every monster within 20 meters for 2000% of the thrower's damage, all of it within 6 meters and a quarter
-        // at the edge, and sets every one it sees ablaze with the Ignition Tank's stronger burn, 2000% in all.
+        // at the edge, and sets every one it sees within 100 meters ablaze with the Ignition Tank's stronger burn, 2000% in all
+        // up close, less the further away.
         public class Flare : MonoBehaviour
         {
             // the sun grows for 0.6 seconds, so it never gets to burn on its own
@@ -74,7 +75,9 @@ namespace RandomEvents
             private const float EdgeShare = 0.25f;
             private const float BlastDamage = 20f;
             private const float BurnDamage = 20f;
+            // each stack of the burn, up close; one at the edge of its sight
             private const int BurnStacks = 10;
+            private const float BurnRange = 100f;
             // what the Grandparent's sun shows on everything it heats
             private static AsyncOperationHandle<GameObject> HeatEffect;
             public CharacterBody owner;
@@ -115,33 +118,34 @@ namespace RandomEvents
                         continue;
                     }
                     var distance = Mathf.Max(0f, (body.corePosition - center).magnitude - body.radius);
-                    if (distance > Radius)
+                    if (distance <= Radius)
                     {
-                        continue;
+                        var falloff = 1f - (1f - EdgeShare) * Mathf.Clamp01((distance - SweetSpot) / (Radius - SweetSpot));
+                        body.healthComponent.TakeDamage(new DamageInfo
+                        {
+                            attacker = owner.gameObject,
+                            inflictor = gameObject,
+                            damage = owner.damage * BlastDamage * falloff,
+                            crit = owner.RollCrit(),
+                            position = body.corePosition,
+                            procCoefficient = 1f,
+                            damageColorIndex = DamageColorIndex.Item
+                        });
                     }
-                    var falloff = 1f - (1f - EdgeShare) * Mathf.Clamp01((distance - SweetSpot) / (Radius - SweetSpot));
-                    body.healthComponent.TakeDamage(new DamageInfo
-                    {
-                        attacker = owner.gameObject,
-                        inflictor = gameObject,
-                        damage = owner.damage * BlastDamage * falloff,
-                        crit = owner.RollCrit(),
-                        position = body.corePosition,
-                        procCoefficient = 1f,
-                        damageColorIndex = DamageColorIndex.Item
-                    });
                     // only what the sun sees
-                    if (!body.healthComponent.alive || Physics.Linecast(SunPosition, body.corePosition, LayerIndex.world.mask, QueryTriggerInteraction.Ignore))
+                    if (distance > BurnRange || !body.healthComponent.alive
+                        || Physics.Linecast(SunPosition, body.corePosition, LayerIndex.world.mask, QueryTriggerInteraction.Ignore))
                     {
                         continue;
                     }
+                    var stacks = Mathf.Max(1, Mathf.RoundToInt(BurnStacks * (1f - Mathf.Clamp01((distance - SweetSpot) / (BurnRange - SweetSpot)))));
                     EffectManager.SpawnEffect(HeatEffect.WaitForCompletion(), new EffectData
                     {
                         origin = body.corePosition,
                         rotation = Util.QuaternionSafeLookRotation(SunPosition - body.corePosition),
                         scale = body.bestFitRadius
                     }, transmit: true);
-                    for (int i = 0; i < BurnStacks; i++)
+                    for (int i = 0; i < stacks; i++)
                     {
                         var info = new InflictDotInfo
                         {
