@@ -75,7 +75,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Gives all players a remixed equipment with a shorter cooldown. Royal Capacitor inflates a monster until it explodes, Disposable Missile Launcher fires a Plasma Shrimp missile at every monster, Radar Scanner sends out a shockwave instead of scanning, which hurts, stuns and throws back monsters, and Super Massive Leech causes hemorrhage instead of healing, Forgive Me Please's doll walks straight ahead and explodes like a mini nuke after 10 seconds, the Crowdfunder costs no gold and fires Resonance Disc shots, but roots you while it fires, the Molotov (6-Pack) lights a blazing sun that burns everything nearby harder and harder for 5 seconds, and the Sawmerang's blades hunt monsters, cutting through them back and forth for 15 seconds.";
+            return "Gives all players a remixed equipment with a shorter cooldown. Royal Capacitor inflates a monster until it explodes, Disposable Missile Launcher fires a Plasma Shrimp missile at every monster, Radar Scanner sends out a shockwave instead of scanning, which hurts, stuns and throws back monsters, and Super Massive Leech causes hemorrhage instead of healing, Forgive Me Please's doll walks straight ahead and explodes like a mini nuke after 10 seconds, the Crowdfunder costs no gold and fires Resonance Disc shots, but roots you while it fires, the Molotov (6-Pack) lights a blazing sun that burns everything nearby harder and harder for 5 seconds, and the Sawmerang's blades hunt monsters, cutting through them back and forth for 8 seconds.";
         }
         public override string GetPopupDescription()
         {
@@ -92,7 +92,7 @@ namespace RandomEvents
             if (equipmentDef == DLC1Content.Equipment.Molotov)
                 return "One bottle that lights a blazing sun, burning everything nearby harder and harder for 5 seconds.";
             if (equipmentDef == RoR2Content.Equipment.Saw)
-                return "The blades hunt the nearest monster, cutting through it back and forth, then the next, for 15 seconds.";
+                return "The blades hunt the nearest monster, cutting through it back and forth, then the next, for 8 seconds.";
             return "Inflates the targeted monster to three times its size, then it explodes. No effect on bosses.";
         }
         public override string GetConditionDescription()
@@ -777,7 +777,7 @@ namespace RandomEvents
         // transform passes on to everyone.
         public class HuntingSaw : MonoBehaviour
         {
-            private const float Lifetime = 15f;
+            private const float Lifetime = 8f;
             private const float Speed = 40f;
             private const float TurnRate = 720f;
             private const float Overshoot = 0.25f;
