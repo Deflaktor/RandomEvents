@@ -57,6 +57,7 @@ namespace RandomEvents
 
                 ModConfig.Init();
                 InitAndHookEvent(new EventBehemoths());
+                InitAndHookEvent(new EventBlightedCorpses());
                 InitAndHookEvent(new EventBouncy());
                 InitAndHookEvent(new EventBulletHell());
                 InitAndHookEvent(new EventCasinoItem());
