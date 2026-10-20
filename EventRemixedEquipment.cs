@@ -34,6 +34,7 @@ namespace RandomEvents
         private static AsyncOperationHandle<GameObject> DiscTracer;
         private static AsyncOperationHandle<GameObject> DiscBomb;
         private static AsyncOperationHandle<GameObject> MolotovBottle;
+        private static AsyncOperationHandle<GameObject> Sawmerang;
         // each Crowdfunder's bullets so far
         private readonly Dictionary<GameObject, int> crowdfunderBullets = new Dictionary<GameObject, int>();
         // the players the Crowdfunder roots while it fires
@@ -46,7 +47,7 @@ namespace RandomEvents
         private static EquipmentDef[] Equipments => new[]
         {
             RoR2Content.Equipment.Lightning, RoR2Content.Equipment.CommandMissile, RoR2Content.Equipment.Scanner, RoR2Content.Equipment.LifestealOnHit,
-            RoR2Content.Equipment.DeathProjectile, RoR2Content.Equipment.GoldGat, DLC1Content.Equipment.Molotov
+            RoR2Content.Equipment.DeathProjectile, RoR2Content.Equipment.GoldGat, DLC1Content.Equipment.Molotov, RoR2Content.Equipment.Saw
         };
 
         public override bool LoadCondition()
@@ -71,7 +72,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Gives all players a remixed equipment with a shorter cooldown. Royal Capacitor inflates a monster until it explodes, Disposable Missile Launcher fires a Plasma Shrimp missile at every monster, Radar Scanner's wave also pushes and hurts monsters, and Super Massive Leech causes hemorrhage instead of healing, Forgive Me Please's doll walks straight ahead and explodes like a mini nuke after 10 seconds, the Crowdfunder costs no gold and fires Resonance Disc shots, but roots you while it fires, and the Molotov (6-Pack) sets a sea of fire that burns everything nearby harder and harder for 10 seconds.";
+            return "Gives all players a remixed equipment with a shorter cooldown. Royal Capacitor inflates a monster until it explodes, Disposable Missile Launcher fires a Plasma Shrimp missile at every monster, Radar Scanner's wave also pushes and hurts monsters, and Super Massive Leech causes hemorrhage instead of healing, Forgive Me Please's doll walks straight ahead and explodes like a mini nuke after 10 seconds, the Crowdfunder costs no gold and fires Resonance Disc shots, but roots you while it fires, the Molotov (6-Pack) sets a sea of fire that burns everything nearby harder and harder for 10 seconds, and the Sawmerang's blades hunt monsters, cutting through them back and forth for 15 seconds.";
         }
         public override string GetPopupDescription()
         {
@@ -87,6 +88,8 @@ namespace RandomEvents
                 return "Costs no gold and fires Resonance Disc shots, but you can't move while it fires.";
             if (equipmentDef == DLC1Content.Equipment.Molotov)
                 return "One bottle that sets a sea of fire, burning everything nearby harder and harder for 10 seconds.";
+            if (equipmentDef == RoR2Content.Equipment.Saw)
+                return "The blades hunt the nearest monster, cutting through it back and forth, then the next, for 15 seconds.";
             return "Inflates the targeted monster to three times its size, then it explodes. No effect on bosses.";
         }
         public override string GetConditionDescription()
@@ -105,6 +108,7 @@ namespace RandomEvents
             DiscTracer = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LaserTurbine/TracerLaserTurbine.prefab");
             DiscBomb = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LaserTurbine/LaserTurbineBomb.prefab");
             MolotovBottle = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC1/Molotov/MolotovSingleProjectile.prefab");
+            Sawmerang = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Saw/Sawmerang.prefab");
             Inferno.Preload();
             EventHotPotato.MiniNuke.Preload();
         }
@@ -174,6 +178,11 @@ namespace RandomEvents
             if (def == RoR2Content.Equipment.DeathProjectile)
             {
                 return LaunchDoll(self);
+            }
+            if (def == RoR2Content.Equipment.Saw)
+            {
+                LaunchSaws(self);
+                return true;
             }
             if (def == DLC1Content.Equipment.Molotov)
             {
@@ -265,6 +274,44 @@ namespace RandomEvents
             var inferno = new GameObject("RandomEventsInferno").AddComponent<Inferno>();
             inferno.owner = owner;
             inferno.center = center;
+        }
+
+        // three blades, fanned out like the vanilla ones, which then hunt on their own
+        private static void LaunchSaws(EquipmentSlot slot)
+        {
+            var body = slot.characterBody;
+            var aim = slot.GetAimRay();
+            foreach (var angle in new[] { -15f, 0f, 15f })
+            {
+                var rotation = Quaternion.LookRotation(aim.direction) * Quaternion.Euler(0f, angle, 0f);
+                var saw = UnityEngine.Object.Instantiate(Sawmerang.WaitForCompletion(), aim.origin, rotation);
+                if (saw.TryGetComponent(out BoomerangProjectile boomerang))
+                {
+                    boomerang.enabled = false;
+                }
+                if (saw.TryGetComponent(out Rigidbody rigidbody))
+                {
+                    rigidbody.isKinematic = true;
+                }
+                if (saw.TryGetComponent(out ProjectileController controller))
+                {
+                    controller.owner = body.gameObject;
+                }
+                if (saw.TryGetComponent(out TeamFilter teamFilter))
+                {
+                    teamFilter.teamIndex = body.teamComponent.teamIndex;
+                }
+                if (saw.TryGetComponent(out ProjectileDamage projectileDamage))
+                {
+                    projectileDamage.damage = body.damage;
+                    projectileDamage.crit = body.RollCrit();
+                    projectileDamage.damageColorIndex = DamageColorIndex.Item;
+                }
+                var hunter = saw.AddComponent<HuntingSaw>();
+                hunter.owner = body;
+                hunter.direction = rotation * Vector3.forward;
+                NetworkServer.Spawn(saw);
+            }
         }
 
         private bool IsRemixedCrowdfunder(CharacterBody body)
@@ -752,6 +799,95 @@ namespace RandomEvents
                 }
                 fires.Clear();
                 Destroy(gameObject);
+            }
+        }
+
+        // The blade flies at the nearest monster and through it, a little past it, then turns back for another pass, so
+        // it cuts it again and again; once the monster dies, the next nearest. The host moves it, which its projectile
+        // transform passes on to everyone.
+        public class HuntingSaw : MonoBehaviour
+        {
+            private const float Lifetime = 15f;
+            private const float Speed = 40f;
+            private const float TurnRate = 720f;
+            private const float Overshoot = 0.25f;
+            private const float SearchRadius = 120f;
+            public CharacterBody owner;
+            public Vector3 direction;
+            private CharacterBody target;
+            private ProjectileOverlapAttack overlapAttack;
+            private float age;
+            // how long it keeps going straight after passing through its target
+            private float passTimer;
+
+            private void Start()
+            {
+                overlapAttack = GetComponent<ProjectileOverlapAttack>();
+            }
+
+            private void FixedUpdate()
+            {
+                if (!NetworkServer.active)
+                {
+                    return;
+                }
+                age += Time.fixedDeltaTime;
+                if (age >= Lifetime)
+                {
+                    Destroy(gameObject);
+                    return;
+                }
+                if (target == null || target.healthComponent == null || !target.healthComponent.alive)
+                {
+                    target = FindTarget();
+                    passTimer = 0f;
+                }
+                var position = transform.position;
+                if (target != null)
+                {
+                    var toTarget = target.corePosition - position;
+                    if (passTimer > 0f)
+                    {
+                        passTimer -= Time.fixedDeltaTime;
+                        if (passTimer <= 0f && overlapAttack != null)
+                        {
+                            // a new pass hits it again
+                            overlapAttack.ResetOverlapAttack();
+                        }
+                    }
+                    else if (toTarget.sqrMagnitude <= target.radius * target.radius + 1f || Vector3.Dot(toTarget, direction) < 0f && toTarget.sqrMagnitude < 25f)
+                    {
+                        passTimer = Overshoot;
+                    }
+                    else
+                    {
+                        direction = Vector3.RotateTowards(direction, toTarget.normalized, TurnRate * Mathf.Deg2Rad * Time.fixedDeltaTime, 0f);
+                    }
+                }
+                else if (owner != null)
+                {
+                    // nothing to hunt: circle back to its owner
+                    var toOwner = owner.corePosition + Vector3.up * 3f - position;
+                    if (toOwner.sqrMagnitude > 9f)
+                    {
+                        direction = Vector3.RotateTowards(direction, toOwner.normalized, TurnRate * 0.5f * Mathf.Deg2Rad * Time.fixedDeltaTime, 0f);
+                    }
+                }
+                transform.SetPositionAndRotation(position + direction * Speed * Time.fixedDeltaTime, Util.QuaternionSafeLookRotation(direction));
+            }
+
+            private CharacterBody FindTarget()
+            {
+                if (owner == null || owner.teamComponent == null)
+                {
+                    return null;
+                }
+                var position = transform.position;
+                return CharacterBody.readOnlyInstancesList
+                    .Where(body => body != null && body.healthComponent != null && body.healthComponent.alive && body.teamComponent.teamIndex != owner.teamComponent.teamIndex
+                        && body.teamComponent.teamIndex != TeamIndex.Neutral && (body.corePosition - position).sqrMagnitude <= SearchRadius * SearchRadius)
+                    .OrderBy(body => (body.corePosition - position).sqrMagnitude)
+                    .FirstOrDefault();
             }
         }
 
