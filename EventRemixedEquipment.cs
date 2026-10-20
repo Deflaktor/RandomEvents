@@ -1,6 +1,7 @@
 using BepInEx.Configuration;
 using RoR2;
 using RoR2.Orbs;
+using RoR2.Projectile;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -18,6 +19,10 @@ namespace RandomEvents
         private const float InflateFactor = 3f;
         private const float ScannerWaveSpeed = 125f;
         private const float ScannerWaveRadius = 500f;
+        private const float DollSpeed = 6f;
+        private const float DollFuse = 10f;
+        private const float DollNukeRadius = 40f;
+        private static AsyncOperationHandle<GameObject> Doll;
         private static AsyncOperationHandle<GameObject> Breach;
         private static AsyncOperationHandle<GameObject> Tick;
         private const float LeechDuration = 8f;
@@ -25,7 +30,8 @@ namespace RandomEvents
 
         private static EquipmentDef[] Equipments => new[]
         {
-            RoR2Content.Equipment.Lightning, RoR2Content.Equipment.CommandMissile, RoR2Content.Equipment.Scanner, RoR2Content.Equipment.LifestealOnHit
+            RoR2Content.Equipment.Lightning, RoR2Content.Equipment.CommandMissile, RoR2Content.Equipment.Scanner, RoR2Content.Equipment.LifestealOnHit,
+            RoR2Content.Equipment.DeathProjectile
         };
 
         public override bool LoadCondition()
@@ -50,7 +56,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Gives all players a remixed equipment with a shorter cooldown. Royal Capacitor inflates a monster until it explodes, Disposable Missile Launcher fires a Plasma Shrimp missile at every monster, Radar Scanner's wave also pushes and hurts monsters, and Super Massive Leech causes hemorrhage instead of healing.";
+            return "Gives all players a remixed equipment with a shorter cooldown. Royal Capacitor inflates a monster until it explodes, Disposable Missile Launcher fires a Plasma Shrimp missile at every monster, Radar Scanner's wave also pushes and hurts monsters, and Super Massive Leech causes hemorrhage instead of healing, and Forgive Me Please's doll walks straight ahead and explodes like a mini nuke after 10 seconds.";
         }
         public override string GetPopupDescription()
         {
@@ -60,6 +66,8 @@ namespace RandomEvents
                 return "The wave also pushes and hurts monsters.";
             if (equipmentDef == RoR2Content.Equipment.LifestealOnHit)
                 return "Your hits cause hemorrhage instead of healing you.";
+            if (equipmentDef == RoR2Content.Equipment.DeathProjectile)
+                return "The doll walks straight ahead and explodes like a mini nuke after 10 seconds.";
             return "Inflates the targeted monster to three times its size, then it explodes. No effect on bosses.";
         }
         public override string GetConditionDescription()
@@ -74,6 +82,8 @@ namespace RandomEvents
             // the explosion of ExplodingCorpses' monsters
             Breach = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC2/Scorchling/VFXScorchlingBreachExplosion.prefab");
             Tick = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/OmniExplosionVFXQuick.prefab");
+            Doll = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/DeathProjectile/DeathProjectile.prefab");
+            EventHotPotato.MiniNuke.Preload();
         }
         public override void Hook()
         {
@@ -133,6 +143,10 @@ namespace RandomEvents
             {
                 return Bleed(self.characterBody);
             }
+            if (def == RoR2Content.Equipment.DeathProjectile)
+            {
+                return LaunchDoll(self);
+            }
             return orig(self, def);
         }
 
@@ -146,6 +160,46 @@ namespace RandomEvents
             effectData.SetNetworkedObjectReference(body.gameObject);
             EffectManager.SpawnEffect(LegacyResourcesAPI.Load<GameObject>("Prefabs/Effects/LifeStealOnHitActivation"), effectData, transmit: true);
             body.AddTimedBuff(DLC3Content.Buffs.ShieldTankDamage, LeechDuration);
+            return true;
+        }
+
+        // The doll, without its own behavior: no on-kill effects, no sticking, no physics. The host moves it, which its
+        // projectile transform passes on to everyone.
+        private static bool LaunchDoll(EquipmentSlot slot)
+        {
+            var body = slot.characterBody;
+            var aim = slot.GetAimRay().direction;
+            var direction = new Vector3(aim.x, 0f, aim.z);
+            direction = direction.sqrMagnitude > 0.001f ? direction.normalized : body.transform.forward;
+            var doll = UnityEngine.Object.Instantiate(Doll.WaitForCompletion(), body.footPosition + direction * 1.5f + Vector3.up, Quaternion.LookRotation(direction));
+            foreach (var behaviour in new Behaviour[] { doll.GetComponent<DeathProjectile>(), doll.GetComponent<ProjectileStickOnImpact>(), doll.GetComponent<ProjectileSimple>(),
+                doll.GetComponent<ProjectileDeployToOwner>(), doll.GetComponent<ApplyTorqueOnStart>(), doll.GetComponent<DestroyOnTimer>() })
+            {
+                if (behaviour != null)
+                {
+                    behaviour.enabled = false;
+                }
+            }
+            if (doll.TryGetComponent(out Rigidbody rigidbody))
+            {
+                rigidbody.isKinematic = true;
+            }
+            if (doll.TryGetComponent(out ProjectileController controller))
+            {
+                controller.owner = body.gameObject;
+            }
+            if (doll.TryGetComponent(out TeamFilter teamFilter))
+            {
+                teamFilter.teamIndex = body.teamComponent.teamIndex;
+            }
+            if (doll.TryGetComponent(out TeamComponent teamComponent))
+            {
+                teamComponent.teamIndex = body.teamComponent.teamIndex;
+            }
+            var walker = doll.AddComponent<WalkingDoll>();
+            walker.owner = body;
+            walker.direction = direction;
+            NetworkServer.Spawn(doll);
             return true;
         }
 
@@ -332,6 +386,46 @@ namespace RandomEvents
                     body.healthComponent.Suicide(attacker != null ? attacker.gameObject : null);
                 }
                 Destroy(this);
+            }
+        }
+
+        // Walks along the ground until a wall stops it, then goes off like Hot Potato's bomb, sparing players
+        public class WalkingDoll : MonoBehaviour
+        {
+            public CharacterBody owner;
+            public Vector3 direction;
+            private float age;
+
+            private void FixedUpdate()
+            {
+                if (!NetworkServer.active)
+                {
+                    return;
+                }
+                age += Time.fixedDeltaTime;
+                var position = transform.position;
+                var step = direction * DollSpeed * Time.fixedDeltaTime;
+                if (!Physics.Raycast(position, direction, step.magnitude + 0.5f, LayerIndex.world.mask, QueryTriggerInteraction.Ignore))
+                {
+                    position += step;
+                }
+                // on the ground below, or falling if there is none
+                if (Physics.Raycast(position + Vector3.up * 2f, Vector3.down, out var hit, 6f, LayerIndex.world.mask, QueryTriggerInteraction.Ignore))
+                {
+                    position.y = hit.point.y + 0.5f;
+                }
+                else
+                {
+                    position.y -= 10f * Time.fixedDeltaTime;
+                }
+                // a waddle from side to side
+                transform.SetPositionAndRotation(position, Quaternion.LookRotation(direction) * Quaternion.Euler(0f, 0f, Mathf.Sin(age * 12f) * 15f));
+                if (age >= DollFuse)
+                {
+                    var groundZero = Physics.Raycast(position, Vector3.down, out var floor, 50f, LayerIndex.world.mask, QueryTriggerInteraction.Ignore) ? floor.point : position;
+                    EventHotPotato.Nuke(groundZero, DollNukeRadius, 0f, 2f, 0.5f, owner != null ? owner.gameObject : null);
+                    Destroy(gameObject);
+                }
             }
         }
 
