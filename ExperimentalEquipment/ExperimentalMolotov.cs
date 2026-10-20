@@ -14,13 +14,13 @@ namespace RandomEvents
         private static AsyncOperationHandle<GameObject> MolotovBottle;
 
         public override EquipmentDef EquipmentDef => DLC1Content.Equipment.Molotov;
-        public override string Description => "the Molotov (6-Pack) lights a blazing fire that burns everything nearby in its sight harder and harder for 5 seconds";
-        public override string PopupDescription => "One bottle that lights a blazing fire, burning everything nearby in its sight harder and harder for 5 seconds.";
+        public override string Description => "the Molotov (6-Pack) flares up like a sun, blasting everything nearby and setting what it sees ablaze";
+        public override string PopupDescription => "One bottle that flares up like a sun where it lands, blasting everything nearby and setting what it sees ablaze.";
 
         public override void Preload()
         {
             MolotovBottle = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC1/Molotov/MolotovSingleProjectile.prefab");
-            Inferno.Preload();
+            Flare.Preload();
         }
 
         public override void Hook()
@@ -46,7 +46,7 @@ namespace RandomEvents
             return true;
         }
 
-        // the experimental Molotov's bottle sets its sea of fire instead of the bottle's own fire
+        // the experimental Molotov's bottle flares up instead of the bottle's own fire
         private void ProjectileExplosion_DetonateServer(On.RoR2.Projectile.ProjectileExplosion.orig_DetonateServer orig, ProjectileExplosion self)
         {
             var owner = self.projectileController != null && self.projectileController.owner != null ? self.projectileController.owner.GetComponent<CharacterBody>() : null;
@@ -56,205 +56,113 @@ namespace RandomEvents
                 return;
             }
             var center = Physics.Raycast(self.transform.position + Vector3.up, Vector3.down, out var hit, 30f, LayerIndex.world.mask, QueryTriggerInteraction.Ignore) ? hit.point : self.transform.position;
-            var inferno = new GameObject("RandomEventsInferno").AddComponent<Inferno>();
-            inferno.owner = owner;
-            inferno.center = center;
+            var flare = new GameObject("RandomEventsFlare").AddComponent<Flare>();
+            flare.owner = owner;
+            flare.center = center;
         }
 
-        // The experimental Molotov: the Molotov's and Gasoline's bursts where it landed, then for 5 seconds the ground ablaze
-        // with Molotov fire, Kjaro's Band's fire tornado in the middle, and a huge Elder Lemurian's fireball bursting over it
-        // again and again. Meanwhile
-        // everything hostile nearby that the blaze can see burns, with stacks that pile up faster and faster to 5000% of the
-        // thrower's damage in all, which the Grandparent's heat shows, and is scorched every half second with Helfire
-        // Tincture's flash.
-        public class Inferno : MonoBehaviour
+        // The experimental Molotov: where it lands, a Grandparent's sun grows for half a second and is gone. In that moment
+        // it blasts every monster within 20 meters for 2000% of the thrower's damage, all of it within 6 meters and a quarter
+        // at the edge, and sets every one it sees ablaze with the Ignition Tank's stronger burn, 2000% in all.
+        public class Flare : MonoBehaviour
         {
-            private const float Duration = 5f;
-            private const float Radius = 8f;
-            private const float TickInterval = 0.1f;
-            private const float TotalDamage = 50f;
-            private const int MaxHeatStacks = 40;
-            // where the blaze sees from
-            private const float BlazeHeight = 1.5f;
-            // an Elder Lemurian's fireball bursting over the middle again and again
-            private const float FireballInterval = 0.5f;
-            private const float FireballHeight = 4f;
-            private const float FireballScale = 10f;
-            private const int FirePools = 6;
-            // Kjaro's Band's fire tornado, whose flames die down after a while, so a new one comes
-            private const float TornadoInterval = 2.5f;
-            private const float ScorchDamagePerSecond = 1.5f;
-            private const float ScorchInterval = 0.5f;
-            private static AsyncOperationHandle<GameObject> Gasoline;
-            private static AsyncOperationHandle<GameObject> Fireball;
-            private static AsyncOperationHandle<GameObject> Tornado;
-            private static AsyncOperationHandle<GameObject> ScorchEffect;
+            // the sun grows for 0.6 seconds, so it never gets to burn on its own
+            private const float SunTime = 0.5f;
+            private const float SunHeight = 4f;
+            private const float Radius = 20f;
+            private const float SweetSpot = 6f;
+            private const float EdgeShare = 0.25f;
+            private const float BlastDamage = 20f;
+            private const float BurnDamage = 20f;
+            private const int BurnStacks = 10;
+            // what the Grandparent's sun shows on everything it heats
+            private static AsyncOperationHandle<GameObject> HeatEffect;
             public CharacterBody owner;
             public Vector3 center;
-            private readonly Dictionary<CharacterBody, int> heat = new Dictionary<CharacterBody, int>();
-            private readonly List<GameObject> fires = new List<GameObject>();
-            private float fireballTimer;
-            private float tornadoTimer;
-            private float age;
-            private int tick;
-            private int ticks;
-            private float weightSum;
-            private float scorchTimer;
+            private GenericOwnership sun;
 
             public static void Preload()
             {
                 FireEffects.Preload();
-                Gasoline = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/IgniteOnKill/IgniteExplosionVFX.prefab");
-                Fireball = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LemurianBruiser/OmniExplosionVFXLemurianBruiserFireballImpact.prefab");
-                Tornado = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/ElementalRings/FireTornado.prefab");
-                ScorchEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/BurnNearby/HelfireIgniteEffect.prefab");
+                HeatEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Grandparent/IgniteDirectionalExplosionVFX.prefab");
             }
+
+            private Vector3 SunPosition => center + Vector3.up * SunHeight;
 
             private void Start()
-            {
-                ticks = Mathf.RoundToInt(Duration / TickInterval);
-                for (int i = 1; i <= ticks; i++)
-                {
-                    weightSum += i * i;
-                }
-                FireEffects.SpawnEffect(FireEffects.Ignition, center, Radius);
-                FireEffects.SpawnEffect(Gasoline, center + Vector3.up, Radius);
-                var team = owner != null && owner.teamComponent != null ? owner.teamComponent.teamIndex : TeamIndex.Neutral;
-                fires.Add(FireEffects.SpawnFire(FireEffects.FirePool, center, null, team));
-                for (int i = 0; i < FirePools; i++)
-                {
-                    fires.Add(FireEffects.SpawnFire(FireEffects.FirePool, FireEffects.OnGround(center + FireEffects.RandomHorizontal(Radius * 0.8f)), null, team));
-                }
-            }
-
-            private Vector3 BlazePosition => center + Vector3.up * BlazeHeight;
-
-            private void FixedUpdate()
             {
                 if (!NetworkServer.active)
                 {
                     return;
                 }
-                age += Time.fixedDeltaTime;
-                fireballTimer -= Time.fixedDeltaTime;
-                if (fireballTimer <= 0f && age < Duration)
-                {
-                    fireballTimer = FireballInterval;
-                    FireEffects.SpawnEffect(Fireball, center + Vector3.up * FireballHeight, FireballScale);
-                }
-                tornadoTimer -= Time.fixedDeltaTime;
-                if (tornadoTimer <= 0f && age < Duration)
-                {
-                    tornadoTimer = TornadoInterval;
-                    SpawnTornado();
-                }
-                scorchTimer -= Time.fixedDeltaTime;
-                if (scorchTimer <= 0f && age < Duration)
-                {
-                    scorchTimer = ScorchInterval;
-                    Scorch();
-                }
-                while (tick < ticks && age >= (tick + 1) * TickInterval)
-                {
-                    tick++;
-                    Burn(tick);
-                }
-                if (age >= Duration)
-                {
-                    Destroy(gameObject);
-                }
-            }
-
-            private void SpawnTornado()
-            {
                 var team = owner != null && owner.teamComponent != null ? owner.teamComponent.teamIndex : TeamIndex.Neutral;
-                fires.Add(FireEffects.SpawnFire(Tornado, center, null, team));
-            }
-
-            private bool IsTarget(CharacterBody body, float radius)
-            {
-                return body != null && body.healthComponent != null && body.healthComponent.alive && body.teamComponent.teamIndex != owner.teamComponent.teamIndex
-                    && body.teamComponent.teamIndex != TeamIndex.Neutral && (body.corePosition - center).sqrMagnitude <= (radius + body.radius) * (radius + body.radius);
-            }
-
-            // the share of the burn for this tick grows with its square, so the stacks pile up faster and faster
-            private void Burn(int tickNumber)
-            {
-                if (owner == null || owner.teamComponent == null)
+                FireEffects.SpawnEffect(FireEffects.Ignition, center, Radius * 0.5f);
+                sun = FireEffects.SpawnSun(SunPosition, gameObject, team);
+                if (owner != null && owner.teamComponent != null)
                 {
-                    return;
+                    Blast();
                 }
-                var damage = TotalDamage * owner.damage * tickNumber * tickNumber / weightSum;
-                var heatStacks = Mathf.Min(MaxHeatStacks, Mathf.CeilToInt(MaxHeatStacks * (float)tickNumber / ticks));
-                foreach (var body in ShoneOn())
+                Destroy(gameObject, SunTime);
+            }
+
+            private void Blast()
+            {
+                foreach (var body in CharacterBody.readOnlyInstancesList.ToList())
                 {
-                    var info = new InflictDotInfo
+                    if (body == null || body.healthComponent == null || !body.healthComponent.alive || body.teamComponent.teamIndex == owner.teamComponent.teamIndex
+                        || body.teamComponent.teamIndex == TeamIndex.Neutral)
                     {
-                        attackerObject = owner.gameObject,
-                        victimObject = body.gameObject,
-                        dotIndex = DotController.DotIndex.Burn,
-                        damageMultiplier = 1f,
-                        totalDamage = damage,
-                        hitHurtBox = body.mainHurtBox
-                    };
-                    DotController.InflictDot(ref info);
-                    var added = heat.GetValueOrDefault(body);
-                    if (heatStacks > added)
-                    {
-                        body.SetBuffCount(RoR2Content.Buffs.Overheat.buffIndex, body.GetBuffCount(RoR2Content.Buffs.Overheat) + heatStacks - added);
-                        heat[body] = heatStacks;
+                        continue;
                     }
-                }
-            }
-
-            // only what the blaze can see, like the Grandparent's sun
-            private List<CharacterBody> ShoneOn()
-            {
-                return CharacterBody.readOnlyInstancesList.Where(body => IsTarget(body, Radius)
-                    && !Physics.Linecast(BlazePosition, body.corePosition, LayerIndex.world.mask, QueryTriggerInteraction.Ignore)).ToList();
-            }
-
-            // 150% of the thrower's damage per second to everything the blaze can see, with Helfire Tincture's flash at each
-            private void Scorch()
-            {
-                if (owner == null || owner.teamComponent == null)
-                {
-                    return;
-                }
-                foreach (var body in ShoneOn())
-                {
-                    EffectManager.SpawnEffect(ScorchEffect.WaitForCompletion(), new EffectData { origin = body.corePosition }, transmit: true);
+                    var distance = Mathf.Max(0f, (body.corePosition - center).magnitude - body.radius);
+                    if (distance > Radius)
+                    {
+                        continue;
+                    }
+                    var falloff = 1f - (1f - EdgeShare) * Mathf.Clamp01((distance - SweetSpot) / (Radius - SweetSpot));
                     body.healthComponent.TakeDamage(new DamageInfo
                     {
                         attacker = owner.gameObject,
                         inflictor = gameObject,
-                        damage = owner.damage * ScorchDamagePerSecond * ScorchInterval,
+                        damage = owner.damage * BlastDamage * falloff,
                         crit = owner.RollCrit(),
                         position = body.corePosition,
-                        procCoefficient = 0f,
+                        procCoefficient = 1f,
                         damageColorIndex = DamageColorIndex.Item
                     });
+                    // only what the sun sees
+                    if (!body.healthComponent.alive || Physics.Linecast(SunPosition, body.corePosition, LayerIndex.world.mask, QueryTriggerInteraction.Ignore))
+                    {
+                        continue;
+                    }
+                    EffectManager.SpawnEffect(HeatEffect.WaitForCompletion(), new EffectData
+                    {
+                        origin = body.corePosition,
+                        rotation = Util.QuaternionSafeLookRotation(SunPosition - body.corePosition),
+                        scale = body.bestFitRadius
+                    }, transmit: true);
+                    for (int i = 0; i < BurnStacks; i++)
+                    {
+                        var info = new InflictDotInfo
+                        {
+                            attackerObject = owner.gameObject,
+                            victimObject = body.gameObject,
+                            dotIndex = DotController.DotIndex.StrongerBurn,
+                            damageMultiplier = 1f,
+                            totalDamage = owner.damage * BurnDamage / BurnStacks,
+                            hitHurtBox = body.mainHurtBox
+                        };
+                        DotController.InflictDot(ref info);
+                    }
                 }
             }
 
             private void OnDestroy()
             {
-                foreach (var (body, added) in heat)
+                if (sun != null)
                 {
-                    if (body != null)
-                    {
-                        body.SetBuffCount(RoR2Content.Buffs.Overheat.buffIndex, Mathf.Max(0, body.GetBuffCount(RoR2Content.Buffs.Overheat) - added));
-                    }
+                    Destroy(sun.gameObject);
                 }
-                heat.Clear();
-                foreach (var fire in fires)
-                {
-                    if (fire != null)
-                    {
-                        Destroy(fire);
-                    }
-                }
-                fires.Clear();
             }
         }
     }
