@@ -21,8 +21,6 @@ namespace RandomEvents
         private const float PassCooldown = 1.5f;
         private ConfigEntry<float> NukeRadius;
         private ConfigEntry<float> PlayerDamage;
-        private ConfigEntry<float> MonsterDamage;
-        private ConfigEntry<float> BossDamage;
         private AsyncOperationHandle<GameObject> TickEffect;
         private readonly BuffTracker buffs = new BuffTracker();
         private CharacterBody holder;
@@ -67,8 +65,6 @@ namespace RandomEvents
         {
             NukeRadius = config.Bind(GetEventConfigName(), "Nuke Radius", 40f, "How far the explosion reaches, in meters.");
             PlayerDamage = config.Bind(GetEventConfigName(), "Player Damage", 0.75f, "The share of their maximum health players lose at the center of the explosion; a quarter of it at its edge.");
-            MonsterDamage = config.Bind(GetEventConfigName(), "Monster Damage", 2f, "The share of their maximum health monsters lose at the center of the explosion; a quarter of it at its edge.");
-            BossDamage = config.Bind(GetEventConfigName(), "Boss Damage", 0.5f, "The share of their maximum health bosses lose at the center of the explosion; a quarter of it at its edge.");
         }
         public override void Preload()
         {
@@ -186,19 +182,19 @@ namespace RandomEvents
             // ground zero is on the floor below the carrier
             var groundZero = Physics.Raycast(victim.corePosition, Vector3.down, out var hit, 50f, LayerIndex.world.mask, QueryTriggerInteraction.Ignore) ? hit.point : victim.footPosition;
             var attacker = lastPlayerHolder != null && lastPlayerHolder.healthComponent.alive ? lastPlayerHolder.gameObject : null;
-            Nuke(groundZero, Mathf.Max(1f, NukeRadius.Value), PlayerDamage.Value, MonsterDamage.Value, BossDamage.Value, attacker);
+            Nuke(groundZero, Mathf.Max(1f, NukeRadius.Value), PlayerDamage.Value, attacker);
         }
 
-        // The mushroom cloud, and everyone within the radius losing a share of their health: all of it at the center, a
-        // quarter of it at the edge. The attacker gets the kills of monsters; players with no share to lose are spared.
-        public static void Nuke(Vector3 groundZero, float radius, float playerShare, float monsterShare, float bossShare, GameObject attacker)
+        // The mushroom cloud, players within the radius losing a share of their health, all of it at the center and a
+        // quarter of it at the edge, and the explosion's pulses for the monsters. The attacker gets the kills of monsters;
+        // players with no share to lose are spared.
+        public static void Nuke(Vector3 groundZero, float radius, float playerShare, GameObject attacker)
         {
             var nuke = new GameObject("RandomEventsMiniNuke").AddComponent<MiniNuke>();
             nuke.groundZero = groundZero;
+            nuke.radius = radius;
             nuke.attacker = attacker;
             nuke.playerShare = playerShare;
-            nuke.monsterShare = monsterShare;
-            nuke.bossShare = bossShare;
             foreach (var body in CharacterBody.readOnlyInstancesList.ToList())
             {
                 if (body == null || body.healthComponent == null || !body.healthComponent.alive || body.teamComponent.teamIndex == TeamIndex.Neutral)
@@ -212,16 +208,15 @@ namespace RandomEvents
                     continue;
                 }
                 var falloff = 1f - 0.75f * distance / radius;
-                var isPlayerTeam = body.teamComponent.teamIndex == TeamIndex.Player;
-                var share = isPlayerTeam ? playerShare : body.isBoss ? bossShare : monsterShare;
-                if (share <= 0f)
+                // the monsters are hit by the explosion's pulses
+                if (body.teamComponent.teamIndex != TeamIndex.Player || playerShare <= 0f)
                 {
                     continue;
                 }
                 body.healthComponent.TakeDamage(new DamageInfo
                 {
-                    damage = body.healthComponent.fullCombinedHealth * share * falloff,
-                    attacker = isPlayerTeam ? null : attacker,
+                    damage = body.healthComponent.fullCombinedHealth * playerShare * falloff,
+                    attacker = null,
                     position = body.corePosition,
                     force = (offset.sqrMagnitude > 0.01f ? offset.normalized : Vector3.up) * 4000f * falloff + Vector3.up * 1000f * falloff,
                     damageType = DamageType.BypassArmor | DamageType.BypassBlock,
@@ -273,17 +268,24 @@ namespace RandomEvents
             private static AsyncOperationHandle<GameObject> Omni;
             private static AsyncOperationHandle<GameObject> Behemoth;
             private static AsyncOperationHandle<GameObject> Meteor;
-            // its middle keeps burning while the ground fire lasts: a tenth of the explosion's shares per second
+            // Every half second while it explodes, a pulse hurts and throws back every monster in the radius, the first a
+            // massive shockwave: 100000% of the attacker's damage in all at ground zero, a quarter of that at the edge.
+            // Then, while the ground fire lasts, monsters in its middle burn for 2000% in all, and players there lose a
+            // tenth of their share per second.
             private const float FireDuration = 10f;
+            private const float PulseInterval = 0.5f;
+            private const int Pulses = 11;
+            private const float ExplosionDamage = 1000f;
+            private const float CoreBurnDamage = 20f;
+            private int pulsesDone;
             private const float FireRadius = 15f;
             private const float CoreRadius = 8f;
             private const float CoreSharePerSecond = 0.1f;
             private const float CoreTickInterval = 0.25f;
             public Vector3 groundZero;
+            public float radius;
             public GameObject attacker;
             public float playerShare;
-            public float monsterShare;
-            public float bossShare;
             private float age;
             private float coreTimer;
 
@@ -328,6 +330,11 @@ namespace RandomEvents
                     return;
                 }
                 age += Time.fixedDeltaTime;
+                while (pulsesDone < Pulses && age >= pulsesDone * PulseInterval)
+                {
+                    Pulse(pulsesDone == 0);
+                    pulsesDone++;
+                }
                 coreTimer -= Time.fixedDeltaTime;
                 if (coreTimer <= 0f && age < FireDuration)
                 {
@@ -336,8 +343,57 @@ namespace RandomEvents
                 }
             }
 
+            // the attacker's damage, or, with none left, the strongest living player's
+            private float BaseDamage()
+            {
+                var attackerBody = attacker != null ? attacker.GetComponent<CharacterBody>() : null;
+                return attackerBody != null && attackerBody.healthComponent.alive ? attackerBody.damage
+                    : Helper.GetLivingPlayerBodies().Select(body => body.damage).DefaultIfEmpty(0f).Max();
+            }
+
+            private static bool IsMonster(CharacterBody body)
+            {
+                return body != null && body.healthComponent != null && body.healthComponent.alive && body.teamComponent.teamIndex != TeamIndex.Neutral
+                    && body.teamComponent.teamIndex != TeamIndex.Player;
+            }
+
+            private void Pulse(bool shockwave)
+            {
+                var baseDamage = BaseDamage();
+                foreach (var body in CharacterBody.readOnlyInstancesList.ToList())
+                {
+                    if (!IsMonster(body))
+                    {
+                        continue;
+                    }
+                    var offset = body.corePosition - groundZero;
+                    var distance = offset.magnitude;
+                    if (distance > radius + body.radius)
+                    {
+                        continue;
+                    }
+                    var falloff = 1f - 0.75f * Mathf.Clamp01(distance / radius);
+                    var direction = offset.sqrMagnitude > 0.01f ? offset.normalized : Vector3.up;
+                    var mass = body.characterMotor != null ? body.characterMotor.mass : body.rigidbody != null ? body.rigidbody.mass : 100f;
+                    // as fast for every monster, for its weight: very fast with the shockwave, a shove with the others
+                    var speed = shockwave ? 60f : 10f;
+                    body.healthComponent.TakeDamage(new DamageInfo
+                    {
+                        damage = baseDamage * ExplosionDamage / Pulses * falloff,
+                        attacker = attacker,
+                        inflictor = gameObject,
+                        position = body.corePosition,
+                        force = (direction + Vector3.up * 0.4f).normalized * speed * falloff * Mathf.Min(mass, 1000f),
+                        damageType = DamageType.BypassArmor | DamageType.BypassBlock,
+                        procCoefficient = 0f,
+                        damageColorIndex = DamageColorIndex.Item
+                    });
+                }
+            }
+
             private void BurnCore()
             {
+                var baseDamage = BaseDamage();
                 foreach (var body in CharacterBody.readOnlyInstancesList.ToList())
                 {
                     if (body == null || body.healthComponent == null || !body.healthComponent.alive || body.teamComponent.teamIndex == TeamIndex.Neutral
@@ -346,14 +402,15 @@ namespace RandomEvents
                         continue;
                     }
                     var isPlayerTeam = body.teamComponent.teamIndex == TeamIndex.Player;
-                    var share = isPlayerTeam ? playerShare : body.isBoss ? bossShare : monsterShare;
-                    if (share <= 0f)
+                    var damage = isPlayerTeam ? body.healthComponent.fullCombinedHealth * playerShare * CoreSharePerSecond * CoreTickInterval
+                        : baseDamage * CoreBurnDamage * CoreTickInterval / FireDuration;
+                    if (damage <= 0f)
                     {
                         continue;
                     }
                     body.healthComponent.TakeDamage(new DamageInfo
                     {
-                        damage = body.healthComponent.fullCombinedHealth * share * CoreSharePerSecond * CoreTickInterval,
+                        damage = damage,
                         attacker = isPlayerTeam ? null : attacker,
                         inflictor = gameObject,
                         position = body.corePosition,
