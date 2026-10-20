@@ -185,9 +185,15 @@ namespace RandomEvents
             ChatHelper.SendEventMessage("EVENT_HOT_POTATO_EXPLODED", ChatHelper.GetColoredPlayerName(victim));
             // ground zero is on the floor below the carrier
             var groundZero = Physics.Raycast(victim.corePosition, Vector3.down, out var hit, 50f, LayerIndex.world.mask, QueryTriggerInteraction.Ignore) ? hit.point : victim.footPosition;
-            new GameObject("RandomEventsMiniNuke").AddComponent<MiniNuke>().groundZero = groundZero;
-            var radius = Mathf.Max(1f, NukeRadius.Value);
             var attacker = lastPlayerHolder != null && lastPlayerHolder.healthComponent.alive ? lastPlayerHolder.gameObject : null;
+            Nuke(groundZero, Mathf.Max(1f, NukeRadius.Value), PlayerDamage.Value, MonsterDamage.Value, BossDamage.Value, attacker);
+        }
+
+        // The mushroom cloud, and everyone within the radius losing a share of their health: all of it at the center, a
+        // quarter of it at the edge. The attacker gets the kills of monsters; players with no share to lose are spared.
+        public static void Nuke(Vector3 groundZero, float radius, float playerShare, float monsterShare, float bossShare, GameObject attacker)
+        {
+            new GameObject("RandomEventsMiniNuke").AddComponent<MiniNuke>().groundZero = groundZero;
             foreach (var body in CharacterBody.readOnlyInstancesList.ToList())
             {
                 if (body == null || body.healthComponent == null || !body.healthComponent.alive || body.teamComponent.teamIndex == TeamIndex.Neutral)
@@ -202,10 +208,14 @@ namespace RandomEvents
                 }
                 var falloff = 1f - 0.75f * distance / radius;
                 var isPlayerTeam = body.teamComponent.teamIndex == TeamIndex.Player;
-                var share = isPlayerTeam ? PlayerDamage.Value : body.isBoss ? BossDamage.Value : MonsterDamage.Value;
+                var share = isPlayerTeam ? playerShare : body.isBoss ? bossShare : monsterShare;
+                if (share <= 0f)
+                {
+                    continue;
+                }
                 body.healthComponent.TakeDamage(new DamageInfo
                 {
-                    damage = body.healthComponent.fullCombinedHealth * Mathf.Max(0f, share) * falloff,
+                    damage = body.healthComponent.fullCombinedHealth * share * falloff,
                     attacker = isPlayerTeam ? null : attacker,
                     position = body.corePosition,
                     force = (offset.sqrMagnitude > 0.01f ? offset.normalized : Vector3.up) * 4000f * falloff + Vector3.up * 1000f * falloff,
@@ -260,6 +270,10 @@ namespace RandomEvents
 
             public static void Preload()
             {
+                if (Flash.IsValid())
+                {
+                    return;
+                }
                 // the Diablo Strike's flash and the Wandering Vagrant's nova tint the screen and shake it far away
                 Flash = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Captain/CaptainAirstrikeAltImpact.prefab");
                 Nova = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Vagrant/VagrantNovaExplosion.prefab");
