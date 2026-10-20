@@ -48,8 +48,16 @@ namespace RandomEvents
             }
         }
 
+        // every monster it hit gets its normal gravity back
         public override void Stop()
         {
+            foreach (var body in hitBodies)
+            {
+                if (body != null && body.characterMotor != null)
+                {
+                    body.characterMotor.gravityScale = 1f;
+                }
+            }
             hitBodies.Clear();
             lastHit.Clear();
             heavy.Clear();
