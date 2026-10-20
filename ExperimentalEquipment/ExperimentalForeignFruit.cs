@@ -13,8 +13,8 @@ namespace RandomEvents
         private const int SizeStacks = 50;
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.Fruit;
-        public override string Description => "Foreign Fruit fully heals you and makes you half again as big and strong for 15 seconds";
-        public override string PopupDescription => "Fully heals you and makes you half again as big and strong for 15 seconds.";
+        public override string Description => "Foreign Fruit fully heals you and makes you half again as big and strong for 15 seconds, stacking";
+        public override string PopupDescription => "Fully heals you and makes you half again as big and strong for 15 seconds. Eating more stacks.";
 
         public override bool Fire(EquipmentSlot slot)
         {
@@ -27,14 +27,12 @@ namespace RandomEvents
             effectData.SetNetworkedObjectReference(body.gameObject);
             EffectManager.SpawnEffect(LegacyResourcesAPI.Load<GameObject>("Prefabs/Effects/FruitHealEffect"), effectData, transmit: true);
             body.healthComponent.HealFraction(1f, default);
-            // eaten again while it lasts, it lasts longer, but grows no more
-            body.ClearTimedBuffs(DLC2Content.Buffs.BoostAllStatsBuff);
+            // each fruit adds its own, which wears off on its own, so eating more while it lasts stacks
             for (int i = 0; i < StatStacks; i++)
             {
                 body.AddTimedBuff(DLC2Content.Buffs.BoostAllStatsBuff, Duration);
             }
-            var growth = body.GetComponent<Growth>() ?? body.gameObject.AddComponent<Growth>();
-            growth.timeLeft = Duration;
+            body.gameObject.AddComponent<Growth>().timeLeft = Duration;
             return true;
         }
 
