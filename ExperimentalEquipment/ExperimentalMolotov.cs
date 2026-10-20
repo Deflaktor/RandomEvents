@@ -14,8 +14,8 @@ namespace RandomEvents
         private static AsyncOperationHandle<GameObject> MolotovBottle;
 
         public override EquipmentDef EquipmentDef => DLC1Content.Equipment.Molotov;
-        public override string Description => "the Molotov (6-Pack) lights a blazing sun that burns everything nearby harder and harder for 5 seconds";
-        public override string PopupDescription => "One bottle that lights a blazing sun, burning everything nearby harder and harder for 5 seconds.";
+        public override string Description => "the Molotov (6-Pack) lights a blazing light that burns everything nearby it shines on harder and harder for 5 seconds";
+        public override string PopupDescription => "One bottle that lights a blazing light, burning everything nearby it shines on harder and harder for 5 seconds.";
 
         public override void Preload()
         {
@@ -61,9 +61,10 @@ namespace RandomEvents
             inferno.center = center;
         }
 
-        // The experimental Molotov: a bright white spot where it landed, then a Grandparent's sun there for 5 seconds. Meanwhile
-        // everything hostile nearby burns, with stacks that pile up faster and faster to 5000% of the thrower's damage in
-        // all, which the Grandparent's heat shows, and its middle burns continuously.
+        // The experimental Molotov: a bright white spot where it landed, then a blazing light there for 5 seconds, from a
+        // small Genesis Loop nova again and again. Meanwhile everything hostile nearby that the light shines on burns, with
+        // stacks that pile up faster and faster to 5000% of the thrower's damage in all, which the Grandparent's heat
+        // shows, and its middle burns continuously.
         public class Inferno : MonoBehaviour
         {
             private const float Duration = 5f;
@@ -71,16 +72,17 @@ namespace RandomEvents
             private const float TickInterval = 0.1f;
             private const float TotalDamage = 50f;
             private const int MaxHeatStacks = 20;
-            private const float SunDelay = 0.5f;
-            private const float SunHeight = 3f;
+            // a small Genesis Loop nova over the middle again and again, for its light
+            private const float LightInterval = 0.5f;
+            private const float LightHeight = 1.5f;
+            private const float LightScale = 3f;
             private const float CoreRadius = 4f;
             private const float CoreDamagePerSecond = 1.5f;
             private const float CoreTickInterval = 0.25f;
             public CharacterBody owner;
             public Vector3 center;
             private readonly Dictionary<CharacterBody, int> heat = new Dictionary<CharacterBody, int>();
-            private GenericOwnership sun;
-            private bool sunLit;
+            private float lightTimer;
             private float age;
             private int tick;
             private int ticks;
@@ -103,6 +105,8 @@ namespace RandomEvents
                 FireEffects.SpawnEffect(FireEffects.LightBurst, center + Vector3.up, 2f);
             }
 
+            private Vector3 LightPosition => center + Vector3.up * LightHeight;
+
             private void FixedUpdate()
             {
                 if (!NetworkServer.active)
@@ -110,10 +114,11 @@ namespace RandomEvents
                     return;
                 }
                 age += Time.fixedDeltaTime;
-                if (!sunLit && age >= SunDelay)
+                lightTimer -= Time.fixedDeltaTime;
+                if (lightTimer <= 0f && age < Duration)
                 {
-                    sunLit = true;
-                    sun = FireEffects.SpawnSun(center + Vector3.up * SunHeight, gameObject, owner != null ? owner.teamComponent.teamIndex : TeamIndex.Neutral);
+                    lightTimer = LightInterval;
+                    FireEffects.SpawnEffect(FireEffects.Nova, LightPosition, LightScale);
                 }
                 coreTimer -= Time.fixedDeltaTime;
                 if (coreTimer <= 0f && age < Duration)
@@ -149,7 +154,8 @@ namespace RandomEvents
                 var heatStacks = Mathf.Min(MaxHeatStacks, Mathf.CeilToInt(MaxHeatStacks * (float)tickNumber / ticks));
                 foreach (var body in CharacterBody.readOnlyInstancesList.ToList())
                 {
-                    if (!IsTarget(body, Radius))
+                    // only what the light shines on, like the Grandparent's sun
+                    if (!IsTarget(body, Radius) || Physics.Linecast(LightPosition, body.corePosition, LayerIndex.world.mask, QueryTriggerInteraction.Ignore))
                     {
                         continue;
                     }
@@ -200,10 +206,6 @@ namespace RandomEvents
 
             private void OnDestroy()
             {
-                if (sun != null)
-                {
-                    sun.ownerObject = null;
-                }
                 foreach (var (body, added) in heat)
                 {
                     if (body != null)
