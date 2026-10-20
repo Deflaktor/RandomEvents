@@ -1,4 +1,5 @@
 using RoR2;
+using RoR2.Projectile;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -16,6 +17,8 @@ namespace RandomEvents
         private const float ScannerWaveDamage = 25f;
         // each lowers the maximum health, for good
         private const int CurseStacks = 10;
+        // Mithrix's shockwaves, this many in a ring, running out with the wave
+        private const int WaveEffects = 16;
         private static AsyncOperationHandle<GameObject> WaveEffect;
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.Scanner;
@@ -25,8 +28,7 @@ namespace RandomEvents
 
         public override void Preload()
         {
-            // a Jellyfish's nova, as big as the wave's reach
-            WaveEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Jellyfish/JellyfishNova.prefab");
+            WaveEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Brother/BrotherSunderWave.prefab");
         }
 
         // a shockwave instead of the scan
@@ -36,8 +38,8 @@ namespace RandomEvents
             return true;
         }
 
-        // The experimental Radar Scanner's shockwave, shown by a Jellyfish's nova, hurts, stuns, curses and throws back each
-        // monster it reaches
+        // The experimental Radar Scanner's shockwave, shown by a ring of Mithrix's shockwaves running along the ground, hurts,
+        // stuns, curses and throws back each monster it reaches
         public class ScannerWave : MonoBehaviour
         {
             public CharacterBody attacker;
@@ -48,7 +50,39 @@ namespace RandomEvents
             private void Start()
             {
                 origin = attacker != null ? attacker.corePosition : transform.position;
-                EffectManager.SpawnEffect(WaveEffect.WaitForCompletion(), new EffectData { origin = origin, scale = ScannerWaveRadius }, transmit: true);
+                var ground = Physics.Raycast(origin, Vector3.down, out var hit, 50f, LayerIndex.world.mask, QueryTriggerInteraction.Ignore) ? hit.point : origin;
+                for (int i = 0; i < WaveEffects; i++)
+                {
+                    SpawnWave(ground, Quaternion.Euler(0f, 360f * i / WaveEffects, 0f));
+                }
+            }
+
+            // only for show: it hurts nothing, and the host moves it as fast and as far as the wave goes
+            private void SpawnWave(Vector3 position, Quaternion rotation)
+            {
+                var wave = Instantiate(WaveEffect.WaitForCompletion(), position, rotation);
+                if (wave.TryGetComponent(out ProjectileOverlapAttack overlapAttack))
+                {
+                    overlapAttack.enabled = false;
+                }
+                if (wave.TryGetComponent(out ProjectileDamage projectileDamage))
+                {
+                    projectileDamage.damage = 0f;
+                }
+                if (wave.TryGetComponent(out ProjectileCharacterController mover))
+                {
+                    mover.velocity = ScannerWaveSpeed;
+                    mover.lifetime = ScannerWaveRadius / ScannerWaveSpeed;
+                }
+                if (wave.TryGetComponent(out ProjectileController controller) && attacker != null)
+                {
+                    controller.owner = attacker.gameObject;
+                }
+                if (wave.TryGetComponent(out TeamFilter teamFilter) && attacker != null)
+                {
+                    teamFilter.teamIndex = attacker.teamComponent.teamIndex;
+                }
+                NetworkServer.Spawn(wave);
             }
 
             private void FixedUpdate()
