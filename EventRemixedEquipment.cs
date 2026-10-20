@@ -164,16 +164,20 @@ namespace RandomEvents
         }
 
         // The doll, without its own behavior: no on-kill effects, no sticking, no physics. The host moves it, which its
-        // projectile transform passes on to everyone.
+        // projectile transform passes on to everyone. Each player can have 3 out at once, as with the original doll.
         private static bool LaunchDoll(EquipmentSlot slot)
         {
             var body = slot.characterBody;
+            if (body.master == null || body.master.IsDeployableLimited(DeployableSlot.DeathProjectile))
+            {
+                return false;
+            }
             var aim = slot.GetAimRay().direction;
             var direction = new Vector3(aim.x, 0f, aim.z);
             direction = direction.sqrMagnitude > 0.001f ? direction.normalized : body.transform.forward;
             var doll = UnityEngine.Object.Instantiate(Doll.WaitForCompletion(), body.footPosition + direction * 1.5f + Vector3.up, Quaternion.LookRotation(direction));
             foreach (var behaviour in new Behaviour[] { doll.GetComponent<DeathProjectile>(), doll.GetComponent<ProjectileStickOnImpact>(), doll.GetComponent<ProjectileSimple>(),
-                doll.GetComponent<ProjectileDeployToOwner>(), doll.GetComponent<ApplyTorqueOnStart>(), doll.GetComponent<DestroyOnTimer>() })
+                doll.GetComponent<ApplyTorqueOnStart>(), doll.GetComponent<DestroyOnTimer>() })
             {
                 if (behaviour != null)
                 {
