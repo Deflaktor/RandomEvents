@@ -279,6 +279,8 @@ namespace RandomEvents
             // 0 to 4 seconds while the sun burns, then on until 6
             private const int Pulses = 13;
             private const float WeakPulseShare = 0.5f;
+            // the shockwave counts as this many pulses
+            private const float ShockwaveShare = 5f;
             private const float ExplosionDamage = 1000f;
             private const float CoreBurnDamage = 20f;
             private int pulsesDone;
@@ -363,9 +365,11 @@ namespace RandomEvents
 
             private void Pulse(bool shockwave, bool weak)
             {
-                // the weak pulses after the sun count half, all of them together making up the explosion's damage
+                // the shockwave counts five times, the weak pulses after the sun half, all of them together making up the
+                // explosion's damage
                 var strongPulses = Mathf.FloorToInt(SunDuration / PulseInterval) + 1;
-                var share = (weak ? WeakPulseShare : 1f) / (strongPulses + (Pulses - strongPulses) * WeakPulseShare);
+                var share = (shockwave ? ShockwaveShare : weak ? WeakPulseShare : 1f)
+                    / (ShockwaveShare + strongPulses - 1 + (Pulses - strongPulses) * WeakPulseShare);
                 var baseDamage = BaseDamage();
                 foreach (var body in CharacterBody.readOnlyInstancesList.ToList())
                 {
