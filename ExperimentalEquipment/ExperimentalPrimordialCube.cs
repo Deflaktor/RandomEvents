@@ -52,6 +52,7 @@ namespace RandomEvents
             }
             var spot = new GameObject("RandomEventsPullSpot").AddComponent<Altar>();
             spot.owner = body;
+            spot.team = body.teamComponent.teamIndex;
             spot.center = point + Vector3.up * HoverHeight;
             return true;
         }
@@ -89,6 +90,8 @@ namespace RandomEvents
             // of the swallowed health, what each monster in the blast loses, all of it at the center and half at the edge
             private const float DamageShare = 0.3f;
             public CharacterBody owner;
+            // the user's team, spared even once its body is gone, e.g. after dying
+            public TeamIndex team;
             public Vector3 center;
             private readonly List<CharacterBody> swallowed = new List<CharacterBody>();
             // the swallowed that have shrunk away and now grow back unseen
@@ -162,7 +165,7 @@ namespace RandomEvents
             {
                 return body != null && body.healthComponent != null && body.healthComponent.alive && body.master != null && !body.isBoss
                     && body.teamComponent.teamIndex != TeamIndex.Neutral && body.teamComponent.teamIndex != TeamIndex.None
-                    && (owner == null || body.teamComponent.teamIndex != owner.teamComponent.teamIndex) && !swallowed.Contains(body);
+                    && body.teamComponent.teamIndex != team && !swallowed.Contains(body);
             }
 
             // as the Primordial Cube's black hole pulls: harder further in, against the speed it already has
@@ -266,7 +269,7 @@ namespace RandomEvents
                     foreach (var body in CharacterBody.readOnlyInstancesList.ToList())
                     {
                         if (body == null || body.healthComponent == null || !body.healthComponent.alive || body.teamComponent.teamIndex == TeamIndex.Neutral
-                            || (owner != null && body.teamComponent.teamIndex == owner.teamComponent.teamIndex))
+                            || body.teamComponent.teamIndex == team)
                         {
                             continue;
                         }
