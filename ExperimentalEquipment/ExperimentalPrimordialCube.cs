@@ -179,6 +179,7 @@ namespace RandomEvents
             private void Eat(CharacterBody body)
             {
                 swallowed.Add(body);
+                var from = body.corePosition;
                 power += body.healthComponent.fullCombinedHealth;
                 quietTimer = QuietTime;
                 body.inventory.GiveItemPermanent(DLC4Content.Items.ReduceCharacterScale, ShrinkStacks);
@@ -198,6 +199,8 @@ namespace RandomEvents
                     body.rigidbody.isKinematic = true;
                 }
                 TeleportHelper.TeleportBody(body, center);
+                // the whoosh of an item being handed over, flying from where it was to where it went
+                ItemOrb.Fly(from, body.gameObject, DLC4Content.Items.ReduceCharacterScale.itemIndex);
                 EffectManager.SpawnEffect(Swallow.WaitForCompletion(), new EffectData { origin = center, scale = 3f }, transmit: true);
             }
 
