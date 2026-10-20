@@ -10,9 +10,9 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace RandomEvents
 {
-    // Instead of its totem, a Primordial Cube's black hole that swallows the monsters it pulls in. Once it has swallowed
-    // none for 5 seconds, it bursts: the bigger the health it swallowed, the bigger the blast, the harder it hurts, and
-    // the further the swallowed monsters fly out of it.
+    // Instead of its totem, a Primordial Cube's black hole under a Grandparent's sun that swallows the monsters it pulls
+    // in. Once it has swallowed none for 5 seconds, it bursts: the bigger the health it swallowed, the bigger the blast,
+    // the harder it hurts, and the further the swallowed monsters fly out of it.
     public class ExperimentalTotemOfSacrifice : ExperimentalEquipment
     {
         private const float PlaceRange = 50f;
@@ -34,6 +34,7 @@ namespace RandomEvents
             // Genesis Loop's nova, which is the Wandering Vagrant's
             Nova = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Vagrant/VagrantNovaExplosion.prefab");
             Fireball = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/FusionCellDestructible/FusionCellExplosion.prefab");
+            FireEffects.Preload();
             BurstEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Jellyfish/JellyfishNova.prefab");
         }
 
@@ -83,6 +84,25 @@ namespace RandomEvents
             private readonly List<CharacterBody> swallowed = new List<CharacterBody>();
             private float power;
             private float quietTimer = QuietTime;
+            // a Grandparent's sun over it while it pulls in, bright and shaking
+            private GenericOwnership sun;
+
+            private void Start()
+            {
+                if (NetworkServer.active)
+                {
+                    sun = FireEffects.SpawnSun(center + Vector3.up * 3f, gameObject, owner != null ? owner.teamComponent.teamIndex : TeamIndex.Neutral);
+                }
+            }
+
+            private void PutOutSun()
+            {
+                if (sun != null)
+                {
+                    sun.ownerObject = null;
+                }
+                sun = null;
+            }
 
             private void FixedUpdate()
             {
@@ -157,6 +177,7 @@ namespace RandomEvents
 
             private void Burst()
             {
+                PutOutSun();
                 var strength = Mathf.Sqrt(power);
                 var radius = Mathf.Clamp(10f + strength * 0.5f, 10f, 100f);
                 var speed = Mathf.Clamp(20f + strength * 0.3f, 20f, 80f);
@@ -236,6 +257,7 @@ namespace RandomEvents
             // if the black hole goes before it bursts, e.g. with the stage, the swallowed come out unharmed
             private void OnDestroy()
             {
+                PutOutSun();
                 foreach (var body in swallowed)
                 {
                     Release(body);
