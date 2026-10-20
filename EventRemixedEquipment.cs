@@ -72,7 +72,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Gives all players a remixed equipment with a shorter cooldown. Royal Capacitor inflates a monster until it explodes, Disposable Missile Launcher fires a Plasma Shrimp missile at every monster, Radar Scanner's wave also pushes and hurts monsters, and Super Massive Leech causes hemorrhage instead of healing, Forgive Me Please's doll walks straight ahead and explodes like a mini nuke after 10 seconds, the Crowdfunder costs no gold and fires Resonance Disc shots, but roots you while it fires, the Molotov (6-Pack) sets a sea of fire that burns everything nearby harder and harder for 10 seconds, and the Sawmerang's blades hunt monsters, cutting through them back and forth for 15 seconds.";
+            return "Gives all players a remixed equipment with a shorter cooldown. Royal Capacitor inflates a monster until it explodes, Disposable Missile Launcher fires a Plasma Shrimp missile at every monster, Radar Scanner's wave also pushes and hurts monsters, and Super Massive Leech causes hemorrhage instead of healing, Forgive Me Please's doll walks straight ahead and explodes like a mini nuke after 10 seconds, the Crowdfunder costs no gold and fires Resonance Disc shots, but roots you while it fires, the Molotov (6-Pack) sets a sea of fire under a blazing sun that burns everything nearby harder and harder for 5 seconds, and the Sawmerang's blades hunt monsters, cutting through them back and forth for 15 seconds.";
         }
         public override string GetPopupDescription()
         {
@@ -87,7 +87,7 @@ namespace RandomEvents
             if (equipmentDef == RoR2Content.Equipment.GoldGat)
                 return "Costs no gold and fires Resonance Disc shots, but you can't move while it fires.";
             if (equipmentDef == DLC1Content.Equipment.Molotov)
-                return "One bottle that sets a sea of fire, burning everything nearby harder and harder for 10 seconds.";
+                return "One bottle that sets a sea of fire under a blazing sun, burning everything nearby harder and harder for 5 seconds.";
             if (equipmentDef == RoR2Content.Equipment.Saw)
                 return "The blades hunt the nearest monster, cutting through it back and forth, then the next, for 15 seconds.";
             return "Inflates the targeted monster to three times its size, then it explodes. No effect on bosses.";
@@ -615,12 +615,15 @@ namespace RandomEvents
             }
         }
 
-        // The remixed Molotov's sea of fire: for 10 seconds, everything hostile nearby burns, with stacks that pile up
-        // faster and faster to 10000% of the thrower's damage in all, which the Grandparent's heat shows. The ground
-        // is covered in Molotov fire, CHEF's burning oil and the Spirit's rings of fire, all just for show.
+        // The remixed Molotov's sea of fire: a Grandparent's sun blazes where it landed, and for 5 seconds everything
+        // hostile nearby burns, with stacks that pile up faster and faster to 10000% of the thrower's damage in all,
+        // which the Grandparent's heat shows. The ground is covered in Molotov fire, CHEF's burning oil and the
+        // Spirit's rings of fire for 10 seconds, all just for show.
         public class Inferno : MonoBehaviour
         {
             private const float Duration = 10f;
+            private const float BurnDuration = 5f;
+            private const float SunHeight = 4f;
             private const float Radius = 12f;
             private const float TickInterval = 0.1f;
             private const float TotalDamage = 100f;
@@ -631,6 +634,7 @@ namespace RandomEvents
             private static AsyncOperationHandle<GameObject> RingOfFire;
             private static AsyncOperationHandle<GameObject> Ignition;
             private static AsyncOperationHandle<GameObject> Fireball;
+            private static AsyncOperationHandle<GameObject> Sun;
             public CharacterBody owner;
             public Vector3 center;
             private readonly List<GameObject> fires = new List<GameObject>();
@@ -641,6 +645,7 @@ namespace RandomEvents
             private float fireballTimer;
             private int ticks;
             private float weightSum;
+            private GenericOwnership sun;
 
             public static void Preload()
             {
@@ -649,17 +654,19 @@ namespace RandomEvents
                 RingOfFire = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC4/Spirit/RingOfFire.prefab");
                 Ignition = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC1/Molotov/MolotovClusterIgniteExplosionVFX.prefab");
                 Fireball = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC2/Chef/BoostedSearFireballProjectileExplosionVFX.prefab");
+                Sun = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Grandparent/GrandParentSun.prefab");
             }
 
             private void Start()
             {
-                ticks = Mathf.RoundToInt(Duration / TickInterval);
+                ticks = Mathf.RoundToInt(BurnDuration / TickInterval);
                 for (int i = 1; i <= ticks; i++)
                 {
                     weightSum += i * i;
                 }
                 EffectManager.SpawnEffect(Ignition.WaitForCompletion(), new EffectData { origin = center, scale = Radius }, transmit: true);
                 EffectManager.SpawnEffect(Fireball.WaitForCompletion(), new EffectData { origin = center, scale = Radius * 0.5f }, transmit: true);
+                SpawnSun();
                 SpawnFire(FirePool, center);
                 for (int i = 0; i < 10; i++)
                 {
@@ -675,6 +682,39 @@ namespace RandomEvents
             {
                 var circle = UnityEngine.Random.insideUnitCircle * radius;
                 return new Vector3(circle.x, 0f, circle.y);
+            }
+
+            // Its burning runs on the host alone, and is off; it shines while it has an owner, then fades out by itself
+            private void SpawnSun()
+            {
+                if (owner == null)
+                {
+                    return;
+                }
+                var sunObject = Instantiate(Sun.WaitForCompletion(), center + Vector3.up * SunHeight, Quaternion.identity);
+                if (sunObject.TryGetComponent(out GrandParentSunController controller))
+                {
+                    controller.enabled = false;
+                }
+                if (sunObject.TryGetComponent(out TeamFilter teamFilter))
+                {
+                    teamFilter.teamIndex = owner.teamComponent.teamIndex;
+                }
+                sun = sunObject.GetComponent<GenericOwnership>();
+                if (sun != null)
+                {
+                    sun.ownerObject = owner.gameObject;
+                }
+                NetworkServer.Spawn(sunObject);
+            }
+
+            private void PutOutSun()
+            {
+                if (sun != null)
+                {
+                    sun.ownerObject = null;
+                }
+                sun = null;
             }
 
             private static Vector3 OnGround(Vector3 position)
@@ -739,6 +779,11 @@ namespace RandomEvents
                     tick++;
                     Burn(tick);
                 }
+                if (age >= BurnDuration && sun != null)
+                {
+                    PutOutSun();
+                    RemoveHeat();
+                }
                 if (age >= Duration)
                 {
                     End();
@@ -780,7 +825,7 @@ namespace RandomEvents
                 }
             }
 
-            private void End()
+            private void RemoveHeat()
             {
                 foreach (var (body, added) in heat)
                 {
@@ -790,6 +835,12 @@ namespace RandomEvents
                     }
                 }
                 heat.Clear();
+            }
+
+            private void End()
+            {
+                PutOutSun();
+                RemoveHeat();
                 foreach (var fire in fires)
                 {
                     if (fire != null)
