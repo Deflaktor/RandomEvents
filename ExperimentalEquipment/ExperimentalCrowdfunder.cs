@@ -7,12 +7,14 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace RandomEvents
 {
-    // The Crowdfunder fires as usual, its bullets pushing a little as they do, but costs no gold, and every 10 of its hits
+    // The Crowdfunder fires as usual, but costs no gold, its hits push monsters back, and every 4 of its hits
     // make a monster heavier. A monster made heavier dies when it falls out of the map, even one that would be brought
     // back.
     public class ExperimentalCrowdfunder : ExperimentalEquipment
     {
-        private const int HitsPerGravity = 10;
+        private const int HitsPerGravity = 4;
+        // each hit pushes it this fast away from the shooter, for its weight, a little up too
+        private const float KnockbackSpeed = 2.5f;
         // how much the gravity grows each time, up to the most
         private const float GravityStep = 1f;
         private const float MaxGravityScale = 6f;
@@ -22,8 +24,8 @@ namespace RandomEvents
         private readonly HashSet<CharacterBody> heavier = new HashSet<CharacterBody>();
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.GoldGat;
-        public override string Description => "the Crowdfunder costs no gold, and every 10 of its hits make a monster heavier, so it dies if it falls out of the map";
-        public override string PopupDescription => "Costs no gold. Every 10 hits make a monster heavier, and a heavier monster that falls out of the map dies.";
+        public override string Description => "the Crowdfunder costs no gold, and every 4 of its hits make a monster heavier, so it dies if it falls out of the map, and its hits push monsters back";
+        public override string PopupDescription => "Costs no gold and its hits push monsters back. Every 4 hits make a monster heavier, and a heavier monster that falls out of the map dies.";
 
         // it fires as usual, toggled by the player's own game
         public override bool ReplacesAction => false;
@@ -79,6 +81,9 @@ namespace RandomEvents
             {
                 return;
             }
+            var away = body.corePosition - attackerBody.corePosition;
+            var mass = body.characterMotor != null ? body.characterMotor.mass : body.rigidbody != null ? body.rigidbody.mass : 100f;
+            body.healthComponent.TakeDamageForce((new Vector3(away.x, 0f, away.z).normalized + Vector3.up * 0.3f) * KnockbackSpeed * Mathf.Min(mass, 1000f), alwaysApply: true);
             var count = hits.GetValueOrDefault(body) + 1;
             hits[body] = count;
             if (count % HitsPerGravity == 0)
