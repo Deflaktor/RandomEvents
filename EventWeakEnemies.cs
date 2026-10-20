@@ -12,9 +12,10 @@ namespace RandomEvents
         // the director multiplies an elite tier's cost by the bias when it picks one, so a high bias makes elites too
         // expensive
         private const float NoElitesBias = 1000f;
-        // the Simulacrum wave the event changed, and its elite bias before
+        // the Simulacrum wave the event changed, and its elite bias and cheap skipping before
         private InfiniteTowerWaveController changedWave;
         private float originalEliteBias;
+        private bool originalSkipSpawnIfTooCheap;
 
         public override bool LoadCondition()
         {
@@ -80,6 +81,11 @@ namespace RandomEvents
                 originalEliteBias = changedWave.combatDirector.eliteBias;
                 changedWave.combatDirector.eliteBias = NoElitesBias;
                 changedWave.combatDirector.monsterCredit = 0f;
+                // The director skips cards too cheap for its credits while its deck has dearer ones, counting the elite
+                // versions it can no longer afford. With only cheap monsters left, it would then never spend, its
+                // credits would only grow, and nothing would spawn until the wave gives up.
+                originalSkipSpawnIfTooCheap = changedWave.combatDirector.skipSpawnIfTooCheap;
+                changedWave.combatDirector.skipSpawnIfTooCheap = false;
             }
             var costs = MonsterPool.GetChoices()
                 .Where(choice => choice.weight > 0 && choice.value != null)
@@ -105,6 +111,7 @@ namespace RandomEvents
             if (changedWave != null && changedWave.combatDirector != null)
             {
                 changedWave.combatDirector.eliteBias = originalEliteBias;
+                changedWave.combatDirector.skipSpawnIfTooCheap = originalSkipSpawnIfTooCheap;
             }
             changedWave = null;
         }
