@@ -21,6 +21,9 @@ namespace RandomEvents
         private ConfigEntry<float> ReflectedDamageMinimum;
         private ConfigEntry<int> DecayTime;
         private readonly HashSet<CharacterBody> mirrored = new HashSet<CharacterBody>();
+        // the monsters that spawned others for themselves, e.g. a Xi Construct its Alpha Constructs, which are mirrored
+        // only along with them; kept also outside the event, for the ones already there when it starts
+        private readonly Dictionary<CharacterMaster, CharacterBody> summoners = new Dictionary<CharacterMaster, CharacterBody>();
         // the shattering glass of a brittle death, at most this often per mirrored monster
         private const float ShatterInterval = 0.3f;
         private AsyncOperationHandle<GameObject> ShatterEffect;
@@ -78,6 +81,8 @@ namespace RandomEvents
             On.RoR2.SphereSearch.SearchData.FilterByHurtBoxTeam += SearchData_FilterByHurtBoxTeam;
             On.RoR2.SiphonNearbyController.SearchForTargets += SiphonNearbyController_SearchForTargets;
             On.RoR2.CharacterAI.BaseAI.ManagedFixedUpdate += BaseAI_ManagedFixedUpdate;
+            On.RoR2.MasterSpawnSlotController.SpawnRandomOpen += MasterSpawnSlotController_SpawnRandomOpen;
+            On.RoR2.MasterSpawnSlotController.SpawnAllOpen += MasterSpawnSlotController_SpawnAllOpen;
         }
 
         // Searches for the players' enemies, which leave out the players' team, skip mirrored monsters: player allies
@@ -148,10 +153,47 @@ namespace RandomEvents
 
         // the Lunar Chimera's shell and the shine of invulnerable Solus Wing parts mark them, and their health decays like
         // a ghost's
+        private void MasterSpawnSlotController_SpawnRandomOpen(On.RoR2.MasterSpawnSlotController.orig_SpawnRandomOpen orig, MasterSpawnSlotController self, int spawnCount, Xoroshiro128Plus rng, GameObject summonerBodyObject, Action<MasterSpawnSlotController.ISlot, SpawnCard.SpawnResult> callback)
+        {
+            orig(self, spawnCount, rng, summonerBodyObject, RememberSummoner(summonerBodyObject, callback));
+        }
+
+        private void MasterSpawnSlotController_SpawnAllOpen(On.RoR2.MasterSpawnSlotController.orig_SpawnAllOpen orig, MasterSpawnSlotController self, GameObject summonerBodyObject, Xoroshiro128Plus rng, Action<MasterSpawnSlotController.ISlot, SpawnCard.SpawnResult> callback)
+        {
+            orig(self, summonerBodyObject, rng, RememberSummoner(summonerBodyObject, callback));
+        }
+
+        private Action<MasterSpawnSlotController.ISlot, SpawnCard.SpawnResult> RememberSummoner(GameObject summonerBodyObject, Action<MasterSpawnSlotController.ISlot, SpawnCard.SpawnResult> callback)
+        {
+            return (slot, result) =>
+            {
+                if (NetworkServer.active && result.success && result.spawnedInstance != null && summonerBodyObject != null
+                    && result.spawnedInstance.TryGetComponent(out CharacterMaster master) && summonerBodyObject.TryGetComponent(out CharacterBody summoner))
+                {
+                    summoners.Keys.Where(key => key == null).ToList().ForEach(key => summoners.Remove(key));
+                    summoners[master] = summoner;
+                }
+                callback?.Invoke(slot, result);
+            };
+        }
+
+        private bool IsSummoned(CharacterBody body)
+        {
+            return body != null && body.master != null && summoners.ContainsKey(body.master);
+        }
+
+        // a summoned monster is mirrored exactly when its summoner is, the others by chance
         private void TryMirror(CharacterBody body)
         {
-            if (body != null && body.healthComponent != null && body.teamComponent.teamIndex != TeamIndex.Player && body.teamComponent.teamIndex != TeamIndex.Neutral
-                && !mirrored.Contains(body) && RoR2Application.rng.nextNormalizedFloat < MirrorChance.Value)
+            if (body == null || body.healthComponent == null || body.teamComponent.teamIndex == TeamIndex.Player || body.teamComponent.teamIndex == TeamIndex.Neutral
+                || mirrored.Contains(body))
+            {
+                return;
+            }
+            var mirror = body.master != null && summoners.TryGetValue(body.master, out var summoner)
+                ? summoner != null && mirrored.Contains(summoner)
+                : RoR2Application.rng.nextNormalizedFloat < MirrorChance.Value;
+            if (mirror)
             {
                 mirrored.Add(body);
                 body.AddBuff(RoR2Content.Buffs.LunarShell);
@@ -267,7 +309,8 @@ namespace RandomEvents
         public override void Start(List<AbstractEvent> activeOtherEvents)
         {
             mirrored.Clear();
-            foreach (var body in CharacterBody.readOnlyInstancesList)
+            // summoners first, whose summoned monsters follow them
+            foreach (var body in CharacterBody.readOnlyInstancesList.OrderBy(IsSummoned).ToList())
             {
                 TryMirror(body);
             }
