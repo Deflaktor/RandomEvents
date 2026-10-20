@@ -105,23 +105,15 @@ namespace RandomEvents
                     {
                         inventory = gameObject.AddComponent<TemporaryInventory>();
                     }
-                    // originalGame:
-                    // num97 = Mathf.Pow(0.95f, tonicAfflictions)
-                    // attackSpeed *= num97;
-                    // moveSpeed *= num97;
-                    // damage *= num97;
-                    // regen *= num97;
-                    // cursePenalty = 1f + 0.1f * tonicAfflictions;
-                    // maxHealth *= 1f + 0.1f * BoostHP
-                    // maxHealth /= cursePenalty;
-                    var attackSpeedFactor = 4f;
+                    // Not with Tonic Afflictions, whose curse would show as a mostly cursed health bar: a hidden item lowers
+                    // the damage by 1% per stack, another raises the attack speed by 10% per stack. Shorter cooldowns come
+                    // from Alien Heads, each taking off 25%.
+                    var cooldownFactor = 4f;
+                    var attackSpeedFactor = 1.9f;
                     var damageFactor = 0.1f;
-                    var alienHeadAmount = Mathf.RoundToInt(-Mathf.Log(attackSpeedFactor, 0.75f));
-                    var tonicAfflictionAmount = Mathf.RoundToInt(Mathf.Log(damageFactor) / Mathf.Log(0.95f));
-                    inventory.GiveTemporaryItem(RoR2Content.Items.TonicAffliction.itemIndex, tonicAfflictionAmount);
-                    inventory.GiveTemporaryItem(RoR2Content.Items.BoostHp.itemIndex, Mathf.RoundToInt(10f * 0.10f * tonicAfflictionAmount));
-                    inventory.GiveTemporaryItem(RoR2Content.Items.Hoof.itemIndex, Mathf.RoundToInt(10 * 0.14f * tonicAfflictionAmount));
-                    inventory.GiveTemporaryItem(RoR2Content.Items.BoostAttackSpeed.itemIndex, Mathf.RoundToInt(attackSpeedFactor * 10 * 0.1f * tonicAfflictionAmount));
+                    var alienHeadAmount = Mathf.RoundToInt(-Mathf.Log(cooldownFactor, 0.75f));
+                    inventory.GiveTemporaryItem(DLC4Content.Items.ReduceDamage.itemIndex, Mathf.RoundToInt((1f - damageFactor) * 100f));
+                    inventory.GiveTemporaryItem(RoR2Content.Items.BoostAttackSpeed.itemIndex, Mathf.RoundToInt((attackSpeedFactor - 1f) * 10f));
                     // VoidJailer perma stunning is not fun; spawned bodies are named "VoidJailerBody(Clone)", so compare the body index
                     if (body.bodyIndex != BodyCatalog.FindBodyIndex("VoidJailerBody")) {
                         inventory.GiveTemporaryItem(RoR2Content.Items.AlienHead.itemIndex, alienHeadAmount);
