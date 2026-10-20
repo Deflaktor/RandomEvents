@@ -398,6 +398,7 @@ namespace RandomEvents
         {
             public CharacterBody owner;
             public Vector3 direction;
+            private const float StepRate = 12f;
             private float age;
 
             private void FixedUpdate()
@@ -422,16 +423,19 @@ namespace RandomEvents
                     position += step;
                 }
                 // on the ground below, or falling if there is none
+                // with a little hop for each step, highest between leaning to one side and the other
+                var sway = Mathf.Sin(age * StepRate);
                 if (Physics.Raycast(position + Vector3.up * 2f, Vector3.down, out var hit, 6f, LayerIndex.world.mask, QueryTriggerInteraction.Ignore))
                 {
-                    position.y = hit.point.y + 0.5f;
+                    position.y = hit.point.y + 0.5f + (1f - Mathf.Abs(sway)) * 0.25f;
                 }
                 else
                 {
                     position.y -= 10f * Time.fixedDeltaTime;
                 }
-                // a waddle from side to side
-                transform.SetPositionAndRotation(position, Quaternion.LookRotation(direction) * Quaternion.Euler(0f, 0f, Mathf.Sin(age * 12f) * 15f));
+                // a waddle from side to side, and a nod of the head with every step
+                var nod = Mathf.Sin(age * StepRate * 2f) * 10f;
+                transform.SetPositionAndRotation(position, Quaternion.LookRotation(direction) * Quaternion.Euler(nod, 0f, sway * 15f));
                 if (age >= DollFuse)
                 {
                     var groundZero = Physics.Raycast(position, Vector3.down, out var floor, 50f, LayerIndex.world.mask, QueryTriggerInteraction.Ignore) ? floor.point : position;
