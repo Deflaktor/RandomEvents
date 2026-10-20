@@ -19,6 +19,8 @@ namespace RandomEvents
         private const float InflateFactor = 3f;
         private const float ScannerWaveSpeed = 125f;
         private const float ScannerWaveRadius = 500f;
+        // per monster the wave reaches, as a multiple of the player's damage
+        private const float ScannerWaveDamage = 25f;
         // per missile, as a multiple of the player's damage
         private const float ShrimpMissileDamage = 30f;
         private const float DollSpeed = 6f;
@@ -488,7 +490,7 @@ namespace RandomEvents
                     body.healthComponent.TakeDamage(new DamageInfo
                     {
                         attacker = attacker.gameObject,
-                        damage = attacker.damage * 5f,
+                        damage = attacker.damage * ScannerWaveDamage,
                         crit = attacker.RollCrit(),
                         position = body.corePosition,
                         force = (direction * 30f + Vector3.up * 15f) * Mathf.Min(mass, 1000f),
