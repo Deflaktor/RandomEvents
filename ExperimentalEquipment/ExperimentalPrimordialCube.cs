@@ -46,14 +46,31 @@ namespace RandomEvents
         public override bool Fire(EquipmentSlot slot)
         {
             var body = slot.characterBody;
-            if (!Physics.Raycast(slot.GetAimRay(), out var hit, AimRange, LayerIndex.world.mask, QueryTriggerInteraction.Ignore))
+            if (!Aim(slot.GetAimRay(), body, out var point))
             {
                 return false;
             }
             var spot = new GameObject("RandomEventsPullSpot").AddComponent<Altar>();
             spot.owner = body;
-            spot.center = hit.point + Vector3.up * HoverHeight;
+            spot.center = point + Vector3.up * HoverHeight;
             return true;
+        }
+
+        // the first thing in its way: the ground, a wall, a prop or a character, but not the player
+        private static bool Aim(Ray ray, CharacterBody body, out Vector3 point)
+        {
+            point = Vector3.zero;
+            var closest = float.PositiveInfinity;
+            foreach (var hit in Physics.RaycastAll(ray, AimRange, LayerIndex.world.mask | LayerIndex.entityPrecise.mask, QueryTriggerInteraction.Ignore))
+            {
+                if (hit.distance >= closest || (hit.collider.TryGetComponent(out HurtBox hurtBox) && hurtBox.healthComponent == body.healthComponent))
+                {
+                    continue;
+                }
+                closest = hit.distance;
+                point = hit.point;
+            }
+            return closest < float.PositiveInfinity;
         }
 
         public class Altar : MonoBehaviour
