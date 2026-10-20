@@ -113,7 +113,8 @@
         "ANNOUNCE_EVENT_INDIRECT_DAMAGE": "Let the items do the work",
         "ANNOUNCE_EVENT_SWARM_QUEEN": "Nobody comes alone",
         "ANNOUNCE_EVENT_LAVA_FLOOR": "The floor is lava",
-        "ANNOUNCE_EVENT_THIEVES": "Watch your pockets"
+        "ANNOUNCE_EVENT_THIEVES": "Watch your pockets",
+        "ANNOUNCE_EVENT_REMIXED_EQUIPMENT": "Remixed: {0}"
         
     }
 }

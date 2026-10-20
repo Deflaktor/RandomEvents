@@ -37,7 +37,8 @@ namespace RandomEvents
                 return false;
             }
             return !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("SkillsOnly", StringComparison.InvariantCultureIgnoreCase)
-                                            || e.GetEventConfigName().Equals("FuelArray", StringComparison.InvariantCultureIgnoreCase));
+                                            || e.GetEventConfigName().Equals("FuelArray", StringComparison.InvariantCultureIgnoreCase)
+                                            || e.GetEventConfigName().Equals("RemixedEquipment", StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
         {
@@ -53,7 +54,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Events \"SkillsOnly\", \"FuelArray\" inactive. Artifact of Enigma inactive.";
+            return "Events \"SkillsOnly\", \"FuelArray\", \"RemixedEquipment\" inactive. Artifact of Enigma inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {

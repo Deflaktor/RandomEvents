@@ -93,6 +93,7 @@ namespace RandomEvents
                 InitAndHookEvent(new EventRandomTeams());
                 InitAndHookEvent(new EventRedLightGreenLight());
                 InitAndHookEvent(new EventReducedGravity());
+                InitAndHookEvent(new EventRemixedEquipment());
                 InitAndHookEvent(new EventRitualHelmets());
                 InitAndHookEvent(new EventSecondWind());
                 InitAndHookEvent(new EventSkillsOnly());
