@@ -15,7 +15,7 @@ namespace RandomEvents
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.Lightning;
         public override string Description => "Royal Capacitor inflates a monster until it explodes";
-        public override string PopupDescription => "Inflates the targeted monster to three times its size, then it explodes. No effect on bosses.";
+        public override string PopupDescription => "Inflates the targeted monster to three times its size, then it explodes. Bosses too.";
 
         public override void Preload()
         {
@@ -29,7 +29,7 @@ namespace RandomEvents
             slot.UpdateTargets(RoR2Content.Equipment.Lightning.equipmentIndex, userShouldAnticipateTarget: true);
             var hurtBox = slot.currentTarget.hurtBox;
             var target = hurtBox != null && hurtBox.healthComponent != null ? hurtBox.healthComponent.body : null;
-            if (target == null || target.isBoss || target.inventory == null || !target.healthComponent.alive || target.GetComponent<Inflation>() != null)
+            if (target == null || target.inventory == null || !target.healthComponent.alive || target.GetComponent<Inflation>() != null)
             {
                 return false;
             }
