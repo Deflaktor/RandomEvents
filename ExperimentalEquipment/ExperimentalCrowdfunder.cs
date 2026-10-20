@@ -1,5 +1,4 @@
 using RoR2;
-using RoR2.Projectile;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -8,39 +7,38 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace RandomEvents
 {
+    // The Crowdfunder fires as usual, its bullets pushing a little as they do, but costs no gold, and every 10 of its hits
+    // make a monster heavier. A monster made heavier dies when it falls out of the map, even one that would be brought
+    // back.
     public class ExperimentalCrowdfunder : ExperimentalEquipment
     {
-        // the Crowdfunder fires a Resonance Disc's shot with every so many of its bullets, starting with the first
-        private const int BulletsPerDiscShot = 10;
-        private const float DiscBeamDamage = 3f;
-        private const float DiscBombDamage = 10f;
-        private static AsyncOperationHandle<GameObject> DiscTracer;
-        private static AsyncOperationHandle<GameObject> DiscBomb;
-        // each Crowdfunder's bullets so far
-        private readonly Dictionary<GameObject, int> crowdfunderBullets = new Dictionary<GameObject, int>();
-        // the players the Crowdfunder roots while it fires
-        private readonly BuffTracker roots = new BuffTracker();
+        private const int HitsPerGravity = 10;
+        // how much the gravity grows each time, up to the most
+        private const float GravityStep = 1f;
+        private const float MaxGravityScale = 6f;
+        // the Breaching Fin's knock-up, for its sound
+        private static AsyncOperationHandle<GameObject> HeavierEffect;
+        private readonly Dictionary<CharacterBody, int> hits = new Dictionary<CharacterBody, int>();
+        private readonly HashSet<CharacterBody> heavier = new HashSet<CharacterBody>();
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.GoldGat;
-        public override string Description => "the Crowdfunder costs no gold and fires Resonance Disc shots, but roots you while it fires";
-        public override string PopupDescription => "Costs no gold and fires Resonance Disc shots, but you can't move while it fires.";
+        public override string Description => "the Crowdfunder costs no gold, and every 10 of its hits make a monster heavier, so it dies if it falls out of the map";
+        public override string PopupDescription => "Costs no gold. Every 10 hits make a monster heavier, and a heavier monster that falls out of the map dies.";
+
+        // it fires as usual, toggled by the player's own game
+        public override bool ReplacesAction => false;
 
         public override void Preload()
         {
-            DiscTracer = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LaserTurbine/TracerLaserTurbine.prefab");
-            DiscBomb = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LaserTurbine/LaserTurbineBomb.prefab");
+            HeavierEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC2/Items/KnockBackHitEnemies/KnockBackHitEnemiesImpact.prefab");
         }
 
         public override void Hook()
         {
             On.EntityStates.GoldGat.GoldGatFire.FireBullet += GoldGatFire_FireBullet;
-            On.EntityStates.GoldGat.GoldGatFire.OnEnter += GoldGatFire_OnEnter;
-            On.EntityStates.GoldGat.GoldGatFire.OnExit += GoldGatFire_OnExit;
-            On.RoR2.HealthComponent.TakeDamage += HealthComponent_TakeDamage;
+            On.RoR2.GlobalEventManager.OnHitEnemy += GlobalEventManager_OnHitEnemy;
+            On.RoR2.MapZone.CharacterEligibleForTeleport += MapZone_CharacterEligibleForTeleport;
         }
-
-        // it fires as usual, toggled by the player's own game
-        public override bool ReplacesAction => false;
 
         // it only starts firing with gold
         public override void FixedUpdatePlayer(CharacterBody body)
@@ -53,16 +51,14 @@ namespace RandomEvents
 
         public override void Stop()
         {
-            roots.RemoveAll();
-            crowdfunderBullets.Clear();
+            hits.Clear();
+            heavier.Clear();
         }
 
-        // The Crowdfunder's state runs on every machine, the bullets only on the shooting player's. On the host it takes
-        // the gold per bullet, which goes back, and fires the Resonance Disc's shots.
+        // the host takes the gold for each bullet, which goes back
         private void GoldGatFire_FireBullet(On.EntityStates.GoldGat.GoldGatFire.orig_FireBullet orig, EntityStates.GoldGat.GoldGatFire self)
         {
-            var body = self.body;
-            if (!IsExperimental(body) || self.bodyMaster == null)
+            if (!IsExperimental(self.body) || self.bodyMaster == null)
             {
                 orig(self);
                 return;
@@ -70,82 +66,54 @@ namespace RandomEvents
             var money = self.bodyMaster.money;
             orig(self);
             self.bodyMaster.money = money;
-            var bullets = crowdfunderBullets.GetValueOrDefault(self.gameObject);
-            crowdfunderBullets[self.gameObject] = bullets + 1;
-            if (bullets % BulletsPerDiscShot == 0 && body.inputBank != null)
-            {
-                FireDiscShot(body, new Ray(body.inputBank.aimOrigin, body.inputBank.aimDirection));
-            }
         }
 
-        // the Resonance Disc's laser, and its bomb where the laser hits
-        private static void FireDiscShot(CharacterBody body, Ray aim)
+        // The bullets come from the gun, also those a player's own game fires, whose hits the host gets
+        private void GlobalEventManager_OnHitEnemy(On.RoR2.GlobalEventManager.orig_OnHitEnemy orig, GlobalEventManager self, DamageInfo damageInfo, GameObject victim)
         {
-            var crit = body.RollCrit();
-            new BulletAttack
+            orig(self, damageInfo, victim);
+            var attackerBody = damageInfo.attacker != null ? damageInfo.attacker.GetComponent<CharacterBody>() : null;
+            if (damageInfo.rejected || victim == null || damageInfo.inflictor == null || !IsExperimental(attackerBody)
+                || !damageInfo.inflictor.TryGetComponent(out EntityStateMachine stateMachine) || !(stateMachine.state is EntityStates.GoldGat.BaseGoldGatState)
+                || !victim.TryGetComponent(out CharacterBody body) || body.teamComponent.teamIndex == TeamIndex.Player)
             {
-                owner = body.gameObject,
-                weapon = body.gameObject,
-                origin = aim.origin,
-                aimVector = aim.direction,
-                damage = body.damage * DiscBeamDamage,
-                damageColorIndex = DamageColorIndex.Item,
-                isCrit = crit,
-                force = 1000f,
-                procCoefficient = 1f,
-                radius = 1f,
-                maxDistance = 1000f,
-                smartCollision = true,
-                stopperMask = LayerIndex.world.mask,
-                tracerEffectPrefab = DiscTracer.WaitForCompletion()
-            }.Fire();
-            var hitPoint = Physics.Raycast(aim, out var hit, 1000f, LayerIndex.world.mask | LayerIndex.entityPrecise.mask, QueryTriggerInteraction.Ignore) ? hit.point : aim.GetPoint(1000f);
-            ProjectileManager.instance.FireProjectile(new FireProjectileInfo
-            {
-                projectilePrefab = DiscBomb.WaitForCompletion(),
-                owner = body.gameObject,
-                position = hitPoint - aim.direction * 0.5f,
-                rotation = Quaternion.identity,
-                damage = body.damage * DiscBombDamage,
-                damageColorIndex = DamageColorIndex.Item,
-                crit = crit
-            });
-        }
-
-        // rooted while it fires, with the vines of the root from the Hooks of Heresy
-        private void GoldGatFire_OnEnter(On.EntityStates.GoldGat.GoldGatFire.orig_OnEnter orig, EntityStates.GoldGat.GoldGatFire self)
-        {
-            if (IsExperimental(self.body))
-            {
-                crowdfunderBullets[self.gameObject] = 0;
-                if (!roots.Has(self.body, RoR2Content.Buffs.LunarSecondaryRoot))
-                {
-                    roots.Add(self.body, RoR2Content.Buffs.LunarSecondaryRoot);
-                }
-            }
-            orig(self);
-        }
-
-        private void GoldGatFire_OnExit(On.EntityStates.GoldGat.GoldGatFire.orig_OnExit orig, EntityStates.GoldGat.GoldGatFire self)
-        {
-            if (NetworkServer.active && self.body != null)
-            {
-                roots.Remove(self.body, RoR2Content.Buffs.LunarSecondaryRoot);
-            }
-            orig(self);
-        }
-
-        // the Crowdfunder's own bullets do nothing, as the disc's shots replace them; they show for the shooting player
-        // all the same, whose own game fires them
-        private void HealthComponent_TakeDamage(On.RoR2.HealthComponent.orig_TakeDamage orig, HealthComponent self, DamageInfo damageInfo)
-        {
-            if (damageInfo != null && damageInfo.inflictor != null && IsActive()
-                && damageInfo.inflictor.TryGetComponent(out EntityStateMachine stateMachine) && stateMachine.state is EntityStates.GoldGat.BaseGoldGatState)
-            {
-                damageInfo.rejected = true;
                 return;
             }
-            orig(self, damageInfo);
+            var count = hits.GetValueOrDefault(body) + 1;
+            hits[body] = count;
+            if (count % HitsPerGravity == 0)
+            {
+                MakeHeavier(body);
+            }
+        }
+
+        // its AI runs on the host, so the host's motor is the one that moves it; one that flies starts to fall
+        private void MakeHeavier(CharacterBody body)
+        {
+            if (body.characterMotor != null)
+            {
+                body.characterMotor.gravityScale = Mathf.Min(MaxGravityScale, body.characterMotor.gravityScale + GravityStep);
+            }
+            else if (body.rigidbody != null)
+            {
+                body.rigidbody.useGravity = true;
+            }
+            heavier.Add(body);
+            EffectManager.SpawnEffect(HeavierEffect.WaitForCompletion(), new EffectData
+            {
+                origin = body.corePosition,
+                scale = body.radius
+            }, transmit: true);
+        }
+
+        // out of the map, it dies instead of being brought back; its last attacker gets the kill
+        private bool MapZone_CharacterEligibleForTeleport(On.RoR2.MapZone.orig_CharacterEligibleForTeleport orig, MapZone self, CharacterBody characterBody)
+        {
+            if (IsActive() && characterBody != null && heavier.Contains(characterBody) && characterBody.teamComponent.teamIndex != TeamIndex.Player)
+            {
+                return false;
+            }
+            return orig(self, characterBody);
         }
     }
 }
