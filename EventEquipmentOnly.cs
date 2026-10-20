@@ -38,7 +38,9 @@ namespace RandomEvents
             }
             return !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("SkillsOnly", StringComparison.InvariantCultureIgnoreCase)
                                             || e.GetEventConfigName().Equals("FuelArray", StringComparison.InvariantCultureIgnoreCase)
-                                            || e.GetEventConfigName().Equals("RemixedEquipment", StringComparison.InvariantCultureIgnoreCase));
+                                            || e.GetEventConfigName().Equals("RemixedEquipment", StringComparison.InvariantCultureIgnoreCase))
+                // Cursed Spoils' hexes would disable the event's items
+                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("CursedSpoils", StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
         {
@@ -54,7 +56,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Events \"SkillsOnly\", \"FuelArray\", \"RemixedEquipment\" inactive. Artifact of Enigma inactive.";
+            return "Events \"SkillsOnly\", \"FuelArray\", \"RemixedEquipment\", \"CursedSpoils\" inactive. Artifact of Enigma inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {

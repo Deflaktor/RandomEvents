@@ -34,7 +34,9 @@ namespace RandomEvents
             // the players' Earthbound Vessels or Breaching Fins; DroneUprising's drones mostly fly
             return !Helper.IsSimulacrumBossWaveNext() && (VesselsAvailable() || FinsAvailable())
                 && MonsterPool.GetChoices().Any(IsWalker)
-                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("DroneUprising", StringComparison.InvariantCultureIgnoreCase));
+                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("DroneUprising", StringComparison.InvariantCultureIgnoreCase))
+                // Cursed Spoils' hexes would disable the event's items
+                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("CursedSpoils", StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
         {
@@ -50,7 +52,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Hallowed Concepts or Seekers of the Storm is enabled, not a Simulacrum boss wave, the stage has walking monsters, and event \"DroneUprising\" inactive.";
+            return "Hallowed Concepts or Seekers of the Storm is enabled, not a Simulacrum boss wave, the stage has walking monsters, and events \"DroneUprising\" and \"CursedSpoils\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {

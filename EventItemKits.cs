@@ -1,6 +1,7 @@
 ﻿using BepInEx.Configuration;
 using HG;
 using RoR2;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -30,7 +31,9 @@ namespace RandomEvents
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            return GetKits().Count > 0;
+            return GetKits().Count > 0
+                // Cursed Spoils' hexes would disable the event's items
+                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("CursedSpoils", StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
         {
@@ -50,7 +53,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "At least one kit has items.";
+            return "At least one kit has items, and event \"CursedSpoils\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {

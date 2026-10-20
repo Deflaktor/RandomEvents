@@ -1,5 +1,6 @@
 using BepInEx.Configuration;
 using RoR2;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -31,7 +32,9 @@ namespace RandomEvents
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            return GetCandidates(ItemTier.Tier1).Count > 0 || GetCandidates(ItemTier.Tier2).Count > 0;
+            return GetCandidates(ItemTier.Tier1).Count > 0 || GetCandidates(ItemTier.Tier2).Count > 0
+                // Cursed Spoils' hexes would disable the event's items
+                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("CursedSpoils", StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
         {
@@ -51,7 +54,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "At least one common or uncommon item with an on-hit effect is available.";
+            return "At least one common or uncommon item with an on-hit effect is available, and event \"CursedSpoils\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {
@@ -154,7 +157,7 @@ namespace RandomEvents
             {
                 if (inventory != null)
                 {
-                    Object.Destroy(inventory);
+                    UnityEngine.Object.Destroy(inventory);
                 }
             }
             inventories.Clear();

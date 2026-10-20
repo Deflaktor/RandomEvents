@@ -1,6 +1,8 @@
 using BepInEx.Configuration;
 using RoR2;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -22,7 +24,8 @@ namespace RandomEvents
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            return true;
+            // Cursed Spoils' hexes would disable the event's items
+            return !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("CursedSpoils", StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
         {
@@ -42,7 +45,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "";
+            return "Event \"CursedSpoils\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {

@@ -21,7 +21,9 @@ namespace RandomEvents
         {
             // Hex of Ossification comes with that expansion
             return DLC4Content.DLC4 != null && Run.instance != null && Run.instance.IsExpansionEnabled(DLC4Content.DLC4)
-                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("Ghosts", StringComparison.InvariantCultureIgnoreCase));
+                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("Ghosts", StringComparison.InvariantCultureIgnoreCase))
+                // Cursed Spoils' hexes would disable the event's items
+                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("CursedSpoils", StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
         {
@@ -37,7 +39,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Hallowed Concepts is enabled, and event \"Ghosts\" inactive.";
+            return "Hallowed Concepts is enabled, and events \"Ghosts\" and \"CursedSpoils\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {
