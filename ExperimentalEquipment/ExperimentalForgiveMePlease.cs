@@ -7,7 +7,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace RandomEvents
 {
-    public class RemixForgiveMePlease : RemixedEquipment
+    public class ExperimentalForgiveMePlease : ExperimentalEquipment
     {
         private const float DollSpeed = 6f;
         private const float DollFuse = 10f;

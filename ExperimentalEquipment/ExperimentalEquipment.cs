@@ -3,10 +3,10 @@ using UnityEngine.Networking;
 
 namespace RandomEvents
 {
-    // One of RemixedEquipment's equipment and what it does instead. The event picks one for each time it happens.
-    public abstract class RemixedEquipment
+    // One of ExperimentalEquipment's equipment and what it does instead. The event picks one for each time it happens.
+    public abstract class ExperimentalEquipment
     {
-        public EventRemixedEquipment Event { get; set; }
+        public EventExperimentalEquipment Event { get; set; }
         public abstract EquipmentDef EquipmentDef { get; }
         // of its normal cooldown
         public virtual float CooldownScale => 0.5f;
@@ -46,9 +46,9 @@ namespace RandomEvents
             return ModConfig.Enabled.Value && NetworkServer.active && Event != null && Event.IsActive() && Event.Current == this;
         }
 
-        protected bool IsRemixed(CharacterBody body)
+        protected bool IsExperimental(CharacterBody body)
         {
-            return IsActive() && body != null && body.GetComponent<EventRemixedEquipment.RemixComponent>() != null;
+            return IsActive() && body != null && body.GetComponent<EventExperimentalEquipment.ExperimentalComponent>() != null;
         }
     }
 }

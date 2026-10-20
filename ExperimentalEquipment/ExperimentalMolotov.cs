@@ -9,7 +9,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace RandomEvents
 {
-    public class RemixMolotov : RemixedEquipment
+    public class ExperimentalMolotov : ExperimentalEquipment
     {
         private static AsyncOperationHandle<GameObject> MolotovBottle;
 
@@ -46,11 +46,11 @@ namespace RandomEvents
             return true;
         }
 
-        // the remixed Molotov's bottle sets its sea of fire instead of the bottle's own fire
+        // the experimental Molotov's bottle sets its sea of fire instead of the bottle's own fire
         private void ProjectileExplosion_DetonateServer(On.RoR2.Projectile.ProjectileExplosion.orig_DetonateServer orig, ProjectileExplosion self)
         {
             var owner = self.projectileController != null && self.projectileController.owner != null ? self.projectileController.owner.GetComponent<CharacterBody>() : null;
-            if (!IsRemixed(owner) || !self.name.StartsWith("MolotovSingleProjectile"))
+            if (!IsExperimental(owner) || !self.name.StartsWith("MolotovSingleProjectile"))
             {
                 orig(self);
                 return;
@@ -61,7 +61,7 @@ namespace RandomEvents
             inferno.center = center;
         }
 
-        // The remixed Molotov: a bright white spot where it landed, then a Grandparent's sun there for 5 seconds. Meanwhile
+        // The experimental Molotov: a bright white spot where it landed, then a Grandparent's sun there for 5 seconds. Meanwhile
         // everything hostile nearby burns, with stacks that pile up faster and faster to 5000% of the thrower's damage in
         // all, which the Grandparent's heat shows, and its middle burns continuously.
         public class Inferno : MonoBehaviour

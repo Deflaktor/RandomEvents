@@ -8,7 +8,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace RandomEvents
 {
-    public class RemixCrowdfunder : RemixedEquipment
+    public class ExperimentalCrowdfunder : ExperimentalEquipment
     {
         // the Crowdfunder fires a Resonance Disc's shot with every so many of its bullets, starting with the first
         private const int BulletsPerDiscShot = 10;
@@ -62,7 +62,7 @@ namespace RandomEvents
         private void GoldGatFire_FireBullet(On.EntityStates.GoldGat.GoldGatFire.orig_FireBullet orig, EntityStates.GoldGat.GoldGatFire self)
         {
             var body = self.body;
-            if (!IsRemixed(body) || self.bodyMaster == null)
+            if (!IsExperimental(body) || self.bodyMaster == null)
             {
                 orig(self);
                 return;
@@ -115,7 +115,7 @@ namespace RandomEvents
         // rooted while it fires, with the vines of the root from the Hooks of Heresy
         private void GoldGatFire_OnEnter(On.EntityStates.GoldGat.GoldGatFire.orig_OnEnter orig, EntityStates.GoldGat.GoldGatFire self)
         {
-            if (IsRemixed(self.body))
+            if (IsExperimental(self.body))
             {
                 crowdfunderBullets[self.gameObject] = 0;
                 if (!roots.Has(self.body, RoR2Content.Buffs.LunarSecondaryRoot))

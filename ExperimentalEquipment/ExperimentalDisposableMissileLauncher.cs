@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace RandomEvents
 {
-    public class RemixDisposableMissileLauncher : RemixedEquipment
+    public class ExperimentalDisposableMissileLauncher : ExperimentalEquipment
     {
         // per missile, as a multiple of the player's damage
         private const float ShrimpMissileDamage = 30f;

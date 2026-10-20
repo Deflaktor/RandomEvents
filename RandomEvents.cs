@@ -68,6 +68,7 @@ namespace RandomEvents
                 InitAndHookEvent(new EventEgocentrism());
                 InitAndHookEvent(new EventEliteSurge());
                 InitAndHookEvent(new EventEquipmentOnly());
+                InitAndHookEvent(new EventExperimentalEquipment());
                 InitAndHookEvent(new EventExplodingCorpses());
                 InitAndHookEvent(new EventFallingEnemies());
                 InitAndHookEvent(new EventFocusFire());
@@ -94,7 +95,6 @@ namespace RandomEvents
                 InitAndHookEvent(new EventRandomTeams());
                 InitAndHookEvent(new EventRedLightGreenLight());
                 InitAndHookEvent(new EventReducedGravity());
-                InitAndHookEvent(new EventRemixedEquipment());
                 InitAndHookEvent(new EventRitualHelmets());
                 InitAndHookEvent(new EventSecondWind());
                 InitAndHookEvent(new EventShielded());

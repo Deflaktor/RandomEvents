@@ -8,17 +8,17 @@ using UnityEngine.Networking;
 
 namespace RandomEvents
 {
-    // Gives all players one of the equipment in RemixedEquipment/, which does something else and has a shorter cooldown
-    public class EventRemixedEquipment : AbstractEvent
+    // Gives all players one of the equipment in ExperimentalEquipment/, which does something else and has a shorter cooldown
+    public class EventExperimentalEquipment : AbstractEvent
     {
-        private readonly List<RemixedEquipment> remixes = new List<RemixedEquipment>
+        private readonly List<ExperimentalEquipment> equipments = new List<ExperimentalEquipment>
         {
-            new RemixRoyalCapacitor(), new RemixDisposableMissileLauncher(), new RemixRadarScanner(), new RemixSuperMassiveLeech(),
-            new RemixForgiveMePlease(), new RemixCrowdfunder(), new RemixMolotov(), new RemixSawmerang()
+            new ExperimentalRoyalCapacitor(), new ExperimentalDisposableMissileLauncher(), new ExperimentalRadarScanner(), new ExperimentalSuperMassiveLeech(),
+            new ExperimentalForgiveMePlease(), new ExperimentalCrowdfunder(), new ExperimentalMolotov(), new ExperimentalSawmerang()
         };
 
         // the equipment the event gives this time
-        public RemixedEquipment Current { get; private set; }
+        public ExperimentalEquipment Current { get; private set; }
 
         public override bool LoadCondition()
         {
@@ -34,20 +34,20 @@ namespace RandomEvents
         }
         public override string GetEventConfigName()
         {
-            return "RemixedEquipment";
+            return "ExperimentalEquipment";
         }
         public override string GetAnnouncement()
         {
-            return Language.GetStringFormatted("ANNOUNCE_EVENT_REMIXED_EQUIPMENT", Language.GetString((Current ?? remixes[0]).EquipmentDef.nameToken));
+            return Language.GetStringFormatted("ANNOUNCE_EVENT_EXPERIMENTAL_EQUIPMENT", Language.GetString((Current ?? equipments[0]).EquipmentDef.nameToken));
         }
         public override string GetDescription()
         {
-            var parts = remixes.Select(remix => remix.Description).ToList();
-            return "Gives all players a remixed equipment with a shorter cooldown. " + string.Join(", ", parts.Take(parts.Count - 1)) + ", and " + parts.Last() + ".";
+            var parts = equipments.Select(experimental => experimental.Description).ToList();
+            return "Gives all players an experimental equipment with a shorter cooldown. " + string.Join(", ", parts.Take(parts.Count - 1)) + ", and " + parts.Last() + ".";
         }
         public override string GetPopupDescription()
         {
-            return (Current ?? remixes[0]).PopupDescription;
+            return (Current ?? equipments[0]).PopupDescription;
         }
         public override string GetConditionDescription()
         {
@@ -58,19 +58,19 @@ namespace RandomEvents
         }
         public override void Preload()
         {
-            foreach (var remix in remixes)
+            foreach (var experimental in equipments)
             {
-                remix.Event = this;
-                remix.Preload();
+                experimental.Event = this;
+                experimental.Preload();
             }
         }
         public override void Hook()
         {
             CharacterBody.onBodyStartGlobal += CharacterBody_onBodyStartGlobal;
             On.RoR2.EquipmentSlot.PerformEquipmentAction += EquipmentSlot_PerformEquipmentAction;
-            foreach (var remix in remixes)
+            foreach (var experimental in equipments)
             {
-                remix.Hook();
+                experimental.Hook();
             }
         }
 
@@ -84,23 +84,23 @@ namespace RandomEvents
 
         private void Give(CharacterBody body)
         {
-            if (body.inventory == null || Current == null || body.GetComponent<RemixComponent>() != null)
+            if (body.inventory == null || Current == null || body.GetComponent<ExperimentalComponent>() != null)
             {
                 return;
             }
-            body.gameObject.AddComponent<RemixComponent>().Setup(Current);
+            body.gameObject.AddComponent<ExperimentalComponent>().Setup(Current);
         }
 
-        private bool IsRemixed(EquipmentSlot slot, EquipmentDef def)
+        private bool IsExperimental(EquipmentSlot slot, EquipmentDef def)
         {
             return ModConfig.Enabled.Value && NetworkServer.active && IsActive() && Current != null && def == Current.EquipmentDef && Current.ReplacesAction
-                && slot.characterBody != null && slot.characterBody.GetComponent<RemixComponent>() != null;
+                && slot.characterBody != null && slot.characterBody.GetComponent<ExperimentalComponent>() != null;
         }
 
         // returning false fires nothing and keeps the charge
         private bool EquipmentSlot_PerformEquipmentAction(On.RoR2.EquipmentSlot.orig_PerformEquipmentAction orig, EquipmentSlot self, EquipmentDef def)
         {
-            if (!IsRemixed(self, def) || self.equipmentDisabled)
+            if (!IsExperimental(self, def) || self.equipmentDisabled)
             {
                 return orig(self, def);
             }
@@ -110,8 +110,8 @@ namespace RandomEvents
         public override void Prepare()
         {
             // only those of the run's expansions, e.g. the Molotov (6-Pack) with Survivors of the Void
-            var available = remixes.Where(remix => remix.EquipmentDef != null && (remix.EquipmentDef.requiredExpansion == null || Run.instance == null
-                || Run.instance.IsExpansionEnabled(remix.EquipmentDef.requiredExpansion))).ToList();
+            var available = equipments.Where(experimental => experimental.EquipmentDef != null && (experimental.EquipmentDef.requiredExpansion == null || Run.instance == null
+                || Run.instance.IsExpansionEnabled(experimental.EquipmentDef.requiredExpansion))).ToList();
             Current = available[RoR2Application.rng.RangeInt(0, available.Count)];
         }
 
@@ -131,36 +131,36 @@ namespace RandomEvents
         {
             foreach (var body in CharacterBody.instancesList)
             {
-                if (body != null && body.TryGetComponent(out RemixComponent remix))
+                if (body != null && body.TryGetComponent(out ExperimentalComponent experimental))
                 {
-                    UnityEngine.Object.Destroy(remix);
+                    UnityEngine.Object.Destroy(experimental);
                 }
             }
-            foreach (var remix in remixes)
+            foreach (var experimental in equipments)
             {
-                remix.Stop();
+                experimental.Stop();
             }
             Current = null;
         }
 
-        public class RemixComponent : MonoBehaviour
+        public class ExperimentalComponent : MonoBehaviour
         {
             private TemporaryEquipment equipment;
-            private RemixedEquipment remix;
+            private ExperimentalEquipment experimental;
 
-            public void Setup(RemixedEquipment remixedEquipment)
+            public void Setup(ExperimentalEquipment experimentalEquipment)
             {
-                remix = remixedEquipment;
+                experimental = experimentalEquipment;
                 equipment = gameObject.AddComponent<TemporaryEquipment>();
-                equipment.cooldownScale = remix.CooldownScale;
-                equipment.SetTemporaryEquipment(remix.EquipmentDef.equipmentIndex);
+                equipment.cooldownScale = experimental.CooldownScale;
+                equipment.SetTemporaryEquipment(experimental.EquipmentDef.equipmentIndex);
             }
 
             private void FixedUpdate()
             {
-                if (NetworkServer.active && remix != null && TryGetComponent(out CharacterBody body))
+                if (NetworkServer.active && experimental != null && TryGetComponent(out CharacterBody body))
                 {
-                    remix.FixedUpdatePlayer(body);
+                    experimental.FixedUpdatePlayer(body);
                 }
             }
 

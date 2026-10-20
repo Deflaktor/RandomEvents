@@ -8,7 +8,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace RandomEvents
 {
-    public class RemixSawmerang : RemixedEquipment
+    public class ExperimentalSawmerang : ExperimentalEquipment
     {
         private static AsyncOperationHandle<GameObject> Sawmerang;
 

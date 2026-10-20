@@ -8,7 +8,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace RandomEvents
 {
-    public class RemixRadarScanner : RemixedEquipment
+    public class ExperimentalRadarScanner : ExperimentalEquipment
     {
         private const float ScannerWaveSpeed = 100f;
         private const float ScannerWaveRadius = 100f;
@@ -37,7 +37,7 @@ namespace RandomEvents
             return true;
         }
 
-        // The remixed Radar Scanner's shockwave, spreading in rings of the Captain's Tazer, hurts, stuns and throws back
+        // The experimental Radar Scanner's shockwave, spreading in rings of the Captain's Tazer, hurts, stuns and throws back
         // each monster it reaches
         public class ScannerWave : MonoBehaviour
         {

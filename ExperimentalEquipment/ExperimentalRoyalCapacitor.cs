@@ -6,7 +6,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace RandomEvents
 {
-    public class RemixRoyalCapacitor : RemixedEquipment
+    public class ExperimentalRoyalCapacitor : ExperimentalEquipment
     {
         private const float InflateTime = 2f;
         private const float InflateFactor = 3f;

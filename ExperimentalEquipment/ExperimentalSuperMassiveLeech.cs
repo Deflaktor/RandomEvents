@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace RandomEvents
 {
-    public class RemixSuperMassiveLeech : RemixedEquipment
+    public class ExperimentalSuperMassiveLeech : ExperimentalEquipment
     {
         private const float LeechDuration = 8f;
 
@@ -35,7 +35,7 @@ namespace RandomEvents
         {
             orig(self, damageInfo, victim);
             var attackerBody = damageInfo.attacker != null ? damageInfo.attacker.GetComponent<CharacterBody>() : null;
-            if (IsRemixed(attackerBody) && attackerBody.HasBuff(DLC3Content.Buffs.ShieldTankDamage) && damageInfo.procCoefficient > 0f && !damageInfo.rejected && victim != null)
+            if (IsExperimental(attackerBody) && attackerBody.HasBuff(DLC3Content.Buffs.ShieldTankDamage) && damageInfo.procCoefficient > 0f && !damageInfo.rejected && victim != null)
             {
                 DotController.InflictDot(victim, damageInfo.attacker, damageInfo.inflictedHurtbox, damageInfo.procChainMask, DotController.DotIndex.SuperBleed, 15f * damageInfo.procCoefficient);
             }

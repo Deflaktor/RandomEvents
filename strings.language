@@ -114,7 +114,7 @@
         "ANNOUNCE_EVENT_SWARM_QUEEN": "Nobody comes alone",
         "ANNOUNCE_EVENT_LAVA_FLOOR": "The floor is lava",
         "ANNOUNCE_EVENT_THIEVES": "Watch your pockets",
-        "ANNOUNCE_EVENT_REMIXED_EQUIPMENT": "Remixed: {0}",
+        "ANNOUNCE_EVENT_EXPERIMENTAL_EQUIPMENT": "Experimental: {0}",
         "ANNOUNCE_EVENT_SLIPPERY": "Watch your step",
         "ANNOUNCE_EVENT_SHIELDED": "Shields up",
         "ANNOUNCE_EVENT_BLIGHTED_CORPSES": "The dead linger"

@@ -8,7 +8,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace RandomEvents
 {
-    // Fire to look at, for the remixed Molotov and the mini nuke: projectiles whose every part that would hurt or spread
+    // Fire to look at, for the experimental Molotov and the mini nuke: projectiles whose every part that would hurt or spread
     // runs on the host alone, and is off, and a Grandparent's sun that burns nothing
     public static class FireEffects
     {
