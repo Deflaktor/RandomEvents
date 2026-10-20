@@ -62,8 +62,8 @@ namespace RandomEvents
         }
 
         // The experimental Molotov: where it lands, a Grandparent's sun grows for half a second and is gone. In that moment
-        // it blasts every monster within 20 meters for 2000% of the thrower's damage, all of it within 6 meters and a quarter
-        // at the edge, and sets every one it sees within 100 meters ablaze with the Ignition Tank's stronger burn, 2000% in all
+        // it blasts every monster within 20 meters for 2000% of the thrower's damage and throws it back, all of it within 6
+        // meters and a quarter at the edge, and sets every one it sees within 100 meters ablaze with the Ignition Tank's stronger burn, 2000% in all
         // up close, less the further away.
         public class Flare : MonoBehaviour
         {
@@ -74,6 +74,8 @@ namespace RandomEvents
             private const float SweetSpot = 6f;
             private const float EdgeShare = 0.25f;
             private const float BlastDamage = 20f;
+            // as fast for every monster, for its weight
+            private const float BlastSpeed = 30f;
             private const float BurnDamage = 20f;
             // each stack of the burn, up close; one at the edge of its sight
             private const int BurnStacks = 10;
@@ -121,11 +123,15 @@ namespace RandomEvents
                     if (distance <= Radius)
                     {
                         var falloff = 1f - (1f - EdgeShare) * Mathf.Clamp01((distance - SweetSpot) / (Radius - SweetSpot));
+                        var offset = body.corePosition - center;
+                        var direction = (new Vector3(offset.x, 0f, offset.z).normalized + Vector3.up * 0.5f).normalized;
+                        var mass = body.characterMotor != null ? body.characterMotor.mass : body.rigidbody != null ? body.rigidbody.mass : 100f;
                         body.healthComponent.TakeDamage(new DamageInfo
                         {
                             attacker = owner.gameObject,
                             inflictor = gameObject,
                             damage = owner.damage * BlastDamage * falloff,
+                            force = direction * BlastSpeed * falloff * Mathf.Min(mass, 1000f),
                             crit = owner.RollCrit(),
                             position = body.corePosition,
                             procCoefficient = 1f,
