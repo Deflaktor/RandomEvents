@@ -141,6 +141,7 @@ namespace RandomEvents
             bodyStrings.Remove("IronHaulerBody"); // lots of errors / gets stuck
             bodyStrings.Remove("SolusAmalgamatorBody"); // has weird camera
             bodyStrings.Remove("WorkerUnitBody"); // has only a single melee attack which often misses at high movement speed
+            bodyStrings.Remove("ChildBody");
             bodyStrings.AddRange(["ITBrotherBody", "VultureHunterBody"]);
 
             //string[] survivorBodyNames = SurvivorCatalog.allSurvivorDefs.Select(survivor => survivor.bodyPrefab.name).ToArray();
