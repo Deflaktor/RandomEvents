@@ -31,7 +31,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | Ghosts | Ghostly apparitions haunt the battlefield | Some monsters spawn as ghosts that fade after a while. | Currently not a boss wave, and event "Ossification" inactive. |
 | GiantBalloons | Balloon animals | Fewer monsters spawn, but they are inflated to giant size with ten times their health. They shrink as they lose health. | Hallowed Concepts is enabled. |
 | Haste | The world accelerates | All beings become faster. |  |
-| HotPotato | Hot potato | A player carries a bomb that explodes after 20 seconds and costs them half their health. Touch another player to pass it on. | At least two players are alive and event "TagTeam" inactive. |
+| HotPotato | Hot potato | A player carries a bomb, which goes to any player or monster they touch. Near the end of the event it explodes like a mini nuke. | Not during the teleporter event or a Simulacrum boss wave, and event "TagTeam" inactive. |
 | Hunted | The hunt is on | All monsters chase one random player, who gets 100 armor. | At least two players are alive and event "StealthMission" inactive. |
 | IndirectDamage | Let the items do the work | Players' hits deal no damage, but their item effects and damage over time still do. All players get 10 common and 5 uncommon items with on-hit effects. | At least one common or uncommon item with an on-hit effect is available. |
 | InventoryRoulette | Spin the inventory roulette | Every player gets the items of another player until the event ends. | At least two players are alive and event "SurvivorSwap" inactive. |

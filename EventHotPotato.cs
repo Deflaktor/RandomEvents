@@ -1,6 +1,7 @@
 ﻿using BepInEx.Configuration;
 using RoR2;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -12,30 +13,38 @@ namespace RandomEvents
 {
     public class EventHotPotato : AbstractEvent
     {
-        private const float FuseTime = 20f;
-        private const float WarningTime = 5f;
+        // the bomb goes off at this share of the event's duration, after a countdown
+        private const float DetonationShare = 0.75f;
+        private const int CountdownSeconds = 5;
         private const float PassDistance = 3.5f;
-        // so that two players standing together don't pass the bomb back and forth every tick
+        // so that two characters standing together don't pass the bomb back and forth every tick
         private const float PassCooldown = 1.5f;
-        private const float ExplosionRadius = 15f;
-        private const float HolderDamageFraction = 0.5f;
-        private AsyncOperationHandle<GameObject> FusionCellExplosion;
+        private ConfigEntry<float> NukeRadius;
+        private ConfigEntry<float> PlayerDamage;
+        private ConfigEntry<float> MonsterDamage;
+        private ConfigEntry<float> BossDamage;
         private AsyncOperationHandle<GameObject> TickEffect;
-        private float tickTimer;
         private readonly BuffTracker buffs = new BuffTracker();
         private CharacterBody holder;
-        private float fuseTimer;
+        // the last player who had the bomb, who gets the kills
+        private CharacterBody lastPlayerHolder;
+        private Vector3 lastHolderPosition;
+        private float detonationTime;
+        private int countdown;
         private float passTimer;
-        private bool warned;
+        private float tickTimer;
+        private bool detonated;
 
         public override bool LoadCondition()
         {
             return true;
         }
+        // not while the teleporter or a Simulacrum boss wave has a boss to fight
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            // Tag Team marks its tagged player the same way
-            return Helper.GetLivingPlayerBodies().Count >= 2
+            var teleporter = TeleporterInteraction.instance;
+            return Helper.GetLivingPlayerBodies().Count >= 1 && !Helper.IsSimulacrumBossWaveNext()
+                && (teleporter == null || !(teleporter.isIdleToCharging || teleporter.isCharging))
                 && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("TagTeam", StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
@@ -48,19 +57,23 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "A player carries a bomb that explodes after 20 seconds and costs them half their health. Touch another player to pass it on.";
+            return "A player carries a bomb, which goes to any player or monster they touch. Near the end of the event it explodes like a mini nuke.";
         }
         public override string GetConditionDescription()
         {
-            return "At least two players are alive and event \"TagTeam\" inactive.";
+            return "Not during the teleporter event or a Simulacrum boss wave, and event \"TagTeam\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {
+            NukeRadius = config.Bind(GetEventConfigName(), "Nuke Radius", 40f, "How far the explosion reaches, in meters.");
+            PlayerDamage = config.Bind(GetEventConfigName(), "Player Damage", 0.75f, "The share of their maximum health players lose at the center of the explosion; a quarter of it at its edge.");
+            MonsterDamage = config.Bind(GetEventConfigName(), "Monster Damage", 2f, "The share of their maximum health monsters lose at the center of the explosion; a quarter of it at its edge.");
+            BossDamage = config.Bind(GetEventConfigName(), "Boss Damage", 0.5f, "The share of their maximum health bosses lose at the center of the explosion; a quarter of it at its edge.");
         }
         public override void Preload()
         {
-            FusionCellExplosion = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/FusionCellDestructible/FusionCellExplosion.prefab");
             TickEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/OmniExplosionVFXQuick.prefab");
+            MiniNuke.Preload();
         }
         public override void Hook()
         {
@@ -69,62 +82,78 @@ namespace RandomEvents
 
         private void RoR2Application_onFixedUpdate()
         {
-            if (!NetworkServer.active || !IsActive())
+            if (!NetworkServer.active || !IsActive() || detonated)
             {
                 return;
             }
             if (holder == null || !holder.healthComponent.alive)
             {
-                // the bomb of a carrier who died goes on ticking with someone else
-                var candidates = Helper.GetLivingPlayerBodies();
-                if (candidates.Count == 0)
+                // the bomb of a carrier who died goes to whoever is nearest
+                var receiver = GetCharacters(null).OrderBy(body => (body.corePosition - lastHolderPosition).sqrMagnitude).FirstOrDefault();
+                if (receiver == null)
                 {
                     return;
                 }
-                var receiver = candidates[RoR2Application.rng.RangeInt(0, candidates.Count)];
                 if (holder != null)
                 {
                     ChatHelper.SendEventMessage("EVENT_HOT_POTATO_PASSED", ChatHelper.GetColoredPlayerName(holder), ChatHelper.GetColoredPlayerName(receiver));
                 }
-                GiveBomb(receiver, keepFuse: holder != null);
+                GiveBomb(receiver);
+            }
+            lastHolderPosition = holder.corePosition;
+            var timeLeft = detonationTime - Time.fixedTime;
+            if (timeLeft <= 0f)
+            {
+                Detonate();
                 return;
             }
-            fuseTimer -= Time.fixedDeltaTime;
+            if (Mathf.CeilToInt(timeLeft) < countdown)
+            {
+                countdown = Mathf.CeilToInt(timeLeft);
+                if (countdown == CountdownSeconds)
+                {
+                    ChatHelper.SendEventMessage("EVENT_HOT_POTATO_WARNING", ChatHelper.GetColoredPlayerName(holder), countdown);
+                }
+                else
+                {
+                    ChatHelper.SendEventMessage("EVENT_HOT_POTATO_COUNTDOWN", countdown);
+                }
+            }
+            Tick(timeLeft);
             passTimer -= Time.fixedDeltaTime;
-            if (!warned && fuseTimer <= WarningTime)
-            {
-                warned = true;
-                ChatHelper.SendEventMessage("EVENT_HOT_POTATO_WARNING", ChatHelper.GetColoredPlayerName(holder), Mathf.RoundToInt(WarningTime));
-            }
-            if (fuseTimer <= 0f)
-            {
-                Explode();
-                return;
-            }
-            Tick();
             if (passTimer <= 0f)
             {
-                var receiver = Helper.GetLivingPlayerBodies()
-                    .Where(body => body != holder && (body.corePosition - holder.corePosition).sqrMagnitude <= PassDistance * PassDistance)
+                // players pass it to anyone, monsters only to players
+                var receiver = GetCharacters(holder)
+                    .Where(body => holder.isPlayerControlled || body.isPlayerControlled)
+                    .Where(body => (body.corePosition - holder.corePosition).magnitude <= PassDistance + body.radius + holder.radius)
                     .OrderBy(body => (body.corePosition - holder.corePosition).sqrMagnitude)
                     .FirstOrDefault();
                 if (receiver != null)
                 {
                     ChatHelper.SendEventMessage("EVENT_HOT_POTATO_PASSED", ChatHelper.GetColoredPlayerName(holder), ChatHelper.GetColoredPlayerName(receiver));
-                    GiveBomb(receiver, keepFuse: true);
+                    GiveBomb(receiver);
                 }
             }
         }
 
-        // a small blast at the carrier, faster and faster as the fuse burns down
-        private void Tick()
+        // the living players and monsters, other than the one given
+        private static IEnumerable<CharacterBody> GetCharacters(CharacterBody except)
+        {
+            return CharacterBody.readOnlyInstancesList.Where(body => body != null && body != except && body.healthComponent != null && body.healthComponent.alive
+                && body.teamComponent.teamIndex != TeamIndex.Neutral && body.teamComponent.teamIndex != TeamIndex.None
+                && (body.isPlayerControlled || body.teamComponent.teamIndex != TeamIndex.Player) && body.master != null);
+        }
+
+        // a small blast at the carrier, faster and faster as the detonation nears
+        private void Tick(float timeLeft)
         {
             tickTimer -= Time.fixedDeltaTime;
             if (tickTimer > 0f)
             {
                 return;
             }
-            tickTimer = Mathf.Lerp(0.15f, 1f, fuseTimer / FuseTime);
+            tickTimer = Mathf.Lerp(0.15f, 1f, timeLeft / 20f);
             EffectManager.SpawnEffect(TickEffect.WaitForCompletion(), new EffectData
             {
                 origin = holder.corePosition,
@@ -132,68 +161,58 @@ namespace RandomEvents
             }, transmit: true);
         }
 
-        private void GiveBomb(CharacterBody body, bool keepFuse)
+        private void GiveBomb(CharacterBody body)
         {
             buffs.RemoveAll();
             holder = body;
+            if (body.isPlayerControlled)
+            {
+                lastPlayerHolder = body;
+            }
             tickTimer = 0f;
-            // Essence of Heresy's marks show everyone who carries the bomb; only a teammate's Essence of Heresy with
-            // Artifact of Chaos could detonate them, unlike Death Mark's skull, which adds 50% damage taken
+            // Essence of Heresy's marks show everyone who carries the bomb; only Hooks of Heresy could detonate them,
+            // unlike Death Mark's skull, which adds 50% damage taken
             buffs.Add(holder, RoR2Content.Buffs.LunarDetonationCharge);
             passTimer = PassCooldown;
-            if (!keepFuse)
-            {
-                fuseTimer = FuseTime;
-                warned = false;
-                ChatHelper.SendEventMessage("EVENT_HOT_POTATO_NEW_BOMB", ChatHelper.GetColoredPlayerName(holder), Mathf.RoundToInt(FuseTime));
-            }
         }
 
-        private void Explode()
+        private void Detonate()
         {
+            detonated = true;
             var victim = holder;
             buffs.RemoveAll();
             holder = null;
-            var position = victim.corePosition;
-            EffectManager.SpawnEffect(FusionCellExplosion.WaitForCompletion(), new EffectData
-            {
-                origin = position,
-                scale = ExplosionRadius
-            }, transmit: true);
-            new BlastAttack
-            {
-                attacker = victim.gameObject,
-                inflictor = victim.gameObject,
-                teamIndex = victim.teamComponent.teamIndex,
-                position = position,
-                radius = ExplosionRadius,
-                baseDamage = victim.damage * 10f,
-                baseForce = 2000f,
-                falloffModel = BlastAttack.FalloffModel.SweetSpot,
-                attackerFiltering = AttackerFiltering.NeverHitSelf,
-                crit = victim.RollCrit(),
-                procCoefficient = 0f,
-                damageColorIndex = DamageColorIndex.Item
-            }.Fire();
-            victim.healthComponent.TakeDamage(new DamageInfo
-            {
-                damage = victim.healthComponent.fullCombinedHealth * HolderDamageFraction,
-                position = position,
-                damageType = DamageType.BypassArmor | DamageType.BypassBlock,
-                procCoefficient = 0f,
-                damageColorIndex = DamageColorIndex.Bleed
-            });
             ChatHelper.SendEventMessage("EVENT_HOT_POTATO_EXPLODED", ChatHelper.GetColoredPlayerName(victim));
-            // a new bomb for someone else, if possible
-            var candidates = Helper.GetLivingPlayerBodies();
-            var others = candidates.Where(body => body != victim).ToList();
-            if (others.Count > 0)
+            // ground zero is on the floor below the carrier
+            var groundZero = Physics.Raycast(victim.corePosition, Vector3.down, out var hit, 50f, LayerIndex.world.mask, QueryTriggerInteraction.Ignore) ? hit.point : victim.footPosition;
+            new GameObject("RandomEventsMiniNuke").AddComponent<MiniNuke>().groundZero = groundZero;
+            var radius = Mathf.Max(1f, NukeRadius.Value);
+            var attacker = lastPlayerHolder != null && lastPlayerHolder.healthComponent.alive ? lastPlayerHolder.gameObject : null;
+            foreach (var body in CharacterBody.readOnlyInstancesList.ToList())
             {
-                candidates = others;
-            }
-            if (candidates.Count > 0)
-            {
-                GiveBomb(candidates[RoR2Application.rng.RangeInt(0, candidates.Count)], keepFuse: false);
+                if (body == null || body.healthComponent == null || !body.healthComponent.alive || body.teamComponent.teamIndex == TeamIndex.Neutral)
+                {
+                    continue;
+                }
+                var offset = body.corePosition - groundZero;
+                var distance = offset.magnitude;
+                if (distance > radius)
+                {
+                    continue;
+                }
+                var falloff = 1f - 0.75f * distance / radius;
+                var isPlayerTeam = body.teamComponent.teamIndex == TeamIndex.Player;
+                var share = isPlayerTeam ? PlayerDamage.Value : body.isBoss ? BossDamage.Value : MonsterDamage.Value;
+                body.healthComponent.TakeDamage(new DamageInfo
+                {
+                    damage = body.healthComponent.fullCombinedHealth * Mathf.Max(0f, share) * falloff,
+                    attacker = isPlayerTeam ? null : attacker,
+                    position = body.corePosition,
+                    force = (offset.sqrMagnitude > 0.01f ? offset.normalized : Vector3.up) * 4000f * falloff + Vector3.up * 1000f * falloff,
+                    damageType = DamageType.BypassArmor | DamageType.BypassBlock,
+                    procCoefficient = 0f,
+                    damageColorIndex = DamageColorIndex.Item
+                });
             }
         }
 
@@ -204,10 +223,17 @@ namespace RandomEvents
         public override void Start(List<AbstractEvent> activeOtherEvents)
         {
             holder = null;
+            lastPlayerHolder = null;
+            detonated = false;
+            detonationTime = Time.fixedTime + Mathf.Max(CountdownSeconds, ModConfig.EventDuration.Value * DetonationShare);
+            countdown = CountdownSeconds + 1;
             var candidates = Helper.GetLivingPlayerBodies();
             if (candidates.Count > 0)
             {
-                GiveBomb(candidates[RoR2Application.rng.RangeInt(0, candidates.Count)], keepFuse: false);
+                var first = candidates[RoR2Application.rng.RangeInt(0, candidates.Count)];
+                GiveBomb(first);
+                lastHolderPosition = first.corePosition;
+                ChatHelper.SendEventMessage("EVENT_HOT_POTATO_NEW_BOMB", ChatHelper.GetColoredPlayerName(first), Mathf.RoundToInt(detonationTime - Time.fixedTime));
             }
         }
 
@@ -215,6 +241,156 @@ namespace RandomEvents
         {
             buffs.RemoveAll();
             holder = null;
+            lastPlayerHolder = null;
+        }
+
+        // The mushroom cloud of explosions: the flash and fireball, a shockwave along the ground, the stem rising and
+        // the cap rolling outwards at its top, which goes on after the event has ended
+        public class MiniNuke : MonoBehaviour
+        {
+            private const float StemHeight = 35f;
+            private static AsyncOperationHandle<GameObject> Flash;
+            private static AsyncOperationHandle<GameObject> Nova;
+            private static AsyncOperationHandle<GameObject> Fireball;
+            private static AsyncOperationHandle<GameObject> Breach;
+            private static AsyncOperationHandle<GameObject> Omni;
+            private static AsyncOperationHandle<GameObject> Behemoth;
+            private static AsyncOperationHandle<GameObject> Meteor;
+            public Vector3 groundZero;
+
+            public static void Preload()
+            {
+                // the Diablo Strike's flash and the Wandering Vagrant's nova tint the screen and shake it far away
+                Flash = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Captain/CaptainAirstrikeAltImpact.prefab");
+                Nova = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Vagrant/VagrantNovaExplosion.prefab");
+                Fireball = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/FusionCellDestructible/FusionCellExplosion.prefab");
+                // the explosion of ExplodingCorpses' monsters
+                Breach = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC2/Scorchling/VFXScorchlingBreachExplosion.prefab");
+                Omni = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/OmniExplosionVFX.prefab");
+                Behemoth = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/StickyBomb/BehemothVFX.prefab");
+                // a rumble with a shake that reaches up to the cap
+                Meteor = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Meteor/MeteorStrikeImpact.prefab");
+            }
+
+            private void Start()
+            {
+                StartCoroutine(Flashes());
+                StartCoroutine(FireballAndShockwave());
+                StartCoroutine(Stem());
+                StartCoroutine(Cap());
+                Destroy(gameObject, 12f);
+            }
+
+            private static void Spawn(AsyncOperationHandle<GameObject> effect, Vector3 position, float scale)
+            {
+                EffectManager.SpawnEffect(effect.WaitForCompletion(), new EffectData
+                {
+                    origin = position,
+                    scale = scale,
+                    rotation = Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f)
+                }, transmit: true);
+            }
+
+            // on the floor below, so the shockwave follows the ground
+            private Vector3 OnGround(Vector3 position)
+            {
+                return Physics.Raycast(position + Vector3.up * 10f, Vector3.down, out var hit, 30f, LayerIndex.world.mask, QueryTriggerInteraction.Ignore) ? hit.point : position;
+            }
+
+            // 0 s: the flash; 3 s: a second nova as the cap forms
+            private IEnumerator Flashes()
+            {
+                Spawn(Flash, groundZero, 1f);
+                Spawn(Nova, groundZero + Vector3.up * 2f, 40f);
+                Spawn(Fireball, groundZero, 30f);
+                yield return new WaitForSeconds(3f);
+                Spawn(Nova, groundZero + Vector3.up * StemHeight, 20f);
+            }
+
+            // 0-0.8 s: the fireball bursting at ground zero; 0.1-1.3 s: rings racing outwards along the ground
+            private IEnumerator FireballAndShockwave()
+            {
+                for (int i = 0; i < 7; i++)
+                {
+                    Spawn(i % 2 == 0 ? Fireball : Behemoth, groundZero + Vector3.up * UnityEngine.Random.Range(2f, 6f) + RandomHorizontal(6f), UnityEngine.Random.Range(10f, 15f));
+                    if (i < 6)
+                    {
+                        var ringRadius = 6f + 34f * i / 5f;
+                        var count = 6 + 2 * i;
+                        var angleOffset = UnityEngine.Random.Range(0f, 360f);
+                        for (int j = 0; j < count; j++)
+                        {
+                            var direction = Quaternion.Euler(0f, angleOffset + 360f * j / count, 0f) * Vector3.forward;
+                            Spawn(Breach, OnGround(groundZero + direction * ringRadius), 4f);
+                        }
+                    }
+                    yield return new WaitForSeconds(0.2f);
+                }
+            }
+
+            // 0.6-4 s: the stem rising to its full height
+            private IEnumerator Stem()
+            {
+                yield return new WaitForSeconds(0.6f);
+                const float duration = 3.4f;
+                const float step = 0.15f;
+                for (float time = 0f; time < duration; time += step)
+                {
+                    var height = Mathf.Lerp(3f, StemHeight, time / duration);
+                    var width = Mathf.Lerp(3.5f, 2f, time / duration);
+                    Spawn(Omni, groundZero + Vector3.up * height + RandomHorizontal(width), 6f);
+                    Spawn(time % 0.3f < step ? Fireball : Behemoth, groundZero + Vector3.up * (height - 4f) + RandomHorizontal(width), 5f);
+                    yield return new WaitForSeconds(step);
+                }
+            }
+
+            // 3-10 s: the cap rolling outwards and slowly rising, thinning out at the end
+            private IEnumerator Cap()
+            {
+                yield return new WaitForSeconds(3f);
+                const float duration = 7f;
+                const float step = 0.12f;
+                float rumbleTimer = 0f;
+                for (float time = 0f; time < duration; time += step)
+                {
+                    var progress = time / duration;
+                    var center = groundZero + Vector3.up * (StemHeight + 8f * progress);
+                    var ringRadius = Mathf.Lerp(4f, 16f, Mathf.Sqrt(progress));
+                    var tubeRadius = Mathf.Lerp(4f, 6f, progress);
+                    var count = progress < 0.7f ? 3 : 1;
+                    for (int i = 0; i < count; i++)
+                    {
+                        // a point on the torus, mostly on its upper and outer side
+                        var around = Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f);
+                        var tubeAngle = UnityEngine.Random.Range(-60f, 150f) * Mathf.Deg2Rad;
+                        var position = center + around * (Vector3.forward * (ringRadius + Mathf.Cos(tubeAngle) * tubeRadius) + Vector3.up * Mathf.Sin(tubeAngle) * tubeRadius);
+                        switch (UnityEngine.Random.Range(0, 3))
+                        {
+                            case 0: Spawn(Fireball, position, UnityEngine.Random.Range(8f, 12f)); break;
+                            case 1: Spawn(Breach, position, 5f); break;
+                            default: Spawn(Omni, position, 8f); break;
+                        }
+                    }
+                    // the top of the dome
+                    if (UnityEngine.Random.value < 0.3f)
+                    {
+                        Spawn(Behemoth, center + Vector3.up * tubeRadius + RandomHorizontal(ringRadius * 0.5f), 8f);
+                    }
+                    rumbleTimer -= step;
+                    if (rumbleTimer <= 0f && progress < 0.8f)
+                    {
+                        rumbleTimer = 1f;
+                        Spawn(Meteor, center, 1f);
+                    }
+                    yield return new WaitForSeconds(step);
+                }
+            }
+
+            private static Vector3 RandomHorizontal(float radius)
+            {
+                var circle = UnityEngine.Random.insideUnitCircle * radius;
+                return new Vector3(circle.x, 0f, circle.y);
+            }
         }
     }
 }
