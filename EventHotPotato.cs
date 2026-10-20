@@ -270,7 +270,8 @@ namespace RandomEvents
             private static AsyncOperationHandle<GameObject> Meteor;
             // Every half second while it explodes, a pulse hurts and throws back every monster in the radius, the first a
             // massive shockwave: 100000% of the attacker's damage in all at ground zero, a quarter of that at the edge.
-            // Once the sun burns out, the explosions go on for 2 more seconds, hurting and pushing half as hard.
+            // Once the sun burns out, the explosions go on for 2 more seconds, hurting and pushing half as hard. Players
+            // in the radius are thrown back just the same, but take only 1% of the damage.
             // Then, while the ground fire lasts, monsters in its middle burn for 2000% in all, and players there lose a
             // tenth of their share per second.
             private const float FireDuration = 10f;
@@ -282,6 +283,7 @@ namespace RandomEvents
             // the shockwave counts as this many pulses
             private const float ShockwaveShare = 5f;
             private const float ExplosionDamage = 1000f;
+            private const float FriendlyFireShare = 0.01f;
             private const float CoreBurnDamage = 20f;
             private int pulsesDone;
             private const float FireRadius = 15f;
@@ -357,10 +359,9 @@ namespace RandomEvents
                     : Helper.GetLivingPlayerBodies().Select(body => body.damage).DefaultIfEmpty(0f).Max();
             }
 
-            private static bool IsMonster(CharacterBody body)
+            private static bool IsHit(CharacterBody body)
             {
-                return body != null && body.healthComponent != null && body.healthComponent.alive && body.teamComponent.teamIndex != TeamIndex.Neutral
-                    && body.teamComponent.teamIndex != TeamIndex.Player;
+                return body != null && body.healthComponent != null && body.healthComponent.alive && body.teamComponent.teamIndex != TeamIndex.Neutral;
             }
 
             private void Pulse(bool shockwave, bool weak)
@@ -373,7 +374,7 @@ namespace RandomEvents
                 var baseDamage = BaseDamage();
                 foreach (var body in CharacterBody.readOnlyInstancesList.ToList())
                 {
-                    if (!IsMonster(body))
+                    if (!IsHit(body))
                     {
                         continue;
                     }
@@ -388,10 +389,11 @@ namespace RandomEvents
                     var mass = body.characterMotor != null ? body.characterMotor.mass : body.rigidbody != null ? body.rigidbody.mass : 100f;
                     // as fast for every monster, for its weight: very fast with the shockwave, a shove with the others
                     var speed = shockwave ? 60f : weak ? 10f * WeakPulseShare : 10f;
+                    var isPlayerTeam = body.teamComponent.teamIndex == TeamIndex.Player;
                     body.healthComponent.TakeDamage(new DamageInfo
                     {
-                        damage = baseDamage * ExplosionDamage * share * falloff,
-                        attacker = attacker,
+                        damage = baseDamage * ExplosionDamage * share * falloff * (isPlayerTeam ? FriendlyFireShare : 1f),
+                        attacker = isPlayerTeam ? null : attacker,
                         inflictor = gameObject,
                         position = body.corePosition,
                         force = (direction + Vector3.up * 0.4f).normalized * speed * falloff * Mathf.Min(mass, 1000f),
