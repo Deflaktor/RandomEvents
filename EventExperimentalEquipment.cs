@@ -13,7 +13,7 @@ namespace RandomEvents
     {
         private readonly List<ExperimentalEquipment> equipments = new List<ExperimentalEquipment>
         {
-            new ExperimentalRoyalCapacitor(), new ExperimentalDisposableMissileLauncher(), new ExperimentalRadarScanner(), new ExperimentalSuperMassiveLeech(),
+            new ExperimentalRoyalCapacitor(), new ExperimentalRadarScanner(), new ExperimentalSuperMassiveLeech(),
             new ExperimentalForgiveMePlease(), new ExperimentalCrowdfunder(), new ExperimentalMolotov(), new ExperimentalSawmerang(), new ExperimentalForeignFruit(),
             new ExperimentalPrimordialCube()
         };
