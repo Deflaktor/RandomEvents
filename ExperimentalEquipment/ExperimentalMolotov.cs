@@ -61,14 +61,12 @@ namespace RandomEvents
             flare.center = center;
         }
 
-        // The experimental Molotov: where it lands, a Grandparent's sun grows for half a second and is gone. In that moment
-        // it blasts every monster within 20 meters for 2000% of the thrower's damage and throws it back, all of it within 6
+        // The experimental Molotov: where it lands, a Grandparent's sun flares up and burns out at once. In that moment it
+        // blasts every monster within 20 meters for 2000% of the thrower's damage and throws it back, all of it within 6
         // meters and a quarter at the edge, and sets every one it sees within 100 meters ablaze with the Ignition Tank's stronger burn, 2000% in all
         // up close, less the further away.
         public class Flare : MonoBehaviour
         {
-            // the sun grows for 0.6 seconds, so it never gets to burn on its own
-            private const float SunTime = 0.5f;
             private const float SunHeight = 4f;
             private const float Radius = 20f;
             private const float SweetSpot = 6f;
@@ -82,14 +80,16 @@ namespace RandomEvents
             private const float BurnRange = 100f;
             // what the Grandparent's sun shows on everything it heats
             private static AsyncOperationHandle<GameObject> HeatEffect;
+            // what the sun shows as it appears and as it burns out
+            private static AsyncOperationHandle<GameObject> SunBurst;
             public CharacterBody owner;
             public Vector3 center;
-            private GenericOwnership sun;
 
             public static void Preload()
             {
                 FireEffects.Preload();
                 HeatEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Grandparent/IgniteDirectionalExplosionVFX.prefab");
+                SunBurst = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Grandparent/GrandParentSunSpawn.prefab");
             }
 
             private Vector3 SunPosition => center + Vector3.up * SunHeight;
@@ -100,14 +100,13 @@ namespace RandomEvents
                 {
                     return;
                 }
-                var team = owner != null && owner.teamComponent != null ? owner.teamComponent.teamIndex : TeamIndex.Neutral;
                 FireEffects.SpawnEffect(FireEffects.Ignition, center, Radius * 0.5f);
-                sun = FireEffects.SpawnSun(SunPosition, gameObject, team);
+                FireEffects.SpawnEffect(SunBurst, SunPosition, 1f);
                 if (owner != null && owner.teamComponent != null)
                 {
                     Blast();
                 }
-                Destroy(gameObject, SunTime);
+                Destroy(gameObject);
             }
 
             private void Blast()
@@ -164,14 +163,6 @@ namespace RandomEvents
                         };
                         DotController.InflictDot(ref info);
                     }
-                }
-            }
-
-            private void OnDestroy()
-            {
-                if (sun != null)
-                {
-                    Destroy(sun.gameObject);
                 }
             }
         }
