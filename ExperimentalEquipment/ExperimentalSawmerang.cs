@@ -13,8 +13,8 @@ namespace RandomEvents
         private static AsyncOperationHandle<GameObject> Sawmerang;
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.Saw;
-        public override string Description => "the Sawmerang's blades hunt monsters, cutting through them back and forth for 10 seconds";
-        public override string PopupDescription => "The blades hunt the nearest monster, cutting through it back and forth, then the next, for 10 seconds.";
+        public override string Description => "the Sawmerang's blades hunt monsters, cutting through them back and forth for 20 seconds";
+        public override string PopupDescription => "The blades hunt the nearest monster, cutting through it back and forth, then the next, for 20 seconds.";
 
         public override void Preload()
         {
@@ -65,7 +65,7 @@ namespace RandomEvents
         // transform passes on to everyone.
         public class HuntingSaw : MonoBehaviour
         {
-            private const float Lifetime = 10f;
+            private const float Lifetime = 20f;
             private const float Speed = 40f;
             private const float TurnRate = 720f;
             private const float Overshoot = 0.25f;
