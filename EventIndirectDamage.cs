@@ -9,11 +9,11 @@ namespace RandomEvents
 {
     public class EventIndirectDamage : AbstractEvent
     {
-        // items whose effects on hit deal damage or help damage over time; only the run's common and uncommon ones are used
+        // items whose effects on hit deal damage; only the run's common and uncommon ones are used
         private static ItemDef[] OnHitItems => new[]
         {
             RoR2Content.Items.BleedOnHit, RoR2Content.Items.StickyBomb, RoR2Content.Items.ChainLightning, RoR2Content.Items.Missile,
-            RoR2Content.Items.DeathMark, RoR2Content.Items.FireRing, RoR2Content.Items.IceRing, DLC1Content.Items.PermanentDebuffOnHit,
+            RoR2Content.Items.FireRing, RoR2Content.Items.IceRing, DLC1Content.Items.PermanentDebuffOnHit,
             DLC2Content.Items.StunAndPierce, DLC3Content.Items.SharedSuffering, DLC4Content.Items.WispOnKill,
             DLC4Content.Items.DreamDemon, DLC4Content.Items.CausticPheromones,
         };
