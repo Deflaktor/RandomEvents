@@ -13,7 +13,7 @@ namespace RandomEvents
     {
         // per orb, as a multiple of the player's damage
         private const float OrbDamage = 10f;
-        private const float LaunchInterval = 0.5f;
+        private const float LaunchInterval = 0.1f;
         // how many times each monster is hit
         private const int Rounds = 3;
         private static AsyncOperationHandle<GameObject> SunOrb;
@@ -23,8 +23,8 @@ namespace RandomEvents
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.CommandMissile;
         public override float CooldownScale => 0.25f;
-        public override string Description => "Disposable Missile Launcher sends out Egocentrism's orbs, one every half second, until every monster nearby is hit three times";
-        public override string PopupDescription => "Sends out Egocentrism's orbs, one every half second, until every monster nearby is hit three times.";
+        public override string Description => "Disposable Missile Launcher sends out Egocentrism's orbs, one every tenth of a second, until every monster nearby is hit three times";
+        public override string PopupDescription => "Sends out Egocentrism's orbs, one every tenth of a second, until every monster nearby is hit three times.";
 
         public override void Preload()
         {
