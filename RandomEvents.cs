@@ -97,6 +97,7 @@ namespace RandomEvents
                 InitAndHookEvent(new EventRitualHelmets());
                 InitAndHookEvent(new EventSecondWind());
                 InitAndHookEvent(new EventSkillsOnly());
+                InitAndHookEvent(new EventSlippery());
                 InitAndHookEvent(new EventSmallArena());
                 InitAndHookEvent(new EventStealthMission());
                 InitAndHookEvent(new EventStrongEnemies());
