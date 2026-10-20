@@ -12,6 +12,7 @@ namespace RandomEvents
         private const float InflateFactor = 3f;
         private static AsyncOperationHandle<GameObject> Breach;
         private static AsyncOperationHandle<GameObject> Tick;
+        private static AsyncOperationHandle<GameObject> Strike;
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.Lightning;
         public override string Description => "Royal Capacitor inflates a monster until it explodes";
@@ -22,6 +23,8 @@ namespace RandomEvents
             // the explosion of ExplodingCorpses' monsters
             Breach = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC2/Scorchling/VFXScorchlingBreachExplosion.prefab");
             Tick = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/OmniExplosionVFXQuick.prefab");
+            // the Royal Capacitor's own lightning strike, with its thunder
+            Strike = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Lightning/LightningStrikeImpact.prefab");
         }
 
         public override bool Fire(EquipmentSlot slot)
@@ -36,6 +39,7 @@ namespace RandomEvents
             slot.subcooldownTimer = 0.2f;
             slot.InvalidateCurrentTarget();
             target.gameObject.AddComponent<Inflation>().attacker = slot.characterBody;
+            EffectManager.SpawnEffect(Strike.WaitForCompletion(), new EffectData { origin = target.corePosition }, transmit: true);
             return true;
         }
 
