@@ -1,23 +1,28 @@
 using RoR2;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
 
 namespace RandomEvents
 {
     // The Crowdfunder fires as usual, but costs no gold, and each of its hits launches a monster like the Breaching Fin,
-    // even one in the air, and makes it lighter. A monster made lighter dies when it leaves the map, even one that would
-    // be brought back.
+    // even one in the air, and makes it lighter. Once it hasn't been hit for 2 seconds, it gets three times as heavy as
+    // normal. A monster it has hit dies when it leaves the map, even one that would be brought back.
     public class ExperimentalCrowdfunder : ExperimentalEquipment
     {
         // how much the gravity shrinks with each hit, down to the least
         private const float GravityStep = 0.1f;
-        private const float MinGravityScale = 0f;
-        private readonly HashSet<CharacterBody> lighter = new HashSet<CharacterBody>();
+        private const float MinGravityScale = 0.1f;
+        private const float HeavyGravityScale = 3f;
+        private const float HeavyDelay = 2f;
+        private readonly HashSet<CharacterBody> hitBodies = new HashSet<CharacterBody>();
+        // when each lightened one was last hit
+        private readonly Dictionary<CharacterBody, float> lastHit = new Dictionary<CharacterBody, float>();
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.GoldGat;
-        public override string Description => "the Crowdfunder costs no gold, and each of its hits launches a monster like the Breaching Fin, again and again, and makes it lighter, so it dies if it leaves the map";
-        public override string PopupDescription => "Costs no gold. Each hit launches a monster like the Breaching Fin, again and again, and makes it lighter. A lighter monster that leaves the map dies.";
+        public override string Description => "the Crowdfunder costs no gold, and each of its hits launches a monster like the Breaching Fin, again and again, and makes it lighter, until it's left alone for 2 seconds and gets three times as heavy, and it dies if it leaves the map";
+        public override string PopupDescription => "Costs no gold. Each hit launches a monster like the Breaching Fin, again and again, and makes it lighter; left alone for 2 seconds, it gets three times as heavy. A monster hit that leaves the map dies.";
 
         // it fires as usual, toggled by the player's own game
         public override bool ReplacesAction => false;
@@ -27,6 +32,7 @@ namespace RandomEvents
             On.EntityStates.GoldGat.GoldGatFire.FireBullet += GoldGatFire_FireBullet;
             On.RoR2.GlobalEventManager.OnHitEnemy += GlobalEventManager_OnHitEnemy;
             On.RoR2.MapZone.CharacterEligibleForTeleport += MapZone_CharacterEligibleForTeleport;
+            RoR2Application.onFixedUpdate += MakeHeavy;
         }
 
         // it only starts firing with gold
@@ -40,7 +46,8 @@ namespace RandomEvents
 
         public override void Stop()
         {
-            lighter.Clear();
+            hitBodies.Clear();
+            lastHit.Clear();
         }
 
         // the host takes the gold for each bullet, which goes back
@@ -77,8 +84,30 @@ namespace RandomEvents
             if (body.characterMotor != null)
             {
                 body.characterMotor.gravityScale = Mathf.Max(MinGravityScale, body.characterMotor.gravityScale - GravityStep);
+                lastHit[body] = Time.fixedTime;
             }
-            lighter.Add(body);
+            hitBodies.Add(body);
+        }
+
+        // left alone long enough, it drops
+        private void MakeHeavy()
+        {
+            if (lastHit.Count == 0 || !NetworkServer.active)
+            {
+                return;
+            }
+            foreach (var (body, time) in lastHit.ToList())
+            {
+                if (body == null || body.characterMotor == null)
+                {
+                    lastHit.Remove(body);
+                }
+                else if (Time.fixedTime - time >= HeavyDelay)
+                {
+                    body.characterMotor.gravityScale = HeavyGravityScale;
+                    lastHit.Remove(body);
+                }
+            }
         }
 
         // The Breaching Fin's launch, as the game does it, but also in the air, with no limit and no cooldown: up and a
@@ -129,7 +158,7 @@ namespace RandomEvents
         // out of the map, it dies instead of being brought back; its last attacker gets the kill
         private bool MapZone_CharacterEligibleForTeleport(On.RoR2.MapZone.orig_CharacterEligibleForTeleport orig, MapZone self, CharacterBody characterBody)
         {
-            if (IsActive() && characterBody != null && lighter.Contains(characterBody) && characterBody.teamComponent.teamIndex != TeamIndex.Player)
+            if (IsActive() && characterBody != null && hitBodies.Contains(characterBody) && characterBody.teamComponent.teamIndex != TeamIndex.Player)
             {
                 return false;
             }
