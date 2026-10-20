@@ -142,15 +142,25 @@ namespace RandomEvents
         // weaker, so a swarm of them stays fair
         private void CharacterBody_onBodyStartGlobal(CharacterBody body)
         {
-            if (!NetworkServer.active || !IsActive() || body.master == null || body.teamComponent.teamIndex == TeamIndex.Player
-                || !droneBodies.Contains(body.bodyIndex) || body.master.GetComponent<HostileDrone>() != null)
+            if (!NetworkServer.active || body.master == null || body.teamComponent.teamIndex == TeamIndex.Player || !droneBodies.Contains(body.bodyIndex))
             {
                 return;
             }
-            body.master.gameObject.AddComponent<HostileDrone>();
+            var known = body.master.GetComponent<HostileDrone>() != null;
+            if (!known && !IsActive())
+            {
+                return;
+            }
+            // every body of a hostile drone, also one revived by Dio's Best Friend or the like, even after the event;
             // a destroyed drone's master can be gone by the time its wreck hits the ground
             body.gameObject.EnsureComponent<HostileDrone>();
             Slowdown.Apply(body, 1f, MoveSpeedMultiplier.Value);
+            if (known)
+            {
+                return;
+            }
+            // its items are in the master's inventory, which the revived body keeps
+            body.master.gameObject.AddComponent<HostileDrone>();
             // an item without a name, which lowers the damage by 1% per stack
             var reduceDamage = Mathf.RoundToInt((1f - Mathf.Clamp01(DamageMultiplier.Value)) * 100f);
             if (reduceDamage > 0)
