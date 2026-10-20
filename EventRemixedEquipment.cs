@@ -17,8 +17,11 @@ namespace RandomEvents
     {
         private const float InflateTime = 2f;
         private const float InflateFactor = 3f;
-        private const float ScannerWaveSpeed = 125f;
-        private const float ScannerWaveRadius = 500f;
+        private const float ScannerWaveSpeed = 100f;
+        private const float ScannerWaveRadius = 100f;
+        private const float ScannerWaveRingInterval = 0.1f;
+        private static AsyncOperationHandle<GameObject> ShockNova;
+        private static AsyncOperationHandle<GameObject> ShockRing;
         // per monster the wave reaches, as a multiple of the player's damage
         private const float ScannerWaveDamage = 25f;
         // per missile, as a multiple of the player's damage
@@ -72,14 +75,14 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Gives all players a remixed equipment with a shorter cooldown. Royal Capacitor inflates a monster until it explodes, Disposable Missile Launcher fires a Plasma Shrimp missile at every monster, Radar Scanner's wave also pushes and hurts monsters, and Super Massive Leech causes hemorrhage instead of healing, Forgive Me Please's doll walks straight ahead and explodes like a mini nuke after 10 seconds, the Crowdfunder costs no gold and fires Resonance Disc shots, but roots you while it fires, the Molotov (6-Pack) lights a blazing sun that burns everything nearby harder and harder for 5 seconds, and the Sawmerang's blades hunt monsters, cutting through them back and forth for 15 seconds.";
+            return "Gives all players a remixed equipment with a shorter cooldown. Royal Capacitor inflates a monster until it explodes, Disposable Missile Launcher fires a Plasma Shrimp missile at every monster, Radar Scanner sends out a shockwave instead of scanning, which hurts, stuns and throws back monsters, and Super Massive Leech causes hemorrhage instead of healing, Forgive Me Please's doll walks straight ahead and explodes like a mini nuke after 10 seconds, the Crowdfunder costs no gold and fires Resonance Disc shots, but roots you while it fires, the Molotov (6-Pack) lights a blazing sun that burns everything nearby harder and harder for 5 seconds, and the Sawmerang's blades hunt monsters, cutting through them back and forth for 15 seconds.";
         }
         public override string GetPopupDescription()
         {
             if (equipmentDef == RoR2Content.Equipment.CommandMissile)
                 return "Fires a Plasma Shrimp missile at every monster.";
             if (equipmentDef == RoR2Content.Equipment.Scanner)
-                return "The wave also pushes and hurts monsters.";
+                return "Sends out a shockwave instead of scanning, which hurts, stuns and throws back monsters.";
             if (equipmentDef == RoR2Content.Equipment.LifestealOnHit)
                 return "Your hits cause hemorrhage instead of healing you.";
             if (equipmentDef == RoR2Content.Equipment.DeathProjectile)
@@ -109,6 +112,9 @@ namespace RandomEvents
             DiscBomb = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LaserTurbine/LaserTurbineBomb.prefab");
             MolotovBottle = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC1/Molotov/MolotovSingleProjectile.prefab");
             Sawmerang = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Saw/Sawmerang.prefab");
+            // the Captain's shocking beacon's nova where it starts, his Tazer's for the rings it spreads in
+            ShockNova = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Captain/CaptainTazerSupplyDropNova.prefab");
+            ShockRing = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Captain/CaptainTazerNova.prefab");
             Inferno.Preload();
             EventHotPotato.MiniNuke.Preload();
         }
@@ -164,12 +170,9 @@ namespace RandomEvents
             }
             if (def == RoR2Content.Equipment.Scanner)
             {
-                var fired = orig(self, def);
-                if (fired)
-                {
-                    new GameObject("RandomEventsScannerWave").AddComponent<ScannerWave>().attacker = self.characterBody;
-                }
-                return fired;
+                // a shockwave instead of the scan
+                new GameObject("RandomEventsScannerWave").AddComponent<ScannerWave>().attacker = self.characterBody;
+                return true;
             }
             if (def == RoR2Content.Equipment.LifestealOnHit)
             {
@@ -913,7 +916,8 @@ namespace RandomEvents
             }
         }
 
-        // Radar Scanner's wave, travelling outwards as fast as its pulse, pushes away and hurts each monster it reaches
+        // The remixed Radar Scanner's shockwave, spreading in rings of the Captain's Tazer, hurts, stuns and throws back
+        // each monster it reaches
         public class ScannerWave : MonoBehaviour
         {
             public CharacterBody attacker;
@@ -921,9 +925,12 @@ namespace RandomEvents
             private float radius;
             private readonly HashSet<CharacterBody> hit = new HashSet<CharacterBody>();
 
+            private float ringTimer;
+
             private void Start()
             {
                 origin = attacker != null ? attacker.corePosition : transform.position;
+                EffectManager.SpawnEffect(ShockNova.WaitForCompletion(), new EffectData { origin = origin, scale = 15f }, transmit: true);
             }
 
             private void FixedUpdate()
@@ -934,6 +941,12 @@ namespace RandomEvents
                     return;
                 }
                 radius += ScannerWaveSpeed * Time.fixedDeltaTime;
+                ringTimer -= Time.fixedDeltaTime;
+                if (ringTimer <= 0f)
+                {
+                    ringTimer = ScannerWaveRingInterval;
+                    EffectManager.SpawnEffect(ShockRing.WaitForCompletion(), new EffectData { origin = origin, scale = radius }, transmit: true);
+                }
                 foreach (var body in CharacterBody.readOnlyInstancesList.ToList())
                 {
                     if (body == null || hit.Contains(body) || body.healthComponent == null || !body.healthComponent.alive
@@ -955,7 +968,9 @@ namespace RandomEvents
                         damage = attacker.damage * ScannerWaveDamage,
                         crit = attacker.RollCrit(),
                         position = body.corePosition,
-                        force = (direction * 30f + Vector3.up * 15f) * Mathf.Min(mass, 1000f),
+                        force = (direction * 60f + Vector3.up * 30f) * Mathf.Min(mass, 1000f),
+                        // stunned for 5 seconds, like by the Captain's Tazer
+                        damageType = DamageType.Shock5s,
                         procCoefficient = 1f,
                         damageColorIndex = DamageColorIndex.Item
                     });
