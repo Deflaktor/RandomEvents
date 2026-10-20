@@ -12,13 +12,11 @@ namespace RandomEvents
     {
         private const float ScannerWaveSpeed = 100f;
         private const float ScannerWaveRadius = 100f;
-        private const float ScannerWaveRingInterval = 0.1f;
         // per monster the wave reaches, as a multiple of the player's damage
         private const float ScannerWaveDamage = 25f;
         // each lowers the maximum health, for good
         private const int CurseStacks = 10;
-        private static AsyncOperationHandle<GameObject> ShockNova;
-        private static AsyncOperationHandle<GameObject> ShockRing;
+        private static AsyncOperationHandle<GameObject> WaveEffect;
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.Scanner;
         public override float CooldownScale => 0.25f;
@@ -27,9 +25,8 @@ namespace RandomEvents
 
         public override void Preload()
         {
-            // the Captain's shocking beacon's nova where it starts, his Tazer's for the rings it spreads in
-            ShockNova = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Captain/CaptainTazerSupplyDropNova.prefab");
-            ShockRing = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Captain/CaptainTazerNova.prefab");
+            // a Jellyfish's nova, as big as the wave's reach
+            WaveEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Jellyfish/JellyfishNova.prefab");
         }
 
         // a shockwave instead of the scan
@@ -39,8 +36,8 @@ namespace RandomEvents
             return true;
         }
 
-        // The experimental Radar Scanner's shockwave, spreading in rings of the Captain's Tazer, hurts, stuns, curses and throws back
-        // each monster it reaches
+        // The experimental Radar Scanner's shockwave, shown by a Jellyfish's nova, hurts, stuns, curses and throws back each
+        // monster it reaches
         public class ScannerWave : MonoBehaviour
         {
             public CharacterBody attacker;
@@ -48,12 +45,10 @@ namespace RandomEvents
             private float radius;
             private readonly HashSet<CharacterBody> hit = new HashSet<CharacterBody>();
 
-            private float ringTimer;
-
             private void Start()
             {
                 origin = attacker != null ? attacker.corePosition : transform.position;
-                EffectManager.SpawnEffect(ShockNova.WaitForCompletion(), new EffectData { origin = origin, scale = 15f }, transmit: true);
+                EffectManager.SpawnEffect(WaveEffect.WaitForCompletion(), new EffectData { origin = origin, scale = ScannerWaveRadius }, transmit: true);
             }
 
             private void FixedUpdate()
@@ -64,12 +59,6 @@ namespace RandomEvents
                     return;
                 }
                 radius += ScannerWaveSpeed * Time.fixedDeltaTime;
-                ringTimer -= Time.fixedDeltaTime;
-                if (ringTimer <= 0f)
-                {
-                    ringTimer = ScannerWaveRingInterval;
-                    EffectManager.SpawnEffect(ShockRing.WaitForCompletion(), new EffectData { origin = origin, scale = radius }, transmit: true);
-                }
                 foreach (var body in CharacterBody.readOnlyInstancesList.ToList())
                 {
                     if (body == null || hit.Contains(body) || body.healthComponent == null || !body.healthComponent.alive
