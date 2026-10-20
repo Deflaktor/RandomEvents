@@ -15,13 +15,15 @@ namespace RandomEvents
         private const float ScannerWaveRingInterval = 0.1f;
         // per monster the wave reaches, as a multiple of the player's damage
         private const float ScannerWaveDamage = 25f;
+        // each lowers the maximum health, for good
+        private const int CurseStacks = 10;
         private static AsyncOperationHandle<GameObject> ShockNova;
         private static AsyncOperationHandle<GameObject> ShockRing;
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.Scanner;
         public override float CooldownScale => 0.25f;
-        public override string Description => "Radar Scanner sends out a shockwave instead of scanning, which hurts, stuns and throws back monsters";
-        public override string PopupDescription => "Sends out a shockwave instead of scanning, which hurts, stuns and throws back monsters.";
+        public override string Description => "Radar Scanner sends out a shockwave instead of scanning, which hurts, stuns, curses and throws back monsters";
+        public override string PopupDescription => "Sends out a shockwave instead of scanning, which hurts, stuns, curses and throws back monsters.";
 
         public override void Preload()
         {
@@ -37,7 +39,7 @@ namespace RandomEvents
             return true;
         }
 
-        // The experimental Radar Scanner's shockwave, spreading in rings of the Captain's Tazer, hurts, stuns and throws back
+        // The experimental Radar Scanner's shockwave, spreading in rings of the Captain's Tazer, hurts, stuns, curses and throws back
         // each monster it reaches
         public class ScannerWave : MonoBehaviour
         {
@@ -81,6 +83,7 @@ namespace RandomEvents
                         continue;
                     }
                     hit.Add(body);
+                    body.SetBuffCount(RoR2Content.Buffs.PermanentCurse.buffIndex, body.GetBuffCount(RoR2Content.Buffs.PermanentCurse) + CurseStacks);
                     var direction = new Vector3(offset.x, 0f, offset.z).normalized;
                     var mass = body.characterMotor != null ? body.characterMotor.mass : body.rigidbody != null ? body.rigidbody.mass : 100f;
                     body.healthComponent.TakeDamage(new DamageInfo
