@@ -2,7 +2,9 @@
 using RoR2;
 using RoR2.CharacterAI;
 using RoR2.Orbs;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.AddressableAssets;
@@ -30,9 +32,10 @@ namespace RandomEvents
         {
             return true;
         }
+        // Shielded marks its monsters with the same shine
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            return true;
+            return !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("Shielded", StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
         {
@@ -52,7 +55,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "";
+            return "Event \"Shielded\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {
