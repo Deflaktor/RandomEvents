@@ -1,5 +1,4 @@
 using RoR2;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -8,20 +7,15 @@ namespace RandomEvents
     public class ExperimentalForeignFruit : ExperimentalEquipment
     {
         private const float Duration = 15f;
-        // Growth Nectar's buff, 4% more of every stat per stack, about half again with 13; each fruit eaten while others
-        // last doubles what they give
-        private const int StatStacks = 13;
-        // 1% of the size per stack, the same with each fruit
-        private const int SizeStacks = 50;
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.Fruit;
-        public override string Description => "Foreign Fruit fully heals you and makes you half again as big and strong for 15 seconds, each one eaten meanwhile adding as much size and doubling the strength";
-        public override string PopupDescription => "Fully heals you and makes you half again as big and strong for 15 seconds. Each one eaten meanwhile adds as much size and doubles the strength.";
+        public override string Description => "Foreign Fruit fully heals you and for 15 seconds doubles your damage and health, and makes you faster, tougher, bigger and regenerate, with a Hunter's Harpoon, each one eaten meanwhile adding more and doubling the damage again";
+        public override string PopupDescription => "Fully heals you and for 15 seconds doubles your damage and health, and makes you faster, tougher, bigger and regenerate, with a Hunter's Harpoon. Each one eaten meanwhile adds more and doubles the damage again.";
 
         public override bool Fire(EquipmentSlot slot)
         {
             var body = slot.characterBody;
-            if (body.healthComponent == null)
+            if (body.healthComponent == null || body.inventory == null)
             {
                 return false;
             }
@@ -29,29 +23,54 @@ namespace RandomEvents
             effectData.SetNetworkedObjectReference(body.gameObject);
             EffectManager.SpawnEffect(LegacyResourcesAPI.Load<GameObject>("Prefabs/Effects/FruitHealEffect"), effectData, transmit: true);
             body.healthComponent.HealFraction(1f, default);
-            // each fruit adds as much strength as those still lasting give together, which wears off on its own
-            var lasting = body.GetComponents<Growth>();
             var growth = body.gameObject.AddComponent<Growth>();
             growth.timeLeft = Duration;
-            growth.statStacks = Mathf.Max(StatStacks, lasting.Sum(other => other.statStacks));
-            for (int i = 0; i < growth.statStacks; i++)
-            {
-                body.AddTimedBuff(DLC2Content.Buffs.BoostAllStatsBuff, Duration);
-            }
+            growth.nth = body.GetComponents<Growth>().Length;
             return true;
         }
 
-        // One fruit's size items, which every player's game sees in the inventory, taken back when it wears off
+        // What one fruit gives, taken back when it wears off on its own. All of it is in the inventory or buffs, which every
+        // player's game sees and works out the stats from. With the nth fruit lasting:
+        // damage 200%, 400%, 800%, ...; health 200%, 400%, 600%, ...; movement speed 150%, 200%, 250%, ...;
+        // armor +40, +80, +120, ...; size 150%, 200%, 250%, ...; 2.5% of the health regenerated per second and a Hunter's
+        // Harpoon for each.
         public class Growth : MonoBehaviour
         {
+            // the hidden items, 10% more damage and health per stack
+            private const int DamageStacks = 10;
+            private const int FirstHealthStacks = 10;
+            private const int HealthStacks = 20;
+            // Hunter's Harpoon's buff, 25% faster per stack, given untimed so its kills don't clear it
+            private const int SpeedStacks = 2;
+            // +20 armor per stack
+            private const int ArmorStacks = 2;
+            // 2.5% of the health per second per stack
+            private const int RegenStacks = 1;
+            // 1% of the size per stack
+            private const int SizeStacks = 50;
+            private const int Harpoons = 1;
+            // until the new health counts, so the heal fills it
+            private const float HealDelay = 0.2f;
             public float timeLeft;
-            public int statStacks;
-            private Inventory inventory;
+            public int nth;
+            private CharacterBody body;
+            private int damageStacks;
+            private int healthStacks;
+            private float healTimer = HealDelay;
 
             private void Start()
             {
-                inventory = GetComponent<CharacterBody>()?.inventory;
-                inventory?.GiveItemPermanent(DLC4Content.Items.BoostCharacterScale, SizeStacks);
+                body = GetComponent<CharacterBody>();
+                damageStacks = DamageStacks << Mathf.Min(nth - 1, 20);
+                healthStacks = nth == 1 ? FirstHealthStacks : HealthStacks;
+                var inventory = body.inventory;
+                inventory.GiveItemPermanent(RoR2Content.Items.BoostDamage, damageStacks);
+                inventory.GiveItemPermanent(RoR2Content.Items.BoostHp, healthStacks);
+                inventory.GiveItemPermanent(DLC4Content.Items.BoostCharacterScale, SizeStacks);
+                inventory.GiveItemPermanent(DLC1Content.Items.MoveSpeedOnKill, Harpoons);
+                AddBuff(DLC1Content.Buffs.KillMoveSpeed, SpeedStacks);
+                AddBuff(DLC4Content.Buffs.MinorArmorBuff, ArmorStacks);
+                AddBuff(DLC3Content.Buffs.HealNovaRegen, RegenStacks);
             }
 
             private void FixedUpdate()
@@ -60,6 +79,14 @@ namespace RandomEvents
                 {
                     return;
                 }
+                if (healTimer > 0f)
+                {
+                    healTimer -= Time.fixedDeltaTime;
+                    if (healTimer <= 0f && body != null && body.healthComponent != null && body.healthComponent.alive)
+                    {
+                        body.healthComponent.HealFraction(1f, default);
+                    }
+                }
                 timeLeft -= Time.fixedDeltaTime;
                 if (timeLeft <= 0f)
                 {
@@ -67,12 +94,38 @@ namespace RandomEvents
                 }
             }
 
+            private void AddBuff(BuffDef buffDef, int count)
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    body.AddBuff(buffDef);
+                }
+            }
+
+            private void RemoveBuff(BuffDef buffDef, int count)
+            {
+                for (int i = 0; i < count && body.HasBuff(buffDef); i++)
+                {
+                    body.RemoveBuff(buffDef);
+                }
+            }
+
             private void OnDestroy()
             {
-                if (inventory != null)
+                if (body == null)
                 {
-                    inventory.RemoveItemPermanent(DLC4Content.Items.BoostCharacterScale, SizeStacks);
+                    return;
                 }
+                if (body.inventory != null)
+                {
+                    body.inventory.RemoveItemPermanent(RoR2Content.Items.BoostDamage, damageStacks);
+                    body.inventory.RemoveItemPermanent(RoR2Content.Items.BoostHp, healthStacks);
+                    body.inventory.RemoveItemPermanent(DLC4Content.Items.BoostCharacterScale, SizeStacks);
+                    body.inventory.RemoveItemPermanent(DLC1Content.Items.MoveSpeedOnKill, Harpoons);
+                }
+                RemoveBuff(DLC1Content.Buffs.KillMoveSpeed, SpeedStacks);
+                RemoveBuff(DLC4Content.Buffs.MinorArmorBuff, ArmorStacks);
+                RemoveBuff(DLC3Content.Buffs.HealNovaRegen, RegenStacks);
             }
         }
     }
