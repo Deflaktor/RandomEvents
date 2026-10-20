@@ -617,8 +617,8 @@ namespace RandomEvents
 
         // The remixed Molotov's sea of fire: a Grandparent's sun blazes where it landed, and for 5 seconds everything
         // hostile nearby burns, with stacks that pile up faster and faster to 10000% of the thrower's damage in all,
-        // which the Grandparent's heat shows. The ground is covered in Molotov fire, CHEF's burning oil and the
-        // Spirit's rings of fire for 10 seconds, all just for show.
+        // which the Grandparent's heat shows. Its middle burns continuously as long as the fire lasts, 10 seconds, with
+        // the ground covered in Molotov fire, CHEF's burning oil and the Spirit's rings of fire, all just for show.
         public class Inferno : MonoBehaviour
         {
             private const float Duration = 10f;
@@ -628,7 +628,14 @@ namespace RandomEvents
             private const float TickInterval = 0.1f;
             private const float TotalDamage = 100f;
             private const int MaxHeatStacks = 20;
-            private const float RingInterval = 1.5f;
+            // few of the parts with their own sound, which add up quickly
+            private const float RingInterval = 3f;
+            private const float FireballInterval = 2f;
+            private const int OilPuddles = 2;
+            // the center burns on its own too, for as long as the fire lasts
+            private const float CoreRadius = 5f;
+            private const float CoreDamagePerSecond = 3f;
+            private const float CoreTickInterval = 0.25f;
             private static AsyncOperationHandle<GameObject> FirePool;
             private static AsyncOperationHandle<GameObject> BurningOil;
             private static AsyncOperationHandle<GameObject> RingOfFire;
@@ -643,6 +650,7 @@ namespace RandomEvents
             private int tick;
             private float ringTimer;
             private float fireballTimer;
+            private float coreTimer;
             private int ticks;
             private float weightSum;
             private GenericOwnership sun;
@@ -672,7 +680,7 @@ namespace RandomEvents
                 {
                     SpawnFire(FirePool, OnGround(center + RandomHorizontal(Radius * 0.85f)));
                 }
-                for (int i = 0; i < 5; i++)
+                for (int i = 0; i < OilPuddles; i++)
                 {
                     SpawnFire(BurningOil, OnGround(center + RandomHorizontal(Radius * 0.7f)));
                 }
@@ -771,8 +779,14 @@ namespace RandomEvents
                 fireballTimer -= Time.fixedDeltaTime;
                 if (fireballTimer <= 0f && age < Duration)
                 {
-                    fireballTimer = 0.5f;
+                    fireballTimer = FireballInterval;
                     EffectManager.SpawnEffect(Fireball.WaitForCompletion(), new EffectData { origin = OnGround(center + RandomHorizontal(Radius)), scale = 4f }, transmit: true);
+                }
+                coreTimer -= Time.fixedDeltaTime;
+                if (coreTimer <= 0f && age < Duration)
+                {
+                    coreTimer = CoreTickInterval;
+                    BurnCore();
                 }
                 while (tick < ticks && age >= (tick + 1) * TickInterval)
                 {
@@ -822,6 +836,33 @@ namespace RandomEvents
                         body.SetBuffCount(RoR2Content.Buffs.Overheat.buffIndex, body.GetBuffCount(RoR2Content.Buffs.Overheat) + heatStacks - added);
                         heat[body] = heatStacks;
                     }
+                }
+            }
+
+            // 300% of the thrower's damage per second to everything hostile in the middle
+            private void BurnCore()
+            {
+                if (owner == null || owner.teamComponent == null)
+                {
+                    return;
+                }
+                foreach (var body in CharacterBody.readOnlyInstancesList.ToList())
+                {
+                    if (body == null || body.healthComponent == null || !body.healthComponent.alive || body.teamComponent.teamIndex == owner.teamComponent.teamIndex
+                        || body.teamComponent.teamIndex == TeamIndex.Neutral || (body.corePosition - center).sqrMagnitude > (CoreRadius + body.radius) * (CoreRadius + body.radius))
+                    {
+                        continue;
+                    }
+                    body.healthComponent.TakeDamage(new DamageInfo
+                    {
+                        attacker = owner.gameObject,
+                        inflictor = gameObject,
+                        damage = owner.damage * CoreDamagePerSecond * CoreTickInterval,
+                        crit = owner.RollCrit(),
+                        position = body.corePosition,
+                        procCoefficient = 0f,
+                        damageColorIndex = DamageColorIndex.Item
+                    });
                 }
             }
 
