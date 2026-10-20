@@ -60,7 +60,7 @@ namespace RandomEvents
         {
             DamageMultiplier = config.Bind(GetEventConfigName(), "Damage Multiplier", 0.5f, "The damage the hostile drones deal, relative to normal.");
             MoveSpeedMultiplier = config.Bind(GetEventConfigName(), "Move Speed Multiplier", 0.5f, "The hostile drones' movement speed, relative to normal.");
-            HealthMultiplier = config.Bind(GetEventConfigName(), "Health Multiplier", 0.25f, "The hostile drones' maximum health, relative to normal.");
+            HealthMultiplier = config.Bind(GetEventConfigName(), "Health Multiplier", 0.25f, "The hostile drones' health, relative to normal. They take more damage instead, so their health bars stay full-sized.");
         }
         public override void Preload()
         {
@@ -69,6 +69,7 @@ namespace RandomEvents
         {
             CharacterBody.onBodyStartGlobal += CharacterBody_onBodyStartGlobal;
             On.EntityStates.Drone.DeathState.OnImpactServer += DeathState_OnImpactServer;
+            On.RoR2.HealthComponent.TakeDamage += HealthComponent_TakeDamage;
         }
 
         // All drones of the run's expansions with their cost: those of the drone catalog, also those not found on
@@ -128,6 +129,16 @@ namespace RandomEvents
             return spawnCard;
         }
 
+        // Less health as more damage taken: lowering their maximum health would show as a mostly cursed health bar
+        private void HealthComponent_TakeDamage(On.RoR2.HealthComponent.orig_TakeDamage orig, HealthComponent self, DamageInfo damageInfo)
+        {
+            if (NetworkServer.active && IsActive() && damageInfo != null && self.GetComponent<HostileDrone>() != null)
+            {
+                damageInfo.damage /= Mathf.Clamp(HealthMultiplier.Value, 0.01f, 1f);
+            }
+            orig(self, damageInfo);
+        }
+
         // weaker, so a swarm of them stays fair
         private void CharacterBody_onBodyStartGlobal(CharacterBody body)
         {
@@ -145,12 +156,6 @@ namespace RandomEvents
             if (reduceDamage > 0)
             {
                 body.inventory.GiveItemPermanent(DLC4Content.Items.ReduceDamage, reduceDamage);
-            }
-            // a hidden item that divides the maximum health by one more than its stacks
-            var cutHp = Mathf.RoundToInt(1f / Mathf.Clamp(HealthMultiplier.Value, 0.01f, 1f)) - 1;
-            if (cutHp > 0)
-            {
-                body.inventory.GiveItemPermanent(RoR2Content.Items.CutHp, cutHp);
             }
             if (body.bodyIndex == BodyCatalog.FindBodyIndex("EquipmentDroneBody") && body.inventory.currentEquipmentIndex == EquipmentIndex.None)
             {
