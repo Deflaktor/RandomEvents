@@ -64,21 +64,22 @@ namespace RandomEvents
         // The experimental Molotov: a bright white spot where it landed, then a blazing light there for 5 seconds, from a
         // small Genesis Loop nova again and again. Meanwhile everything hostile nearby that the light shines on burns, with
         // stacks that pile up faster and faster to 5000% of the thrower's damage in all, which the Grandparent's heat
-        // shows, and its middle burns continuously.
+        // shows, and is scorched every half second, as by the Grandparent's sun.
         public class Inferno : MonoBehaviour
         {
             private const float Duration = 5f;
             private const float Radius = 8f;
             private const float TickInterval = 0.1f;
             private const float TotalDamage = 50f;
-            private const int MaxHeatStacks = 20;
+            private const int MaxHeatStacks = 40;
             // a small Genesis Loop nova over the middle again and again, for its light
             private const float LightInterval = 0.5f;
             private const float LightHeight = 1.5f;
             private const float LightScale = 3f;
-            private const float CoreRadius = 4f;
-            private const float CoreDamagePerSecond = 1.5f;
-            private const float CoreTickInterval = 0.25f;
+            private const float ScorchDamagePerSecond = 1.5f;
+            private const float ScorchInterval = 0.5f;
+            // what the Grandparent's sun shows on everything it heats
+            private static AsyncOperationHandle<GameObject> ScorchEffect;
             public CharacterBody owner;
             public Vector3 center;
             private readonly Dictionary<CharacterBody, int> heat = new Dictionary<CharacterBody, int>();
@@ -87,11 +88,12 @@ namespace RandomEvents
             private int tick;
             private int ticks;
             private float weightSum;
-            private float coreTimer;
+            private float scorchTimer;
 
             public static void Preload()
             {
                 FireEffects.Preload();
+                ScorchEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Grandparent/IgniteDirectionalExplosionVFX.prefab");
             }
 
             private void Start()
@@ -120,11 +122,11 @@ namespace RandomEvents
                     lightTimer = LightInterval;
                     FireEffects.SpawnEffect(FireEffects.Nova, LightPosition, LightScale);
                 }
-                coreTimer -= Time.fixedDeltaTime;
-                if (coreTimer <= 0f && age < Duration)
+                scorchTimer -= Time.fixedDeltaTime;
+                if (scorchTimer <= 0f && age < Duration)
                 {
-                    coreTimer = CoreTickInterval;
-                    BurnCore();
+                    scorchTimer = ScorchInterval;
+                    Scorch();
                 }
                 while (tick < ticks && age >= (tick + 1) * TickInterval)
                 {
@@ -152,13 +154,8 @@ namespace RandomEvents
                 }
                 var damage = TotalDamage * owner.damage * tickNumber * tickNumber / weightSum;
                 var heatStacks = Mathf.Min(MaxHeatStacks, Mathf.CeilToInt(MaxHeatStacks * (float)tickNumber / ticks));
-                foreach (var body in CharacterBody.readOnlyInstancesList.ToList())
+                foreach (var body in ShoneOn())
                 {
-                    // only what the light shines on, like the Grandparent's sun
-                    if (!IsTarget(body, Radius) || Physics.Linecast(LightPosition, body.corePosition, LayerIndex.world.mask, QueryTriggerInteraction.Ignore))
-                    {
-                        continue;
-                    }
                     var info = new InflictDotInfo
                     {
                         attackerObject = owner.gameObject,
@@ -178,24 +175,33 @@ namespace RandomEvents
                 }
             }
 
-            // 150% of the thrower's damage per second to everything hostile in the middle
-            private void BurnCore()
+            // only what the light shines on, like the Grandparent's sun
+            private List<CharacterBody> ShoneOn()
+            {
+                return CharacterBody.readOnlyInstancesList.Where(body => IsTarget(body, Radius)
+                    && !Physics.Linecast(LightPosition, body.corePosition, LayerIndex.world.mask, QueryTriggerInteraction.Ignore)).ToList();
+            }
+
+            // 150% of the thrower's damage per second to everything the light shines on, with the sun's flash at each
+            private void Scorch()
             {
                 if (owner == null || owner.teamComponent == null)
                 {
                     return;
                 }
-                foreach (var body in CharacterBody.readOnlyInstancesList.ToList())
+                foreach (var body in ShoneOn())
                 {
-                    if (!IsTarget(body, CoreRadius))
+                    EffectManager.SpawnEffect(ScorchEffect.WaitForCompletion(), new EffectData
                     {
-                        continue;
-                    }
+                        origin = body.corePosition,
+                        rotation = Util.QuaternionSafeLookRotation(LightPosition - body.corePosition),
+                        scale = body.bestFitRadius
+                    }, transmit: true);
                     body.healthComponent.TakeDamage(new DamageInfo
                     {
                         attacker = owner.gameObject,
                         inflictor = gameObject,
-                        damage = owner.damage * CoreDamagePerSecond * CoreTickInterval,
+                        damage = owner.damage * ScorchDamagePerSecond * ScorchInterval,
                         crit = owner.RollCrit(),
                         position = body.corePosition,
                         procCoefficient = 0f,
