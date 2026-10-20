@@ -197,7 +197,6 @@ namespace RandomEvents
             private void Eat(CharacterBody body)
             {
                 swallowed.Add(body);
-                var from = body.corePosition;
                 power += body.healthComponent.fullCombinedHealth;
                 quietTimer = QuietTime;
                 // each shrink item takes away 1% of the normal size, so one already bigger needs more
@@ -221,8 +220,6 @@ namespace RandomEvents
                     body.rigidbody.isKinematic = true;
                 }
                 TeleportHelper.TeleportBody(body, center);
-                // the whoosh of an item being handed over, flying from where it was to where it went
-                ItemOrb.Fly(from, body.gameObject, DLC4Content.Items.ReduceCharacterScale.itemIndex);
                 EffectManager.SpawnEffect(Swallow.WaitForCompletion(), new EffectData { origin = center, scale = 3f }, transmit: true);
             }
 
