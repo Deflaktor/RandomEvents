@@ -8,7 +8,7 @@ namespace RandomEvents
 {
     // The Crowdfunder fires as usual, but costs no gold, and each of its hits launches a monster like the Breaching Fin,
     // even one in the air, and makes it lighter. Once it hasn't been hit for 2 seconds, it gets three times as heavy as
-    // normal. A monster it has hit dies when it leaves the map, even one that would be brought back.
+    // normal, which wears off over 3 seconds. A monster it has hit dies when it leaves the map, even one that would be brought back.
     public class ExperimentalCrowdfunder : ExperimentalEquipment
     {
         // how much the gravity shrinks with each hit, down to the least
@@ -16,13 +16,17 @@ namespace RandomEvents
         private const float MinGravityScale = 0.1f;
         private const float HeavyGravityScale = 3f;
         private const float HeavyDelay = 2f;
+        // back to normal from three times as heavy in 3 seconds
+        private const float HeavyDecayPerSecond = (HeavyGravityScale - 1f) / 3f;
         private readonly HashSet<CharacterBody> hitBodies = new HashSet<CharacterBody>();
         // when each lightened one was last hit
         private readonly Dictionary<CharacterBody, float> lastHit = new Dictionary<CharacterBody, float>();
+        // those getting lighter again by themselves
+        private readonly HashSet<CharacterBody> heavy = new HashSet<CharacterBody>();
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.GoldGat;
-        public override string Description => "the Crowdfunder costs no gold, and each of its hits launches a monster like the Breaching Fin, again and again, and makes it lighter, until it's left alone for 2 seconds and gets three times as heavy, and it dies if it leaves the map";
-        public override string PopupDescription => "Costs no gold. Each hit launches a monster like the Breaching Fin, again and again, and makes it lighter; left alone for 2 seconds, it gets three times as heavy. A monster hit that leaves the map dies.";
+        public override string Description => "the Crowdfunder costs no gold, and each of its hits launches a monster like the Breaching Fin, again and again, and makes it lighter, until it's left alone for 2 seconds and gets three times as heavy for a moment, and it dies if it leaves the map";
+        public override string PopupDescription => "Costs no gold. Each hit launches a monster like the Breaching Fin, again and again, and makes it lighter; left alone for 2 seconds, it gets three times as heavy for a moment. A monster hit that leaves the map dies.";
 
         // it fires as usual, toggled by the player's own game
         public override bool ReplacesAction => false;
@@ -48,6 +52,7 @@ namespace RandomEvents
         {
             hitBodies.Clear();
             lastHit.Clear();
+            heavy.Clear();
         }
 
         // the host takes the gold for each bullet, which goes back
@@ -85,16 +90,31 @@ namespace RandomEvents
             {
                 body.characterMotor.gravityScale = Mathf.Max(MinGravityScale, body.characterMotor.gravityScale - GravityStep);
                 lastHit[body] = Time.fixedTime;
+                heavy.Remove(body);
             }
             hitBodies.Add(body);
         }
 
-        // left alone long enough, it drops
+        // left alone long enough, it drops, then gets back to normal
         private void MakeHeavy()
         {
-            if (lastHit.Count == 0 || !NetworkServer.active)
+            if (lastHit.Count == 0 && heavy.Count == 0 || !NetworkServer.active)
             {
                 return;
+            }
+            foreach (var body in heavy.ToList())
+            {
+                if (body == null || body.characterMotor == null)
+                {
+                    heavy.Remove(body);
+                    continue;
+                }
+                var motor = body.characterMotor;
+                motor.gravityScale = Mathf.MoveTowards(motor.gravityScale, 1f, HeavyDecayPerSecond * Time.fixedDeltaTime);
+                if (motor.gravityScale == 1f)
+                {
+                    heavy.Remove(body);
+                }
             }
             foreach (var (body, time) in lastHit.ToList())
             {
@@ -106,6 +126,7 @@ namespace RandomEvents
                 {
                     body.characterMotor.gravityScale = HeavyGravityScale;
                     lastHit.Remove(body);
+                    heavy.Add(body);
                 }
             }
         }
