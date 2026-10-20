@@ -43,7 +43,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Half of the monsters that spawn are Lynx Pups, three times as big and with ten times the health.";
+            return "Half of the monsters that spawn are Lynx Pups, one and a half times as big and with ten times the health.";
         }
         public override string GetConditionDescription()
         {
@@ -70,7 +70,7 @@ namespace RandomEvents
                 spawnCard.name = "cscGiantMiniLynx";
                 spawnCard.prefab = MiniLynxMaster.WaitForCompletion();
                 spawnCard.sendOverNetwork = true;
-                // three times as big
+                // one and a half times as big, so it needs more room than a pup
                 spawnCard.hullSize = HullClassification.Golem;
                 spawnCard.nodeGraphType = MapNodeGroup.GraphType.Ground;
                 spawnCard.forbiddenFlags = NodeFlags.NoCharacterSpawn;
@@ -91,7 +91,7 @@ namespace RandomEvents
             grown.Add(body.master);
             // each Boost Hp adds 10% of the base health, each stack of the scale item 1% of the size
             body.inventory.GiveItemPermanent(RoR2Content.Items.BoostHp, 90);
-            body.inventory.GiveItemPermanent(DLC4Content.Items.BoostCharacterScale, 200);
+            body.inventory.GiveItemPermanent(DLC4Content.Items.BoostCharacterScale, 50);
         }
 
         public override void Prepare()
