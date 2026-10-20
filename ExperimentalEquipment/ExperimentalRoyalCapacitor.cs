@@ -116,6 +116,8 @@ namespace RandomEvents
                 }
                 if (body.healthComponent.alive)
                 {
+                    // blown to pieces: its death leaves no body behind, on every player's screen
+                    body.healthComponent.NetworkdestroyModelOnDeath = true;
                     body.healthComponent.Suicide(attacker != null ? attacker.gameObject : null);
                 }
                 Destroy(this);
