@@ -15,6 +15,7 @@ namespace RandomEvents
         private ConfigEntry<float> Radius;
         private ConfigEntry<int> MaxStacksPerSecond;
         private ConfigEntry<int> MaxCorpses;
+        private ConfigEntry<float> DamageMultiplier;
         // the dead monsters kept as corpses, oldest first, with where they came to rest
         private readonly List<(CharacterBody body, Vector3 position)> corpses = new List<(CharacterBody body, Vector3 position)>();
         // corpses let go of again, which their death state then removes as usual
@@ -53,6 +54,7 @@ namespace RandomEvents
         {
             Radius = config.Bind(GetEventConfigName(), "Radius", 6f, "How near in meters players must be to a corpse to be blighted.");
             MaxStacksPerSecond = config.Bind(GetEventConfigName(), "Max Stacks Per Second", 3, "Players get a Blight stack per second for each corpse near them, up to this many.");
+            DamageMultiplier = config.Bind(GetEventConfigName(), "Damage Multiplier", 0.2f, "The damage of each Blight stack, relative to normal.");
             MaxCorpses = config.Bind(GetEventConfigName(), "Max Corpses", 40, "How many corpses stay at most; the oldest go first.");
         }
         public override void Preload()
@@ -109,7 +111,7 @@ namespace RandomEvents
                 // the dead monster's damage, which grows with the level, sets how much it hurts
                 foreach (var corpse in near)
                 {
-                    DotController.InflictDot(player.gameObject, corpse.body.gameObject, DotController.DotIndex.Blight, BlightDuration, 1f, null);
+                    DotController.InflictDot(player.gameObject, corpse.body.gameObject, DotController.DotIndex.Blight, BlightDuration, Mathf.Max(0f, DamageMultiplier.Value), null);
                 }
             }
         }
