@@ -20,7 +20,7 @@ namespace RandomEvents
         private const float ScannerWaveSpeed = 125f;
         private const float ScannerWaveRadius = 500f;
         // per missile, as a multiple of the player's damage
-        private const float ShrimpMissileDamage = 10f;
+        private const float ShrimpMissileDamage = 30f;
         private const float DollSpeed = 6f;
         private const float DollFuse = 10f;
         private const float DollNukeRadius = 40f;
