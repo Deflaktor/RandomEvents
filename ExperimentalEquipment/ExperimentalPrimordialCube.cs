@@ -82,8 +82,10 @@ namespace RandomEvents
             private const float PullDamping = 0.5f;
             private const float SpotInterval = 0.4f;
             private const float QuietTime = 5f;
-            // nearly nothing of their size left
-            private const int ShrinkStacks = 95;
+            // nearly nothing of their size left, whatever size items they already have
+            private const float SmallScale = 0.05f;
+            // the longest it waits for them to grow back after the quiet time, in case something else changes their size
+            private const float MaxGrowWait = 5f;
             // of the swallowed health, what each monster in the blast loses, all of it at the center and half at the edge
             private const float DamageShare = 0.3f;
             public CharacterBody owner;
@@ -91,6 +93,8 @@ namespace RandomEvents
             private readonly List<CharacterBody> swallowed = new List<CharacterBody>();
             // the swallowed that have shrunk away and now grow back unseen
             private readonly HashSet<CharacterBody> hidden = new HashSet<CharacterBody>();
+            // the shrink items each was given, and its size before
+            private readonly Dictionary<CharacterBody, (int stacks, float size)> shrinks = new Dictionary<CharacterBody, (int stacks, float size)>();
             private bool spotRing;
             private float power;
             private float quietTimer = QuietTime;
@@ -130,17 +134,28 @@ namespace RandomEvents
                 {
                     Hold(body);
                     // its target size is only lowered once its stats are worked out again, after the shrink items
-                    if (body != null && !hidden.Contains(body) && body.desiredScale < 0.5f && body.currentScale <= body.desiredScale + 0.01f)
+                    if (body != null && !hidden.Contains(body) && IsSmall(body))
                     {
                         Hide(body);
                     }
                 }
                 quietTimer -= Time.fixedDeltaTime;
                 // once all of them have grown back
-                if (quietTimer <= 0f && swallowed.All(body => body == null || !body.healthComponent.alive || hidden.Contains(body) && body.desiredScale >= 0.5f && body.currentScale >= body.desiredScale - 0.01f))
+                if (quietTimer <= -MaxGrowWait || quietTimer <= 0f && swallowed.All(body => body == null || !body.healthComponent.alive || hidden.Contains(body) && IsGrownBack(body)))
                 {
                     Burst();
                 }
+            }
+
+            private bool IsSmall(CharacterBody body)
+            {
+                var small = shrinks[body].size - shrinks[body].stacks * 0.01f;
+                return body.desiredScale <= small + 0.005f && body.currentScale <= body.desiredScale + 0.01f;
+            }
+
+            private bool IsGrownBack(CharacterBody body)
+            {
+                return body.desiredScale >= shrinks[body].size - 0.005f && body.currentScale >= body.desiredScale - 0.01f;
             }
 
             private bool CanSwallow(CharacterBody body)
@@ -182,7 +197,11 @@ namespace RandomEvents
                 var from = body.corePosition;
                 power += body.healthComponent.fullCombinedHealth;
                 quietTimer = QuietTime;
-                body.inventory.GiveItemPermanent(DLC4Content.Items.ReduceCharacterScale, ShrinkStacks);
+                // each shrink item takes away 1% of the normal size, so one already bigger needs more
+                var size = body.desiredScale;
+                var stacks = Mathf.Max(0, Mathf.RoundToInt((size - SmallScale) * 100f));
+                shrinks[body] = (stacks, size);
+                body.inventory.GiveItemPermanent(DLC4Content.Items.ReduceCharacterScale, stacks);
                 body.AddBuff(RoR2Content.Buffs.Immune);
                 if (body.master.TryGetComponent(out BaseAI ai))
                 {
@@ -210,7 +229,7 @@ namespace RandomEvents
                 hidden.Add(body);
                 body.AddBuff(RoR2Content.Buffs.Cloak);
                 body.AddBuff(RoR2Content.Buffs.Intangible);
-                body.inventory.RemoveItemPermanent(DLC4Content.Items.ReduceCharacterScale, ShrinkStacks);
+                body.inventory.RemoveItemPermanent(DLC4Content.Items.ReduceCharacterScale, shrinks[body].stacks);
             }
 
             // its AI is off, so nothing presses its buttons any more
@@ -277,6 +296,7 @@ namespace RandomEvents
                 }
                 swallowed.Clear();
                 hidden.Clear();
+                shrinks.Clear();
                 Destroy(gameObject);
             }
 
@@ -294,7 +314,7 @@ namespace RandomEvents
                 }
                 else
                 {
-                    body.inventory?.RemoveItemPermanent(DLC4Content.Items.ReduceCharacterScale, ShrinkStacks);
+                    body.inventory?.RemoveItemPermanent(DLC4Content.Items.ReduceCharacterScale, shrinks[body].stacks);
                 }
                 if (body.HasBuff(RoR2Content.Buffs.Immune))
                 {
