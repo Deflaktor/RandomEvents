@@ -254,11 +254,12 @@ namespace RandomEvents
             lastPlayerHolder = null;
         }
 
-        // The mushroom cloud of explosions: the flash and fireball, a shockwave along the ground, the stem rising and
-        // the cap rolling outwards at its top, which goes on after the event has ended
+        // The explosions, all at ground zero and in quick succession: the flash and fireball, a burst for each shockwave
+        // ring, the stem and the rolling cap of the mushroom cloud, which go on after the event has ended
         public class MiniNuke : MonoBehaviour
         {
-            private const float StemHeight = 35f;
+            // the Diablo Strike's flash this far down, out of sight, for its screen tint, shake and boom
+            private const float FlashDepth = 15f;
             private static AsyncOperationHandle<GameObject> Flash;
             private static AsyncOperationHandle<GameObject> Nova;
             private static AsyncOperationHandle<GameObject> Fireball;
@@ -282,7 +283,7 @@ namespace RandomEvents
                 Breach = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC2/Scorchling/VFXScorchlingBreachExplosion.prefab");
                 Omni = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/OmniExplosionVFX.prefab");
                 Behemoth = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/StickyBomb/BehemothVFX.prefab");
-                // a rumble with a shake that reaches up to the cap
+                // a rumble with a shake
                 Meteor = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Meteor/MeteorStrikeImpact.prefab");
             }
 
@@ -292,7 +293,12 @@ namespace RandomEvents
                 StartCoroutine(FireballAndShockwave());
                 StartCoroutine(Stem());
                 StartCoroutine(Cap());
-                Destroy(gameObject, 12f);
+                Destroy(gameObject, 6f);
+            }
+
+            private void Spawn(AsyncOperationHandle<GameObject> effect, float scale)
+            {
+                Spawn(effect, groundZero, scale);
             }
 
             private static void Spawn(AsyncOperationHandle<GameObject> effect, Vector3 position, float scale)
@@ -305,105 +311,79 @@ namespace RandomEvents
                 }, transmit: true);
             }
 
-            // on the floor below, so the shockwave follows the ground
-            private Vector3 OnGround(Vector3 position)
-            {
-                return Physics.Raycast(position + Vector3.up * 10f, Vector3.down, out var hit, 30f, LayerIndex.world.mask, QueryTriggerInteraction.Ignore) ? hit.point : position;
-            }
-
-            // 0 s: the flash; 3 s: a second nova as the cap forms
+            // 0 s: the flash; 1.5 s: a second nova as the cap forms
             private IEnumerator Flashes()
             {
-                Spawn(Flash, groundZero, 1f);
-                Spawn(Nova, groundZero + Vector3.up * 2f, 40f);
-                Spawn(Fireball, groundZero, 30f);
-                yield return new WaitForSeconds(3f);
-                Spawn(Nova, groundZero + Vector3.up * StemHeight, 20f);
+                Spawn(Flash, groundZero + Vector3.down * FlashDepth, 1f);
+                Spawn(Nova, 40f);
+                Spawn(Fireball, 30f);
+                yield return new WaitForSeconds(1.5f);
+                Spawn(Nova, 20f);
             }
 
-            // 0-0.8 s: the fireball bursting at ground zero; 0.1-1.3 s: rings racing outwards along the ground
+            // 0-0.4 s: the fireball, and a burst of the shockwave's explosions with each of its six rings
             private IEnumerator FireballAndShockwave()
             {
                 for (int i = 0; i < 7; i++)
                 {
-                    Spawn(i % 2 == 0 ? Fireball : Behemoth, groundZero + Vector3.up * UnityEngine.Random.Range(2f, 6f) + RandomHorizontal(6f), UnityEngine.Random.Range(10f, 15f));
+                    Spawn(i % 2 == 0 ? Fireball : Behemoth, UnityEngine.Random.Range(10f, 15f));
                     if (i < 6)
                     {
-                        var ringRadius = 6f + 34f * i / 5f;
-                        var count = 6 + 2 * i;
-                        var angleOffset = UnityEngine.Random.Range(0f, 360f);
-                        for (int j = 0; j < count; j++)
+                        for (int j = 0; j < 6 + 2 * i; j++)
                         {
-                            var direction = Quaternion.Euler(0f, angleOffset + 360f * j / count, 0f) * Vector3.forward;
-                            Spawn(Breach, OnGround(groundZero + direction * ringRadius), 4f);
+                            Spawn(Breach, 4f);
                         }
                     }
-                    yield return new WaitForSeconds(0.2f);
+                    yield return new WaitForSeconds(0.1f);
                 }
             }
 
-            // 0.6-4 s: the stem rising to its full height
+            // 0.3-2 s: the stem
             private IEnumerator Stem()
             {
-                yield return new WaitForSeconds(0.6f);
-                const float duration = 3.4f;
-                const float step = 0.15f;
+                yield return new WaitForSeconds(0.3f);
+                const float duration = 1.7f;
+                const float step = 0.075f;
                 for (float time = 0f; time < duration; time += step)
                 {
-                    var height = Mathf.Lerp(3f, StemHeight, time / duration);
-                    var width = Mathf.Lerp(3.5f, 2f, time / duration);
-                    Spawn(Omni, groundZero + Vector3.up * height + RandomHorizontal(width), 6f);
-                    Spawn(time % 0.3f < step ? Fireball : Behemoth, groundZero + Vector3.up * (height - 4f) + RandomHorizontal(width), 5f);
+                    Spawn(Omni, 6f);
+                    Spawn(time % 0.15f < step ? Fireball : Behemoth, 5f);
                     yield return new WaitForSeconds(step);
                 }
             }
 
-            // 3-10 s: the cap rolling outwards and slowly rising, thinning out at the end
+            // 1.5-5 s: the cap, thinning out at the end
             private IEnumerator Cap()
             {
-                yield return new WaitForSeconds(3f);
-                const float duration = 7f;
-                const float step = 0.12f;
+                yield return new WaitForSeconds(1.5f);
+                const float duration = 3.5f;
+                const float step = 0.06f;
                 float rumbleTimer = 0f;
                 for (float time = 0f; time < duration; time += step)
                 {
                     var progress = time / duration;
-                    var center = groundZero + Vector3.up * (StemHeight + 8f * progress);
-                    var ringRadius = Mathf.Lerp(4f, 16f, Mathf.Sqrt(progress));
-                    var tubeRadius = Mathf.Lerp(4f, 6f, progress);
                     var count = progress < 0.7f ? 3 : 1;
                     for (int i = 0; i < count; i++)
                     {
-                        // a point on the torus, mostly on its upper and outer side
-                        var around = Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f);
-                        var tubeAngle = UnityEngine.Random.Range(-60f, 150f) * Mathf.Deg2Rad;
-                        var position = center + around * (Vector3.forward * (ringRadius + Mathf.Cos(tubeAngle) * tubeRadius) + Vector3.up * Mathf.Sin(tubeAngle) * tubeRadius);
                         switch (UnityEngine.Random.Range(0, 3))
                         {
-                            case 0: Spawn(Fireball, position, UnityEngine.Random.Range(8f, 12f)); break;
-                            case 1: Spawn(Breach, position, 5f); break;
-                            default: Spawn(Omni, position, 8f); break;
+                            case 0: Spawn(Fireball, UnityEngine.Random.Range(8f, 12f)); break;
+                            case 1: Spawn(Breach, 5f); break;
+                            default: Spawn(Omni, 8f); break;
                         }
                     }
-                    // the top of the dome
                     if (UnityEngine.Random.value < 0.3f)
                     {
-                        Spawn(Behemoth, center + Vector3.up * tubeRadius + RandomHorizontal(ringRadius * 0.5f), 8f);
+                        Spawn(Behemoth, 8f);
                     }
                     rumbleTimer -= step;
                     if (rumbleTimer <= 0f && progress < 0.8f)
                     {
-                        rumbleTimer = 1f;
-                        Spawn(Meteor, center, 1f);
+                        rumbleTimer = 0.5f;
+                        Spawn(Meteor, 1f);
                     }
                     yield return new WaitForSeconds(step);
                 }
-            }
-
-            private static Vector3 RandomHorizontal(float radius)
-            {
-                var circle = UnityEngine.Random.insideUnitCircle * radius;
-                return new Vector3(circle.x, 0f, circle.y);
             }
         }
     }
