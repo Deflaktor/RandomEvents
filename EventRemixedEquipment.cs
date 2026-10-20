@@ -27,6 +27,16 @@ namespace RandomEvents
         private const float DollFuse = 10f;
         private const float DollNukeRadius = 40f;
         private static AsyncOperationHandle<GameObject> Doll;
+        // the Crowdfunder fires a Resonance Disc's shot with every so many of its bullets, starting with the first
+        private const int BulletsPerDiscShot = 10;
+        private const float DiscBeamDamage = 3f;
+        private const float DiscBombDamage = 10f;
+        private static AsyncOperationHandle<GameObject> DiscTracer;
+        private static AsyncOperationHandle<GameObject> DiscBomb;
+        // each Crowdfunder's bullets so far
+        private readonly Dictionary<GameObject, int> crowdfunderBullets = new Dictionary<GameObject, int>();
+        // the players the Crowdfunder roots while it fires
+        private readonly BuffTracker roots = new BuffTracker();
         private static AsyncOperationHandle<GameObject> Breach;
         private static AsyncOperationHandle<GameObject> Tick;
         private const float LeechDuration = 8f;
@@ -35,7 +45,7 @@ namespace RandomEvents
         private static EquipmentDef[] Equipments => new[]
         {
             RoR2Content.Equipment.Lightning, RoR2Content.Equipment.CommandMissile, RoR2Content.Equipment.Scanner, RoR2Content.Equipment.LifestealOnHit,
-            RoR2Content.Equipment.DeathProjectile
+            RoR2Content.Equipment.DeathProjectile, RoR2Content.Equipment.GoldGat
         };
 
         public override bool LoadCondition()
@@ -60,7 +70,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Gives all players a remixed equipment with a shorter cooldown. Royal Capacitor inflates a monster until it explodes, Disposable Missile Launcher fires a Plasma Shrimp missile at every monster, Radar Scanner's wave also pushes and hurts monsters, and Super Massive Leech causes hemorrhage instead of healing, and Forgive Me Please's doll walks straight ahead and explodes like a mini nuke after 10 seconds.";
+            return "Gives all players a remixed equipment with a shorter cooldown. Royal Capacitor inflates a monster until it explodes, Disposable Missile Launcher fires a Plasma Shrimp missile at every monster, Radar Scanner's wave also pushes and hurts monsters, and Super Massive Leech causes hemorrhage instead of healing, Forgive Me Please's doll walks straight ahead and explodes like a mini nuke after 10 seconds, and the Crowdfunder costs no gold and fires Resonance Disc shots, but roots you while it fires.";
         }
         public override string GetPopupDescription()
         {
@@ -72,6 +82,8 @@ namespace RandomEvents
                 return "Your hits cause hemorrhage instead of healing you.";
             if (equipmentDef == RoR2Content.Equipment.DeathProjectile)
                 return "The doll walks straight ahead and explodes like a mini nuke after 10 seconds.";
+            if (equipmentDef == RoR2Content.Equipment.GoldGat)
+                return "Costs no gold and fires Resonance Disc shots, but you can't move while it fires.";
             return "Inflates the targeted monster to three times its size, then it explodes. No effect on bosses.";
         }
         public override string GetConditionDescription()
@@ -87,6 +99,8 @@ namespace RandomEvents
             Breach = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC2/Scorchling/VFXScorchlingBreachExplosion.prefab");
             Tick = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/OmniExplosionVFXQuick.prefab");
             Doll = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/DeathProjectile/DeathProjectile.prefab");
+            DiscTracer = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LaserTurbine/TracerLaserTurbine.prefab");
+            DiscBomb = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LaserTurbine/LaserTurbineBomb.prefab");
             EventHotPotato.MiniNuke.Preload();
         }
         public override void Hook()
@@ -94,6 +108,10 @@ namespace RandomEvents
             CharacterBody.onBodyStartGlobal += CharacterBody_onBodyStartGlobal;
             On.RoR2.EquipmentSlot.PerformEquipmentAction += EquipmentSlot_PerformEquipmentAction;
             On.RoR2.GlobalEventManager.OnHitEnemy += GlobalEventManager_OnHitEnemy;
+            On.EntityStates.GoldGat.GoldGatFire.FireBullet += GoldGatFire_FireBullet;
+            On.EntityStates.GoldGat.GoldGatFire.OnEnter += GoldGatFire_OnEnter;
+            On.EntityStates.GoldGat.GoldGatFire.OnExit += GoldGatFire_OnExit;
+            On.RoR2.HealthComponent.TakeDamage += HealthComponent_TakeDamage;
         }
 
         private void CharacterBody_onBodyStartGlobal(CharacterBody body)
@@ -211,6 +229,103 @@ namespace RandomEvents
             return true;
         }
 
+        private bool IsRemixedCrowdfunder(CharacterBody body)
+        {
+            return ModConfig.Enabled.Value && NetworkServer.active && IsActive() && equipmentDef == RoR2Content.Equipment.GoldGat && body != null
+                && body.GetComponent<RemixComponent>() != null;
+        }
+
+        // The Crowdfunder's state runs on every machine, the bullets only on the shooting player's. On the host it takes
+        // the gold per bullet, which goes back, and fires the Resonance Disc's shots.
+        private void GoldGatFire_FireBullet(On.EntityStates.GoldGat.GoldGatFire.orig_FireBullet orig, EntityStates.GoldGat.GoldGatFire self)
+        {
+            var body = self.body;
+            if (!IsRemixedCrowdfunder(body) || self.bodyMaster == null)
+            {
+                orig(self);
+                return;
+            }
+            var money = self.bodyMaster.money;
+            orig(self);
+            self.bodyMaster.money = money;
+            var bullets = crowdfunderBullets.GetValueOrDefault(self.gameObject);
+            crowdfunderBullets[self.gameObject] = bullets + 1;
+            if (bullets % BulletsPerDiscShot == 0 && body.inputBank != null)
+            {
+                FireDiscShot(body, new Ray(body.inputBank.aimOrigin, body.inputBank.aimDirection));
+            }
+        }
+
+        // the Resonance Disc's laser, and its bomb where the laser hits
+        private static void FireDiscShot(CharacterBody body, Ray aim)
+        {
+            var crit = body.RollCrit();
+            new BulletAttack
+            {
+                owner = body.gameObject,
+                weapon = body.gameObject,
+                origin = aim.origin,
+                aimVector = aim.direction,
+                damage = body.damage * DiscBeamDamage,
+                damageColorIndex = DamageColorIndex.Item,
+                isCrit = crit,
+                force = 1000f,
+                procCoefficient = 1f,
+                radius = 1f,
+                maxDistance = 1000f,
+                smartCollision = true,
+                stopperMask = LayerIndex.world.mask,
+                tracerEffectPrefab = DiscTracer.WaitForCompletion()
+            }.Fire();
+            var hitPoint = Physics.Raycast(aim, out var hit, 1000f, LayerIndex.world.mask | LayerIndex.entityPrecise.mask, QueryTriggerInteraction.Ignore) ? hit.point : aim.GetPoint(1000f);
+            ProjectileManager.instance.FireProjectile(new FireProjectileInfo
+            {
+                projectilePrefab = DiscBomb.WaitForCompletion(),
+                owner = body.gameObject,
+                position = hitPoint - aim.direction * 0.5f,
+                rotation = Quaternion.identity,
+                damage = body.damage * DiscBombDamage,
+                damageColorIndex = DamageColorIndex.Item,
+                crit = crit
+            });
+        }
+
+        // rooted while it fires, with the vines of the root from the Hooks of Heresy
+        private void GoldGatFire_OnEnter(On.EntityStates.GoldGat.GoldGatFire.orig_OnEnter orig, EntityStates.GoldGat.GoldGatFire self)
+        {
+            if (IsRemixedCrowdfunder(self.body))
+            {
+                crowdfunderBullets[self.gameObject] = 0;
+                if (!roots.Has(self.body, RoR2Content.Buffs.LunarSecondaryRoot))
+                {
+                    roots.Add(self.body, RoR2Content.Buffs.LunarSecondaryRoot);
+                }
+            }
+            orig(self);
+        }
+
+        private void GoldGatFire_OnExit(On.EntityStates.GoldGat.GoldGatFire.orig_OnExit orig, EntityStates.GoldGat.GoldGatFire self)
+        {
+            if (NetworkServer.active && self.body != null)
+            {
+                roots.Remove(self.body, RoR2Content.Buffs.LunarSecondaryRoot);
+            }
+            orig(self);
+        }
+
+        // the Crowdfunder's own bullets do nothing, as the disc's shots replace them; they show for the shooting player
+        // all the same, whose own game fires them
+        private void HealthComponent_TakeDamage(On.RoR2.HealthComponent.orig_TakeDamage orig, HealthComponent self, DamageInfo damageInfo)
+        {
+            if (damageInfo != null && damageInfo.inflictor != null && NetworkServer.active && IsActive() && equipmentDef == RoR2Content.Equipment.GoldGat
+                && damageInfo.inflictor.TryGetComponent(out EntityStateMachine stateMachine) && stateMachine.state is EntityStates.GoldGat.BaseGoldGatState)
+            {
+                damageInfo.rejected = true;
+                return;
+            }
+            orig(self, damageInfo);
+        }
+
         private bool Inflate(EquipmentSlot slot)
         {
             slot.UpdateTargets(RoR2Content.Equipment.Lightning.equipmentIndex, userShouldAnticipateTarget: true);
@@ -292,20 +407,34 @@ namespace RandomEvents
                     UnityEngine.Object.Destroy(remix);
                 }
             }
+            roots.RemoveAll();
+            crowdfunderBullets.Clear();
             equipmentDef = null;
         }
 
         public class RemixComponent : MonoBehaviour
         {
             private TemporaryEquipment equipment;
+            private bool crowdfunder;
 
             public void Setup(EquipmentDef equipmentDef)
             {
+                crowdfunder = equipmentDef == RoR2Content.Equipment.GoldGat;
                 equipment = gameObject.AddComponent<TemporaryEquipment>();
                 // a quarter for the missiles, the leech and the scanner, half for the rest
                 equipment.cooldownScale = equipmentDef == RoR2Content.Equipment.CommandMissile || equipmentDef == RoR2Content.Equipment.LifestealOnHit
                     || equipmentDef == RoR2Content.Equipment.Scanner ? 0.25f : 0.5f;
                 equipment.SetTemporaryEquipment(equipmentDef.equipmentIndex);
+            }
+
+            // the Crowdfunder only starts firing with gold
+            private void FixedUpdate()
+            {
+                var master = crowdfunder && NetworkServer.active && TryGetComponent(out CharacterBody body) ? body.master : null;
+                if (master != null && master.money == 0)
+                {
+                    master.money = 1;
+                }
             }
 
             private void OnDisable()
