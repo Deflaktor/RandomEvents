@@ -28,6 +28,11 @@ namespace RandomEvents
         private const float ShatterInterval = 0.3f;
         private AsyncOperationHandle<GameObject> ShatterEffect;
         private readonly Dictionary<CharacterBody, float> lastShatter = new Dictionary<CharacterBody, float>();
+        // when each mirrored monster's decay last sped up in the void fog
+        private readonly Dictionary<CharacterBody, float> lastFogDecay = new Dictionary<CharacterBody, float>();
+        // seconds taken off a mirrored monster's decay for each second in the void fog, down to the shortest decay
+        private const int FogDecaySpeedup = 5;
+        private const int ShortestDecayTime = 5;
         // the share of their health each player was dealt back in the current second, which is capped
         private readonly Dictionary<CharacterBody, (float start, float fraction)> reflectedThisSecond = new Dictionary<CharacterBody, (float start, float fraction)>();
 
@@ -207,6 +212,12 @@ namespace RandomEvents
 
         private void HealthComponent_TakeDamage(On.RoR2.HealthComponent.orig_TakeDamage orig, HealthComponent self, DamageInfo damageInfo)
         {
+            // their shell takes the void fog's ticks down to 1 damage, so the fog speeds up their decay instead
+            if (NetworkServer.active && IsActive() && damageInfo != null && self.body != null && mirrored.Contains(self.body)
+                && (damageInfo.damageType.damageTypeExtended & DamageTypeExtended.DamageField) != 0)
+            {
+                SpeedUpDecay(self.body);
+            }
             if (!NetworkServer.active || !IsActive() || damageInfo == null || damageInfo.rejected || damageInfo.damage <= 0f || damageInfo.attacker == null)
             {
                 orig(self, damageInfo);
@@ -252,6 +263,24 @@ namespace RandomEvents
                 return;
             }
             orig(self, damageInfo);
+        }
+
+        // Each Health Decay stack is a second the monster takes to lose its health, so fewer stacks decay it faster
+        private void SpeedUpDecay(CharacterBody body)
+        {
+            var now = Time.fixedTime;
+            if (DecayTime.Value <= 0 || body.inventory == null || (lastFogDecay.TryGetValue(body, out var last) && now - last < 1f))
+            {
+                return;
+            }
+            lastFogDecay[body] = now;
+            var inventory = EventLoot.GetInventory(this, body);
+            var stacks = inventory.temporaryItems.GetValueOrDefault(RoR2Content.Items.HealthDecay.itemIndex);
+            var remove = Mathf.Min(FogDecaySpeedup, stacks - ShortestDecayTime);
+            if (remove > 0)
+            {
+                inventory.RemoveTemporaryItem(RoR2Content.Items.HealthDecay.itemIndex, remove);
+            }
         }
 
         private void Shatter(CharacterBody body, Vector3 position)
@@ -320,6 +349,7 @@ namespace RandomEvents
         {
             reflectedThisSecond.Clear();
             lastShatter.Clear();
+            lastFogDecay.Clear();
             foreach (var body in mirrored)
             {
                 if (body != null && body.HasBuff(RoR2Content.Buffs.LunarShell))
