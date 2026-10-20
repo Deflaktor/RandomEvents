@@ -1,4 +1,5 @@
 using RoR2;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -7,14 +8,15 @@ namespace RandomEvents
     public class ExperimentalForeignFruit : ExperimentalEquipment
     {
         private const float Duration = 15f;
-        // Growth Nectar's buff, 4% more of every stat per stack, about half again with 13
+        // Growth Nectar's buff, 4% more of every stat per stack, about half again with 13; each fruit eaten while others
+        // last doubles what they give
         private const int StatStacks = 13;
-        // 1% of the size per stack
+        // 1% of the size per stack, the same with each fruit
         private const int SizeStacks = 50;
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.Fruit;
-        public override string Description => "Foreign Fruit fully heals you and makes you half again as big and strong for 15 seconds, stacking";
-        public override string PopupDescription => "Fully heals you and makes you half again as big and strong for 15 seconds. Eating more stacks.";
+        public override string Description => "Foreign Fruit fully heals you and makes you half again as big and strong for 15 seconds, each one eaten meanwhile adding as much size and doubling the strength";
+        public override string PopupDescription => "Fully heals you and makes you half again as big and strong for 15 seconds. Each one eaten meanwhile adds as much size and doubles the strength.";
 
         public override bool Fire(EquipmentSlot slot)
         {
@@ -27,19 +29,23 @@ namespace RandomEvents
             effectData.SetNetworkedObjectReference(body.gameObject);
             EffectManager.SpawnEffect(LegacyResourcesAPI.Load<GameObject>("Prefabs/Effects/FruitHealEffect"), effectData, transmit: true);
             body.healthComponent.HealFraction(1f, default);
-            // each fruit adds its own, which wears off on its own, so eating more while it lasts stacks
-            for (int i = 0; i < StatStacks; i++)
+            // each fruit adds as much strength as those still lasting give together, which wears off on its own
+            var lasting = body.GetComponents<Growth>();
+            var growth = body.gameObject.AddComponent<Growth>();
+            growth.timeLeft = Duration;
+            growth.statStacks = Mathf.Max(StatStacks, lasting.Sum(other => other.statStacks));
+            for (int i = 0; i < growth.statStacks; i++)
             {
                 body.AddTimedBuff(DLC2Content.Buffs.BoostAllStatsBuff, Duration);
             }
-            body.gameObject.AddComponent<Growth>().timeLeft = Duration;
             return true;
         }
 
-        // The size items, which every player's game sees in the inventory, taken back when it wears off
+        // One fruit's size items, which every player's game sees in the inventory, taken back when it wears off
         public class Growth : MonoBehaviour
         {
             public float timeLeft;
+            public int statStacks;
             private Inventory inventory;
 
             private void Start()
