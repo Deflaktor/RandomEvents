@@ -111,7 +111,8 @@
         "ANNOUNCE_EVENT_TAG_TEAM": "Tag, you're it",
         "ANNOUNCE_EVENT_INDIRECT_DAMAGE": "Let the items do the work",
         "ANNOUNCE_EVENT_SWARM_QUEEN": "Nobody comes alone",
-        "ANNOUNCE_EVENT_LAVA_FLOOR": "The floor is lava"
+        "ANNOUNCE_EVENT_LAVA_FLOOR": "The floor is lava",
+        "ANNOUNCE_EVENT_THIEVES": "Watch your pockets"
         
     }
 }

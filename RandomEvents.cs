@@ -104,6 +104,7 @@ namespace RandomEvents
                 InitAndHookEvent(new EventSwarmQueen());
                 InitAndHookEvent(new EventTagTeam());
                 InitAndHookEvent(new EventTheAlpha());
+                InitAndHookEvent(new EventThieves());
                 InitAndHookEvent(new EventTimeWarp());
                 InitAndHookEvent(new EventUmbraAmbush());
                 InitAndHookEvent(new EventUnitedWeStand());
