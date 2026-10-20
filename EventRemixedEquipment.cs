@@ -20,9 +20,8 @@ namespace RandomEvents
         private const float ScannerWaveRadius = 500f;
         private static AsyncOperationHandle<GameObject> Breach;
         private static AsyncOperationHandle<GameObject> Tick;
+        private const float LeechDuration = 8f;
         private EquipmentDef equipmentDef;
-        // the Super Massive Leech's hit being processed, whose heal is turned into hemorrhage
-        private DamageInfo leechHit;
 
         private static EquipmentDef[] Equipments => new[]
         {
@@ -81,7 +80,6 @@ namespace RandomEvents
             CharacterBody.onBodyStartGlobal += CharacterBody_onBodyStartGlobal;
             On.RoR2.EquipmentSlot.PerformEquipmentAction += EquipmentSlot_PerformEquipmentAction;
             On.RoR2.GlobalEventManager.OnHitEnemy += GlobalEventManager_OnHitEnemy;
-            On.RoR2.HealthComponent.Heal += HealthComponent_Heal;
         }
 
         private void CharacterBody_onBodyStartGlobal(CharacterBody body)
@@ -131,7 +129,24 @@ namespace RandomEvents
                 }
                 return fired;
             }
+            if (def == RoR2Content.Equipment.LifestealOnHit)
+            {
+                return Bleed(self.characterBody);
+            }
             return orig(self, def);
+        }
+
+        // Not the leech's own buff, which would heal on hit. This one does nothing itself, but shows a red glow
+        private static bool Bleed(CharacterBody body)
+        {
+            var effectData = new EffectData
+            {
+                origin = body.corePosition
+            };
+            effectData.SetNetworkedObjectReference(body.gameObject);
+            EffectManager.SpawnEffect(LegacyResourcesAPI.Load<GameObject>("Prefabs/Effects/LifeStealOnHitActivation"), effectData, transmit: true);
+            body.AddTimedBuff(DLC3Content.Buffs.ShieldTankDamage, LeechDuration);
+            return true;
         }
 
         private bool Inflate(EquipmentSlot slot)
@@ -179,36 +194,14 @@ namespace RandomEvents
 
         private void GlobalEventManager_OnHitEnemy(On.RoR2.GlobalEventManager.orig_OnHitEnemy orig, GlobalEventManager self, DamageInfo damageInfo, GameObject victim)
         {
+            orig(self, damageInfo, victim);
             var attackerBody = damageInfo.attacker != null ? damageInfo.attacker.GetComponent<CharacterBody>() : null;
-            if (!NetworkServer.active || !IsActive() || equipmentDef != RoR2Content.Equipment.LifestealOnHit || attackerBody == null
-                || !attackerBody.HasBuff(RoR2Content.Buffs.LifeSteal) || attackerBody.GetComponent<RemixComponent>() == null)
-            {
-                orig(self, damageInfo, victim);
-                return;
-            }
-            leechHit = damageInfo;
-            try
-            {
-                orig(self, damageInfo, victim);
-            }
-            finally
-            {
-                leechHit = null;
-            }
-            if (damageInfo.procCoefficient > 0f && !damageInfo.rejected && victim != null)
+            if (NetworkServer.active && IsActive() && equipmentDef == RoR2Content.Equipment.LifestealOnHit && attackerBody != null
+                && attackerBody.HasBuff(DLC3Content.Buffs.ShieldTankDamage) && attackerBody.GetComponent<RemixComponent>() != null
+                && damageInfo.procCoefficient > 0f && !damageInfo.rejected && victim != null)
             {
                 DotController.InflictDot(victim, damageInfo.attacker, damageInfo.inflictedHurtbox, damageInfo.procChainMask, DotController.DotIndex.SuperBleed, 15f * damageInfo.procCoefficient);
             }
-        }
-
-        // the leech's heal is a fifth of the hit's damage
-        private float HealthComponent_Heal(On.RoR2.HealthComponent.orig_Heal orig, HealthComponent self, float amount, ProcChainMask procChainMask, bool nonRegen)
-        {
-            if (leechHit != null && self.gameObject == leechHit.attacker && Mathf.Approximately(amount, leechHit.damage * 0.2f))
-            {
-                return 0f;
-            }
-            return orig(self, amount, procChainMask, nonRegen);
         }
 
         public override void Prepare()
