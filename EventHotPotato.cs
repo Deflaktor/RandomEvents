@@ -254,8 +254,8 @@ namespace RandomEvents
             lastPlayerHolder = null;
         }
 
-        // The explosions, all at ground zero and in quick succession: the flash and fireball, a burst for each shockwave
-        // ring, the stem and the rolling cap of the mushroom cloud, which go on after the event has ended
+        // The explosions around ground zero in quick succession: the flash and fireball, a burst for each shockwave ring,
+        // the stem and the rolling cap of the mushroom cloud, which go on after the event has ended
         public class MiniNuke : MonoBehaviour
         {
             // the Diablo Strike's flash this far down, out of sight, for its screen tint, shake and boom
@@ -296,9 +296,11 @@ namespace RandomEvents
                 Destroy(gameObject, 6f);
             }
 
-            private void Spawn(AsyncOperationHandle<GameObject> effect, float scale)
+            // around ground zero: within the given distance to the side, and between the given heights above it
+            private void Spawn(AsyncOperationHandle<GameObject> effect, float scale, float spread, float minHeight = 0f, float maxHeight = 0f)
             {
-                Spawn(effect, groundZero, scale);
+                var circle = UnityEngine.Random.insideUnitCircle * spread;
+                Spawn(effect, groundZero + new Vector3(circle.x, UnityEngine.Random.Range(minHeight, maxHeight), circle.y), scale);
             }
 
             private static void Spawn(AsyncOperationHandle<GameObject> effect, Vector3 position, float scale)
@@ -315,49 +317,53 @@ namespace RandomEvents
             private IEnumerator Flashes()
             {
                 Spawn(Flash, groundZero + Vector3.down * FlashDepth, 1f);
-                Spawn(Nova, 40f);
-                Spawn(Fireball, 30f);
+                Spawn(Nova, groundZero, 40f);
+                Spawn(Fireball, groundZero, 30f);
                 yield return new WaitForSeconds(1.5f);
-                Spawn(Nova, 20f);
+                Spawn(Nova, groundZero, 20f);
             }
 
-            // 0-0.4 s: the fireball, and a burst of the shockwave's explosions with each of its six rings
+            // 0-0.6 s: the fireball, and a burst of the shockwave's explosions along the ground with each of its six rings,
+            // further out with each
             private IEnumerator FireballAndShockwave()
             {
                 for (int i = 0; i < 7; i++)
                 {
-                    Spawn(i % 2 == 0 ? Fireball : Behemoth, UnityEngine.Random.Range(10f, 15f));
+                    Spawn(i % 2 == 0 ? Fireball : Behemoth, UnityEngine.Random.Range(10f, 15f), 5f, 1f, 4f);
                     if (i < 6)
                     {
                         for (int j = 0; j < 6 + 2 * i; j++)
                         {
-                            Spawn(Breach, 4f);
+                            Spawn(Breach, 4f, 6f + 3f * i);
                         }
                     }
                     yield return new WaitForSeconds(0.1f);
                 }
             }
 
-            // 0.3-2 s: the stem
+            // 0.3-2 s: the stem, rising; after 1.5 s at half the rate
             private IEnumerator Stem()
             {
                 yield return new WaitForSeconds(0.3f);
                 const float duration = 1.7f;
                 const float step = 0.075f;
-                for (float time = 0f; time < duration; time += step)
+                for (float time = 0f; time < duration;)
                 {
-                    Spawn(Omni, 6f);
-                    Spawn(time % 0.15f < step ? Fireball : Behemoth, 5f);
-                    yield return new WaitForSeconds(step);
+                    var height = Mathf.Lerp(2f, 14f, time / duration);
+                    Spawn(Omni, 6f, 4f, height - 2f, height + 2f);
+                    Spawn(time % 0.15f < step ? Fireball : Behemoth, 5f, 4f, height - 4f, height);
+                    var wait = time + 0.3f < 1.5f ? step : step * 2f;
+                    time += wait;
+                    yield return new WaitForSeconds(wait);
                 }
             }
 
-            // 1.5-5 s: the cap, thinning out at the end
+            // 1.5-5 s: the cap, spread wide and high, at half the rate of before, thinning out at the end
             private IEnumerator Cap()
             {
                 yield return new WaitForSeconds(1.5f);
                 const float duration = 3.5f;
-                const float step = 0.06f;
+                const float step = 0.12f;
                 float rumbleTimer = 0f;
                 for (float time = 0f; time < duration; time += step)
                 {
@@ -367,20 +373,20 @@ namespace RandomEvents
                     {
                         switch (UnityEngine.Random.Range(0, 3))
                         {
-                            case 0: Spawn(Fireball, UnityEngine.Random.Range(8f, 12f)); break;
-                            case 1: Spawn(Breach, 5f); break;
-                            default: Spawn(Omni, 8f); break;
+                            case 0: Spawn(Fireball, UnityEngine.Random.Range(8f, 12f), 12f, 6f, 18f); break;
+                            case 1: Spawn(Breach, 5f, 12f, 6f, 18f); break;
+                            default: Spawn(Omni, 8f, 12f, 6f, 18f); break;
                         }
                     }
                     if (UnityEngine.Random.value < 0.3f)
                     {
-                        Spawn(Behemoth, 8f);
+                        Spawn(Behemoth, 8f, 8f, 14f, 20f);
                     }
                     rumbleTimer -= step;
                     if (rumbleTimer <= 0f && progress < 0.8f)
                     {
-                        rumbleTimer = 0.5f;
-                        Spawn(Meteor, 1f);
+                        rumbleTimer = 1f;
+                        Spawn(Meteor, groundZero, 1f);
                     }
                     yield return new WaitForSeconds(step);
                 }
