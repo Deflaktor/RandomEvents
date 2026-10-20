@@ -300,7 +300,8 @@ namespace RandomEvents
             public void Setup(EquipmentDef equipmentDef)
             {
                 equipment = gameObject.AddComponent<TemporaryEquipment>();
-                equipment.cooldownScale = equipmentDef == RoR2Content.Equipment.CommandMissile ? 0.25f : 0.5f;
+                // a quarter for the missiles and the leech, half for the rest
+                equipment.cooldownScale = equipmentDef == RoR2Content.Equipment.CommandMissile || equipmentDef == RoR2Content.Equipment.LifestealOnHit ? 0.25f : 0.5f;
                 equipment.SetTemporaryEquipment(equipmentDef.equipmentIndex);
             }
 
