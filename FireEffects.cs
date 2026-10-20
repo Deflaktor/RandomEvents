@@ -17,11 +17,6 @@ namespace RandomEvents
         public static AsyncOperationHandle<GameObject> Ignition;
         public static AsyncOperationHandle<GameObject> Fireball;
         public static AsyncOperationHandle<GameObject> Sun;
-        // a bright white spot: the Spirit's warning glint and the light of the boss reaper's death
-        public static AsyncOperationHandle<GameObject> WhiteGlint;
-        public static AsyncOperationHandle<GameObject> LightBurst;
-        // Genesis Loop's nova, the Wandering Vagrant's, with a very strong light that its scale doesn't shrink
-        public static AsyncOperationHandle<GameObject> Nova;
 
         public static void Preload()
         {
@@ -34,9 +29,6 @@ namespace RandomEvents
             Ignition = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC1/Molotov/MolotovClusterIgniteExplosionVFX.prefab");
             Fireball = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC2/Chef/BoostedSearFireballProjectileExplosionVFX.prefab");
             Sun = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Grandparent/GrandParentSun.prefab");
-            WhiteGlint = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC4/Spirit/warningLightGlint.prefab");
-            LightBurst = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC4/ReaperBoss/ReaperBossDeathBurstLightVFX.prefab");
-            Nova = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Vagrant/VagrantNovaExplosion.prefab");
         }
 
         public static void SpawnEffect(AsyncOperationHandle<GameObject> effect, Vector3 position, float scale)

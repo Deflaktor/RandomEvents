@@ -14,8 +14,8 @@ namespace RandomEvents
         private static AsyncOperationHandle<GameObject> MolotovBottle;
 
         public override EquipmentDef EquipmentDef => DLC1Content.Equipment.Molotov;
-        public override string Description => "the Molotov (6-Pack) lights a blazing light that burns everything nearby it shines on harder and harder for 5 seconds";
-        public override string PopupDescription => "One bottle that lights a blazing light, burning everything nearby it shines on harder and harder for 5 seconds.";
+        public override string Description => "the Molotov (6-Pack) lights a blazing fire that burns everything nearby in its sight harder and harder for 5 seconds";
+        public override string PopupDescription => "One bottle that lights a blazing fire, burning everything nearby in its sight harder and harder for 5 seconds.";
 
         public override void Preload()
         {
@@ -61,10 +61,11 @@ namespace RandomEvents
             inferno.center = center;
         }
 
-        // The experimental Molotov: a bright white spot where it landed, then a blazing light there for 5 seconds, from a
-        // small Genesis Loop nova again and again. Meanwhile everything hostile nearby that the light shines on burns, with
-        // stacks that pile up faster and faster to 5000% of the thrower's damage in all, which the Grandparent's heat
-        // shows, and is scorched every half second, as by the Grandparent's sun.
+        // The experimental Molotov: the Molotov's and Gasoline's bursts where it landed, then for 5 seconds the ground ablaze
+        // with Molotov fire and an Elder Lemurian's fireball bursting over the middle again and again. Meanwhile
+        // everything hostile nearby that the blaze can see burns, with stacks that pile up faster and faster to 5000% of the
+        // thrower's damage in all, which the Grandparent's heat shows, and is scorched every half second with Helfire
+        // Tincture's flash.
         public class Inferno : MonoBehaviour
         {
             private const float Duration = 5f;
@@ -72,18 +73,21 @@ namespace RandomEvents
             private const float TickInterval = 0.1f;
             private const float TotalDamage = 50f;
             private const int MaxHeatStacks = 40;
-            // a small Genesis Loop nova over the middle again and again, for its light
-            private const float LightInterval = 0.5f;
-            private const float LightHeight = 1.5f;
-            private const float LightScale = 3f;
+            // an Elder Lemurian's fireball bursting over the middle again and again
+            private const float BlazeInterval = 0.5f;
+            private const float BlazeHeight = 1.5f;
+            private const float BlazeScale = 3f;
+            private const int FirePools = 6;
             private const float ScorchDamagePerSecond = 1.5f;
             private const float ScorchInterval = 0.5f;
-            // what the Grandparent's sun shows on everything it heats
+            private static AsyncOperationHandle<GameObject> Gasoline;
+            private static AsyncOperationHandle<GameObject> Blaze;
             private static AsyncOperationHandle<GameObject> ScorchEffect;
             public CharacterBody owner;
             public Vector3 center;
             private readonly Dictionary<CharacterBody, int> heat = new Dictionary<CharacterBody, int>();
-            private float lightTimer;
+            private readonly List<GameObject> fires = new List<GameObject>();
+            private float blazeTimer;
             private float age;
             private int tick;
             private int ticks;
@@ -93,7 +97,9 @@ namespace RandomEvents
             public static void Preload()
             {
                 FireEffects.Preload();
-                ScorchEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Grandparent/IgniteDirectionalExplosionVFX.prefab");
+                Gasoline = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/IgniteOnKill/IgniteExplosionVFX.prefab");
+                Blaze = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LemurianBruiser/OmniExplosionVFXLemurianBruiserFireballImpact.prefab");
+                ScorchEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/BurnNearby/HelfireIgniteEffect.prefab");
             }
 
             private void Start()
@@ -103,11 +109,17 @@ namespace RandomEvents
                 {
                     weightSum += i * i;
                 }
-                FireEffects.SpawnEffect(FireEffects.WhiteGlint, center + Vector3.up, 2f);
-                FireEffects.SpawnEffect(FireEffects.LightBurst, center + Vector3.up, 2f);
+                FireEffects.SpawnEffect(FireEffects.Ignition, center, Radius);
+                FireEffects.SpawnEffect(Gasoline, center + Vector3.up, Radius);
+                var team = owner != null && owner.teamComponent != null ? owner.teamComponent.teamIndex : TeamIndex.Neutral;
+                fires.Add(FireEffects.SpawnFire(FireEffects.FirePool, center, null, team));
+                for (int i = 0; i < FirePools; i++)
+                {
+                    fires.Add(FireEffects.SpawnFire(FireEffects.FirePool, FireEffects.OnGround(center + FireEffects.RandomHorizontal(Radius * 0.8f)), null, team));
+                }
             }
 
-            private Vector3 LightPosition => center + Vector3.up * LightHeight;
+            private Vector3 BlazePosition => center + Vector3.up * BlazeHeight;
 
             private void FixedUpdate()
             {
@@ -116,11 +128,11 @@ namespace RandomEvents
                     return;
                 }
                 age += Time.fixedDeltaTime;
-                lightTimer -= Time.fixedDeltaTime;
-                if (lightTimer <= 0f && age < Duration)
+                blazeTimer -= Time.fixedDeltaTime;
+                if (blazeTimer <= 0f && age < Duration)
                 {
-                    lightTimer = LightInterval;
-                    FireEffects.SpawnEffect(FireEffects.Nova, LightPosition, LightScale);
+                    blazeTimer = BlazeInterval;
+                    FireEffects.SpawnEffect(Blaze, BlazePosition, BlazeScale);
                 }
                 scorchTimer -= Time.fixedDeltaTime;
                 if (scorchTimer <= 0f && age < Duration)
@@ -175,14 +187,14 @@ namespace RandomEvents
                 }
             }
 
-            // only what the light shines on, like the Grandparent's sun
+            // only what the blaze can see, like the Grandparent's sun
             private List<CharacterBody> ShoneOn()
             {
                 return CharacterBody.readOnlyInstancesList.Where(body => IsTarget(body, Radius)
-                    && !Physics.Linecast(LightPosition, body.corePosition, LayerIndex.world.mask, QueryTriggerInteraction.Ignore)).ToList();
+                    && !Physics.Linecast(BlazePosition, body.corePosition, LayerIndex.world.mask, QueryTriggerInteraction.Ignore)).ToList();
             }
 
-            // 150% of the thrower's damage per second to everything the light shines on, with the sun's flash at each
+            // 150% of the thrower's damage per second to everything the blaze can see, with Helfire Tincture's flash at each
             private void Scorch()
             {
                 if (owner == null || owner.teamComponent == null)
@@ -191,12 +203,7 @@ namespace RandomEvents
                 }
                 foreach (var body in ShoneOn())
                 {
-                    EffectManager.SpawnEffect(ScorchEffect.WaitForCompletion(), new EffectData
-                    {
-                        origin = body.corePosition,
-                        rotation = Util.QuaternionSafeLookRotation(LightPosition - body.corePosition),
-                        scale = body.bestFitRadius
-                    }, transmit: true);
+                    EffectManager.SpawnEffect(ScorchEffect.WaitForCompletion(), new EffectData { origin = body.corePosition }, transmit: true);
                     body.healthComponent.TakeDamage(new DamageInfo
                     {
                         attacker = owner.gameObject,
@@ -220,6 +227,14 @@ namespace RandomEvents
                     }
                 }
                 heat.Clear();
+                foreach (var fire in fires)
+                {
+                    if (fire != null)
+                    {
+                        Destroy(fire);
+                    }
+                }
+                fires.Clear();
             }
         }
     }
