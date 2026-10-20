@@ -14,7 +14,6 @@ namespace RandomEvents
     {
         public static AsyncOperationHandle<GameObject> FirePool;
         public static AsyncOperationHandle<GameObject> BurningOil;
-        public static AsyncOperationHandle<GameObject> RingOfFire;
         public static AsyncOperationHandle<GameObject> Ignition;
         public static AsyncOperationHandle<GameObject> Fireball;
         public static AsyncOperationHandle<GameObject> Sun;
@@ -30,7 +29,6 @@ namespace RandomEvents
             }
             FirePool = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC1/Molotov/MolotovProjectileDotZone.prefab");
             BurningOil = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC2/Chef/ChefImpactOilBoosted.prefab");
-            RingOfFire = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC4/Spirit/RingOfFire.prefab");
             Ignition = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC1/Molotov/MolotovClusterIgniteExplosionVFX.prefab");
             Fireball = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC2/Chef/BoostedSearFireballProjectileExplosionVFX.prefab");
             Sun = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Grandparent/GrandParentSun.prefab");
@@ -51,7 +49,7 @@ namespace RandomEvents
                 // it sets itself on fire as it starts, which turns its damage zone on again
                 oil.enabled = false;
             }
-            foreach (var behaviour in new Behaviour[] { fire.GetComponent<ProjectileDotZone>(), fire.GetComponent<ProjectileOverlapAttack>(), fire.GetComponent<SpiritRingOfFireProjectile>() })
+            foreach (var behaviour in new Behaviour[] { fire.GetComponent<ProjectileDotZone>(), fire.GetComponent<ProjectileOverlapAttack>() })
             {
                 if (behaviour != null)
                 {
@@ -107,11 +105,10 @@ namespace RandomEvents
         }
     }
 
-    // Ground covered in Molotov fire, CHEF's burning oil and the Spirit's rings of fire, with fireballs bursting now and
-    // then, under a Grandparent's sun, for a while; few of the parts with their own sound, which add up quickly
+    // Ground covered in Molotov fire and CHEF's burning oil, with fireballs bursting now and then, under a Grandparent's
+    // sun, for a while; few of the parts with their own sound, which add up quickly
     public class GroundFire : MonoBehaviour
     {
-        private const float RingInterval = 3f;
         private const float FireballInterval = 2f;
         private const int FirePools = 10;
         private const int OilPuddles = 2;
@@ -124,7 +121,6 @@ namespace RandomEvents
         private readonly List<GameObject> fires = new List<GameObject>();
         private GenericOwnership sun;
         private float age;
-        private float ringTimer;
         private float fireballTimer;
 
         private void Start()
@@ -153,12 +149,6 @@ namespace RandomEvents
             if (age >= sunDuration)
             {
                 PutOutSun();
-            }
-            ringTimer -= Time.fixedDeltaTime;
-            if (ringTimer <= 0f)
-            {
-                ringTimer = RingInterval;
-                FireEffects.SpawnFire(FireEffects.RingOfFire, center, null, teamIndex);
             }
             fireballTimer -= Time.fixedDeltaTime;
             if (fireballTimer <= 0f)
