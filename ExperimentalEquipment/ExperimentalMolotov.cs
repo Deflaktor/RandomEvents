@@ -62,7 +62,8 @@ namespace RandomEvents
         }
 
         // The experimental Molotov: the Molotov's and Gasoline's bursts where it landed, then for 5 seconds the ground ablaze
-        // with Molotov fire and an Elder Lemurian's fireball bursting over the middle again and again. Meanwhile
+        // with Molotov fire, Kjaro's Band's fire tornado in the middle, and a huge Elder Lemurian's fireball bursting over it
+        // again and again. Meanwhile
         // everything hostile nearby that the blaze can see burns, with stacks that pile up faster and faster to 5000% of the
         // thrower's damage in all, which the Grandparent's heat shows, and is scorched every half second with Helfire
         // Tincture's flash.
@@ -73,21 +74,27 @@ namespace RandomEvents
             private const float TickInterval = 0.1f;
             private const float TotalDamage = 50f;
             private const int MaxHeatStacks = 40;
-            // an Elder Lemurian's fireball bursting over the middle again and again
-            private const float BlazeInterval = 0.5f;
+            // where the blaze sees from
             private const float BlazeHeight = 1.5f;
-            private const float BlazeScale = 3f;
+            // an Elder Lemurian's fireball bursting over the middle again and again
+            private const float FireballInterval = 0.5f;
+            private const float FireballHeight = 4f;
+            private const float FireballScale = 10f;
             private const int FirePools = 6;
+            // Kjaro's Band's fire tornado, whose flames die down after a while, so a new one comes
+            private const float TornadoInterval = 2.5f;
             private const float ScorchDamagePerSecond = 1.5f;
             private const float ScorchInterval = 0.5f;
             private static AsyncOperationHandle<GameObject> Gasoline;
-            private static AsyncOperationHandle<GameObject> Blaze;
+            private static AsyncOperationHandle<GameObject> Fireball;
+            private static AsyncOperationHandle<GameObject> Tornado;
             private static AsyncOperationHandle<GameObject> ScorchEffect;
             public CharacterBody owner;
             public Vector3 center;
             private readonly Dictionary<CharacterBody, int> heat = new Dictionary<CharacterBody, int>();
             private readonly List<GameObject> fires = new List<GameObject>();
-            private float blazeTimer;
+            private float fireballTimer;
+            private float tornadoTimer;
             private float age;
             private int tick;
             private int ticks;
@@ -98,7 +105,8 @@ namespace RandomEvents
             {
                 FireEffects.Preload();
                 Gasoline = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/IgniteOnKill/IgniteExplosionVFX.prefab");
-                Blaze = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LemurianBruiser/OmniExplosionVFXLemurianBruiserFireballImpact.prefab");
+                Fireball = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LemurianBruiser/OmniExplosionVFXLemurianBruiserFireballImpact.prefab");
+                Tornado = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/ElementalRings/FireTornado.prefab");
                 ScorchEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/BurnNearby/HelfireIgniteEffect.prefab");
             }
 
@@ -128,11 +136,17 @@ namespace RandomEvents
                     return;
                 }
                 age += Time.fixedDeltaTime;
-                blazeTimer -= Time.fixedDeltaTime;
-                if (blazeTimer <= 0f && age < Duration)
+                fireballTimer -= Time.fixedDeltaTime;
+                if (fireballTimer <= 0f && age < Duration)
                 {
-                    blazeTimer = BlazeInterval;
-                    FireEffects.SpawnEffect(Blaze, BlazePosition, BlazeScale);
+                    fireballTimer = FireballInterval;
+                    FireEffects.SpawnEffect(Fireball, center + Vector3.up * FireballHeight, FireballScale);
+                }
+                tornadoTimer -= Time.fixedDeltaTime;
+                if (tornadoTimer <= 0f && age < Duration)
+                {
+                    tornadoTimer = TornadoInterval;
+                    SpawnTornado();
                 }
                 scorchTimer -= Time.fixedDeltaTime;
                 if (scorchTimer <= 0f && age < Duration)
@@ -149,6 +163,12 @@ namespace RandomEvents
                 {
                     Destroy(gameObject);
                 }
+            }
+
+            private void SpawnTornado()
+            {
+                var team = owner != null && owner.teamComponent != null ? owner.teamComponent.teamIndex : TeamIndex.Neutral;
+                fires.Add(FireEffects.SpawnFire(Tornado, center, null, team));
             }
 
             private bool IsTarget(CharacterBody body, float radius)
