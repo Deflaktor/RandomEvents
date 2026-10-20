@@ -33,6 +33,7 @@ namespace RandomEvents
         private const float DiscBombDamage = 10f;
         private static AsyncOperationHandle<GameObject> DiscTracer;
         private static AsyncOperationHandle<GameObject> DiscBomb;
+        private static AsyncOperationHandle<GameObject> MolotovBottle;
         // each Crowdfunder's bullets so far
         private readonly Dictionary<GameObject, int> crowdfunderBullets = new Dictionary<GameObject, int>();
         // the players the Crowdfunder roots while it fires
@@ -45,7 +46,7 @@ namespace RandomEvents
         private static EquipmentDef[] Equipments => new[]
         {
             RoR2Content.Equipment.Lightning, RoR2Content.Equipment.CommandMissile, RoR2Content.Equipment.Scanner, RoR2Content.Equipment.LifestealOnHit,
-            RoR2Content.Equipment.DeathProjectile, RoR2Content.Equipment.GoldGat
+            RoR2Content.Equipment.DeathProjectile, RoR2Content.Equipment.GoldGat, DLC1Content.Equipment.Molotov
         };
 
         public override bool LoadCondition()
@@ -70,7 +71,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Gives all players a remixed equipment with a shorter cooldown. Royal Capacitor inflates a monster until it explodes, Disposable Missile Launcher fires a Plasma Shrimp missile at every monster, Radar Scanner's wave also pushes and hurts monsters, and Super Massive Leech causes hemorrhage instead of healing, Forgive Me Please's doll walks straight ahead and explodes like a mini nuke after 10 seconds, and the Crowdfunder costs no gold and fires Resonance Disc shots, but roots you while it fires.";
+            return "Gives all players a remixed equipment with a shorter cooldown. Royal Capacitor inflates a monster until it explodes, Disposable Missile Launcher fires a Plasma Shrimp missile at every monster, Radar Scanner's wave also pushes and hurts monsters, and Super Massive Leech causes hemorrhage instead of healing, Forgive Me Please's doll walks straight ahead and explodes like a mini nuke after 10 seconds, the Crowdfunder costs no gold and fires Resonance Disc shots, but roots you while it fires, and the Molotov (6-Pack) sets a sea of fire that burns everything nearby harder and harder for 10 seconds.";
         }
         public override string GetPopupDescription()
         {
@@ -84,6 +85,8 @@ namespace RandomEvents
                 return "The doll walks straight ahead and explodes like a mini nuke after 10 seconds.";
             if (equipmentDef == RoR2Content.Equipment.GoldGat)
                 return "Costs no gold and fires Resonance Disc shots, but you can't move while it fires.";
+            if (equipmentDef == DLC1Content.Equipment.Molotov)
+                return "One bottle that sets a sea of fire, burning everything nearby harder and harder for 10 seconds.";
             return "Inflates the targeted monster to three times its size, then it explodes. No effect on bosses.";
         }
         public override string GetConditionDescription()
@@ -101,6 +104,8 @@ namespace RandomEvents
             Doll = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/DeathProjectile/DeathProjectile.prefab");
             DiscTracer = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LaserTurbine/TracerLaserTurbine.prefab");
             DiscBomb = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/LaserTurbine/LaserTurbineBomb.prefab");
+            MolotovBottle = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC1/Molotov/MolotovSingleProjectile.prefab");
+            Inferno.Preload();
             EventHotPotato.MiniNuke.Preload();
         }
         public override void Hook()
@@ -112,6 +117,7 @@ namespace RandomEvents
             On.EntityStates.GoldGat.GoldGatFire.OnEnter += GoldGatFire_OnEnter;
             On.EntityStates.GoldGat.GoldGatFire.OnExit += GoldGatFire_OnExit;
             On.RoR2.HealthComponent.TakeDamage += HealthComponent_TakeDamage;
+            On.RoR2.Projectile.ProjectileExplosion.DetonateServer += ProjectileExplosion_DetonateServer;
         }
 
         private void CharacterBody_onBodyStartGlobal(CharacterBody body)
@@ -168,6 +174,22 @@ namespace RandomEvents
             if (def == RoR2Content.Equipment.DeathProjectile)
             {
                 return LaunchDoll(self);
+            }
+            if (def == DLC1Content.Equipment.Molotov)
+            {
+                var aim = self.GetAimRay();
+                ProjectileManager.instance.FireProjectile(new FireProjectileInfo
+                {
+                    projectilePrefab = MolotovBottle.WaitForCompletion(),
+                    owner = self.characterBody.gameObject,
+                    position = aim.origin,
+                    rotation = Quaternion.LookRotation(aim.direction),
+                    damage = self.characterBody.damage,
+                    crit = self.characterBody.RollCrit(),
+                    useSpeedOverride = true,
+                    speedOverride = 40f
+                });
+                return true;
             }
             return orig(self, def);
         }
@@ -227,6 +249,22 @@ namespace RandomEvents
             walker.direction = direction;
             NetworkServer.Spawn(doll);
             return true;
+        }
+
+        // the remixed Molotov's bottle sets its sea of fire instead of the bottle's own fire
+        private void ProjectileExplosion_DetonateServer(On.RoR2.Projectile.ProjectileExplosion.orig_DetonateServer orig, ProjectileExplosion self)
+        {
+            var owner = self.projectileController != null && self.projectileController.owner != null ? self.projectileController.owner.GetComponent<CharacterBody>() : null;
+            if (!ModConfig.Enabled.Value || !NetworkServer.active || !IsActive() || equipmentDef != DLC1Content.Equipment.Molotov || owner == null
+                || owner.GetComponent<RemixComponent>() == null || !self.name.StartsWith("MolotovSingleProjectile"))
+            {
+                orig(self);
+                return;
+            }
+            var center = Physics.Raycast(self.transform.position + Vector3.up, Vector3.down, out var hit, 30f, LayerIndex.world.mask, QueryTriggerInteraction.Ignore) ? hit.point : self.transform.position;
+            var inferno = new GameObject("RandomEventsInferno").AddComponent<Inferno>();
+            inferno.owner = owner;
+            inferno.center = center;
         }
 
         private bool IsRemixedCrowdfunder(CharacterBody body)
@@ -383,7 +421,9 @@ namespace RandomEvents
 
         public override void Prepare()
         {
-            equipmentDef = Equipments[RoR2Application.rng.RangeInt(0, Equipments.Length)];
+            // only those of the run's expansions, e.g. the Molotov (6-Pack) with Survivors of the Void
+            var available = Equipments.Where(def => def != null && (def.requiredExpansion == null || Run.instance == null || Run.instance.IsExpansionEnabled(def.requiredExpansion))).ToList();
+            equipmentDef = available[RoR2Application.rng.RangeInt(0, available.Count)];
         }
 
         public override void Start(List<AbstractEvent> activeOtherEvents)
@@ -525,6 +565,193 @@ namespace RandomEvents
                     body.healthComponent.Suicide(attacker != null ? attacker.gameObject : null);
                 }
                 Destroy(this);
+            }
+        }
+
+        // The remixed Molotov's sea of fire: for 10 seconds, everything hostile nearby burns, with stacks that pile up
+        // faster and faster to 10000% of the thrower's damage in all, which the Grandparent's heat shows. The ground
+        // is covered in Molotov fire, CHEF's burning oil and the Spirit's rings of fire, all just for show.
+        public class Inferno : MonoBehaviour
+        {
+            private const float Duration = 10f;
+            private const float Radius = 12f;
+            private const float TickInterval = 0.1f;
+            private const float TotalDamage = 100f;
+            private const int MaxHeatStacks = 20;
+            private const float RingInterval = 1.5f;
+            private static AsyncOperationHandle<GameObject> FirePool;
+            private static AsyncOperationHandle<GameObject> BurningOil;
+            private static AsyncOperationHandle<GameObject> RingOfFire;
+            private static AsyncOperationHandle<GameObject> Ignition;
+            private static AsyncOperationHandle<GameObject> Fireball;
+            public CharacterBody owner;
+            public Vector3 center;
+            private readonly List<GameObject> fires = new List<GameObject>();
+            private readonly Dictionary<CharacterBody, int> heat = new Dictionary<CharacterBody, int>();
+            private float age;
+            private int tick;
+            private float ringTimer;
+            private float fireballTimer;
+            private int ticks;
+            private float weightSum;
+
+            public static void Preload()
+            {
+                FirePool = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC1/Molotov/MolotovProjectileDotZone.prefab");
+                BurningOil = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC2/Chef/ChefImpactOilBoosted.prefab");
+                RingOfFire = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC4/Spirit/RingOfFire.prefab");
+                Ignition = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC1/Molotov/MolotovClusterIgniteExplosionVFX.prefab");
+                Fireball = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC2/Chef/BoostedSearFireballProjectileExplosionVFX.prefab");
+            }
+
+            private void Start()
+            {
+                ticks = Mathf.RoundToInt(Duration / TickInterval);
+                for (int i = 1; i <= ticks; i++)
+                {
+                    weightSum += i * i;
+                }
+                EffectManager.SpawnEffect(Ignition.WaitForCompletion(), new EffectData { origin = center, scale = Radius }, transmit: true);
+                EffectManager.SpawnEffect(Fireball.WaitForCompletion(), new EffectData { origin = center, scale = Radius * 0.5f }, transmit: true);
+                SpawnFire(FirePool, center);
+                for (int i = 0; i < 10; i++)
+                {
+                    SpawnFire(FirePool, OnGround(center + RandomHorizontal(Radius * 0.85f)));
+                }
+                for (int i = 0; i < 5; i++)
+                {
+                    SpawnFire(BurningOil, OnGround(center + RandomHorizontal(Radius * 0.7f)));
+                }
+            }
+
+            private static Vector3 RandomHorizontal(float radius)
+            {
+                var circle = UnityEngine.Random.insideUnitCircle * radius;
+                return new Vector3(circle.x, 0f, circle.y);
+            }
+
+            private static Vector3 OnGround(Vector3 position)
+            {
+                return Physics.Raycast(position + Vector3.up * 5f, Vector3.down, out var hit, 15f, LayerIndex.world.mask, QueryTriggerInteraction.Ignore) ? hit.point : position;
+            }
+
+            // A projectile for its look only: every part that would hurt or spread runs on the host alone, and is off
+            private GameObject SpawnFire(AsyncOperationHandle<GameObject> prefab, Vector3 position)
+            {
+                var fire = Instantiate(prefab.WaitForCompletion(), position, Quaternion.identity);
+                if (fire.TryGetComponent(out OilController oil))
+                {
+                    // it sets itself on fire as it starts, which turns its damage zone on again
+                    oil.enabled = false;
+                }
+                foreach (var behaviour in new Behaviour[] { fire.GetComponent<ProjectileDotZone>(), fire.GetComponent<ProjectileOverlapAttack>(), fire.GetComponent<SpiritRingOfFireProjectile>() })
+                {
+                    if (behaviour != null)
+                    {
+                        behaviour.enabled = false;
+                    }
+                }
+                if (fire.TryGetComponent(out ProjectileDamage projectileDamage))
+                {
+                    projectileDamage.damage = 0f;
+                }
+                if (fire.TryGetComponent(out ProjectileController controller) && owner != null)
+                {
+                    controller.owner = owner.gameObject;
+                }
+                if (fire.TryGetComponent(out TeamFilter teamFilter) && owner != null)
+                {
+                    teamFilter.teamIndex = owner.teamComponent.teamIndex;
+                }
+                NetworkServer.Spawn(fire);
+                fires.Add(fire);
+                return fire;
+            }
+
+            private void FixedUpdate()
+            {
+                if (!NetworkServer.active)
+                {
+                    return;
+                }
+                age += Time.fixedDeltaTime;
+                ringTimer -= Time.fixedDeltaTime;
+                if (ringTimer <= 0f && age < Duration)
+                {
+                    ringTimer = RingInterval;
+                    SpawnFire(RingOfFire, center);
+                }
+                fireballTimer -= Time.fixedDeltaTime;
+                if (fireballTimer <= 0f && age < Duration)
+                {
+                    fireballTimer = 0.5f;
+                    EffectManager.SpawnEffect(Fireball.WaitForCompletion(), new EffectData { origin = OnGround(center + RandomHorizontal(Radius)), scale = 4f }, transmit: true);
+                }
+                while (tick < ticks && age >= (tick + 1) * TickInterval)
+                {
+                    tick++;
+                    Burn(tick);
+                }
+                if (age >= Duration)
+                {
+                    End();
+                }
+            }
+
+            // the share of the burn for this tick grows with its square, so the stacks pile up faster and faster
+            private void Burn(int tickNumber)
+            {
+                if (owner == null || owner.teamComponent == null)
+                {
+                    return;
+                }
+                var damage = TotalDamage * owner.damage * tickNumber * tickNumber / weightSum;
+                var heatStacks = Mathf.Min(MaxHeatStacks, Mathf.CeilToInt(MaxHeatStacks * (float)tickNumber / ticks));
+                foreach (var body in CharacterBody.readOnlyInstancesList.ToList())
+                {
+                    if (body == null || body.healthComponent == null || !body.healthComponent.alive || body.teamComponent.teamIndex == owner.teamComponent.teamIndex
+                        || body.teamComponent.teamIndex == TeamIndex.Neutral || (body.corePosition - center).sqrMagnitude > (Radius + body.radius) * (Radius + body.radius))
+                    {
+                        continue;
+                    }
+                    var info = new InflictDotInfo
+                    {
+                        attackerObject = owner.gameObject,
+                        victimObject = body.gameObject,
+                        dotIndex = DotController.DotIndex.Burn,
+                        damageMultiplier = 1f,
+                        totalDamage = damage,
+                        hitHurtBox = body.mainHurtBox
+                    };
+                    DotController.InflictDot(ref info);
+                    var added = heat.GetValueOrDefault(body);
+                    if (heatStacks > added)
+                    {
+                        body.SetBuffCount(RoR2Content.Buffs.Overheat.buffIndex, body.GetBuffCount(RoR2Content.Buffs.Overheat) + heatStacks - added);
+                        heat[body] = heatStacks;
+                    }
+                }
+            }
+
+            private void End()
+            {
+                foreach (var (body, added) in heat)
+                {
+                    if (body != null)
+                    {
+                        body.SetBuffCount(RoR2Content.Buffs.Overheat.buffIndex, Mathf.Max(0, body.GetBuffCount(RoR2Content.Buffs.Overheat) - added));
+                    }
+                }
+                heat.Clear();
+                foreach (var fire in fires)
+                {
+                    if (fire != null)
+                    {
+                        Destroy(fire);
+                    }
+                }
+                fires.Clear();
+                Destroy(gameObject);
             }
         }
 
