@@ -328,10 +328,14 @@ namespace RandomEvents
             private float time;
             private float tickTimer;
 
+            // The game grows a body to a new size evenly over 2 seconds, starting over with each change. So all the size
+            // items come at once, and the growth itself takes the 2 seconds, on every player's screen alike.
             private void Start()
             {
                 body = GetComponent<CharacterBody>();
                 startPercent = 100 + body.inventory.GetItemCountEffective(DLC4Content.Items.BoostCharacterScale) - body.inventory.GetItemCountEffective(DLC4Content.Items.ReduceCharacterScale);
+                added = Mathf.RoundToInt(startPercent * (InflateFactor - 1f));
+                body.inventory.GiveItemPermanent(DLC4Content.Items.BoostCharacterScale, added);
             }
 
             private void FixedUpdate()
@@ -342,12 +346,6 @@ namespace RandomEvents
                 }
                 time += Time.fixedDeltaTime;
                 var progress = Mathf.Clamp01(time / InflateTime);
-                var target = Mathf.RoundToInt(startPercent * (InflateFactor - 1f) * progress * progress);
-                if (target > added && body.inventory != null)
-                {
-                    body.inventory.GiveItemPermanent(DLC4Content.Items.BoostCharacterScale, target - added);
-                    added = target;
-                }
                 tickTimer -= Time.fixedDeltaTime;
                 if (tickTimer <= 0f)
                 {
@@ -358,7 +356,9 @@ namespace RandomEvents
                         scale = body.radius * (1f + progress)
                     }, transmit: true);
                 }
-                if (progress >= 1f || !body.healthComponent.alive)
+                // once it has grown to its full size, with a little leeway in case it never quite gets there
+                var grown = body.currentScale >= body.desiredScale - 0.01f && time >= InflateTime * 0.5f;
+                if (grown || time >= InflateTime + 0.5f || !body.healthComponent.alive)
                 {
                     Explode();
                 }
