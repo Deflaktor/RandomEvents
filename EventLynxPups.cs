@@ -43,7 +43,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Half of the monsters that spawn are Lynx Pups, one and a half times as big and with ten times the health.";
+            return "Half of the monsters that spawn are Lynx Pups, one and a half times as big, with one and a half times the health and attacking half as often.";
         }
         public override string GetConditionDescription()
         {
@@ -90,8 +90,10 @@ namespace RandomEvents
             }
             grown.Add(body.master);
             // each Boost Hp adds 10% of the base health, each stack of the scale item 1% of the size
-            body.inventory.GiveItemPermanent(RoR2Content.Items.BoostHp, 90);
+            body.inventory.GiveItemPermanent(RoR2Content.Items.BoostHp, 5);
             body.inventory.GiveItemPermanent(DLC4Content.Items.BoostCharacterScale, 50);
+            // and attacking half as often
+            Slowdown.Apply(body, 0.5f);
         }
 
         public override void Prepare()
