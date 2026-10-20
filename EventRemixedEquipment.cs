@@ -439,9 +439,12 @@ namespace RandomEvents
                 {
                     position.y -= 10f * Time.fixedDeltaTime;
                 }
-                // a waddle from side to side, and a nod of the head with every step
+                // Upright: the doll's model lies along its forward axis, head first and face down, so that axis points up
+                // and its down axis ahead. Then a waddle from side to side, and a nod of the head with every step.
                 var nod = Mathf.Sin(age * StepRate * 2f) * 10f;
-                transform.SetPositionAndRotation(position, Quaternion.LookRotation(direction) * Quaternion.Euler(nod, 0f, sway * 15f));
+                var upright = Quaternion.LookRotation(Vector3.up, -direction);
+                var side = Vector3.Cross(Vector3.up, direction);
+                transform.SetPositionAndRotation(position, Quaternion.AngleAxis(sway * 15f, direction) * Quaternion.AngleAxis(nod, side) * upright);
                 if (age >= DollFuse)
                 {
                     var groundZero = Physics.Raycast(position, Vector3.down, out var floor, 50f, LayerIndex.world.mask, QueryTriggerInteraction.Ignore) ? floor.point : position;
