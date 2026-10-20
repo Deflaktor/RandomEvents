@@ -1,39 +1,31 @@
 using RoR2;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
-using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace RandomEvents
 {
-    // The Crowdfunder fires as usual, but costs no gold, its hits push monsters back, and every 4 of its hits
-    // make a monster heavier. A monster made heavier dies when it falls out of the map, even one that would be brought
-    // back.
+    // The Crowdfunder fires as usual, but costs no gold, its hits push monsters back, every 3 of its hits launch a
+    // monster like the Breaching Fin, even one in the air, and every 4 make it heavier. A monster made heavier dies when it
+    // falls out of the map, even one that would be brought back.
     public class ExperimentalCrowdfunder : ExperimentalEquipment
     {
+        private const int HitsPerLaunch = 3;
         private const int HitsPerGravity = 4;
         // each hit pushes it this fast away from the shooter, for its weight, a little up too
         private const float KnockbackSpeed = 2.5f;
         // how much the gravity grows each time, up to the most
         private const float GravityStep = 1f;
         private const float MaxGravityScale = 6f;
-        // the Breaching Fin's knock-up, for its sound
-        private static AsyncOperationHandle<GameObject> HeavierEffect;
         private readonly Dictionary<CharacterBody, int> hits = new Dictionary<CharacterBody, int>();
         private readonly HashSet<CharacterBody> heavier = new HashSet<CharacterBody>();
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.GoldGat;
-        public override string Description => "the Crowdfunder costs no gold, and every 4 of its hits make a monster heavier, so it dies if it falls out of the map, and its hits push monsters back";
-        public override string PopupDescription => "Costs no gold and its hits push monsters back. Every 4 hits make a monster heavier, and a heavier monster that falls out of the map dies.";
+        public override string Description => "the Crowdfunder costs no gold, its hits push monsters back, every 3 of its hits launch a monster like the Breaching Fin, again and again, and every 4 make it heavier, so it dies if it falls out of the map";
+        public override string PopupDescription => "Costs no gold and its hits push monsters back. Every 3 hits launch a monster like the Breaching Fin, again and again, and every 4 make it heavier. A heavier monster that falls out of the map dies.";
 
         // it fires as usual, toggled by the player's own game
         public override bool ReplacesAction => false;
-
-        public override void Preload()
-        {
-            HeavierEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC2/Items/KnockBackHitEnemies/KnockBackHitEnemiesImpact.prefab");
-        }
 
         public override void Hook()
         {
@@ -86,6 +78,10 @@ namespace RandomEvents
             body.healthComponent.TakeDamageForce((new Vector3(away.x, 0f, away.z).normalized + Vector3.up * 0.3f) * KnockbackSpeed * Mathf.Min(mass, 1000f), alwaysApply: true);
             var count = hits.GetValueOrDefault(body) + 1;
             hits[body] = count;
+            if (count % HitsPerLaunch == 0)
+            {
+                Launch(attackerBody, body);
+            }
             if (count % HitsPerGravity == 0)
             {
                 MakeHeavier(body);
@@ -104,11 +100,51 @@ namespace RandomEvents
                 body.rigidbody.useGravity = true;
             }
             heavier.Add(body);
-            EffectManager.SpawnEffect(HeavierEffect.WaitForCompletion(), new EffectData
+        }
+
+        // The Breaching Fin's launch, as the game does it, but also in the air, with no limit and no cooldown: up and a
+        // little away from the shooter, stunned, and each launch before it lands adds 10% to the damage it takes
+        private static void Launch(CharacterBody attacker, CharacterBody body)
+        {
+            var motor = body.characterMotor;
+            if (motor == null || (body.bodyFlags & (CharacterBody.BodyFlags.IgnoreKnockup | CharacterBody.BodyFlags.Unmovable)) != 0
+                || body.HasBuff(RoR2Content.Buffs.Immune))
             {
-                origin = body.corePosition,
-                scale = body.radius
+                return;
+            }
+            // launched: the launches it took stay until it has been back on the ground for a moment
+            body.SetBuffCount(DLC2Content.Buffs.KnockUpHitEnemies.buffIndex, Mathf.Max(1, body.GetBuffCount(DLC2Content.Buffs.KnockUpHitEnemies)));
+            body.AddBuff(DLC2Content.Buffs.KnockUpHitEnemiesJuggleCount);
+            if (body.TryGetComponent(out SetStateOnHurt setStateOnHurt))
+            {
+                setStateOnHurt.OverrideStun(KnockbackFinUtil.StunDuration);
+            }
+            var scale = body.hullClassification switch
+            {
+                HullClassification.Golem => KnockbackFinUtil.golemLaunchEffectScale,
+                HullClassification.BeetleQueen => KnockbackFinUtil.queenLaunchEffectScale,
+                _ => KnockbackFinUtil.humanLaunchEffectScale
+            };
+            EffectManager.SpawnEffect(CharacterBody.CommonAssets.knockbackFinEffect, new EffectData
+            {
+                origin = body.transform.position,
+                scale = scale
             }, transmit: true);
+            var impulse = motor.mass * KnockbackFinUtil.victimMassMultiplier;
+            if (body.isBoss)
+            {
+                impulse *= KnockbackFinUtil.bossImpulseModifier;
+            }
+            else if (body.isChampion)
+            {
+                impulse *= KnockbackFinUtil.championImpulseModifier;
+            }
+            var modifier = motor.isGrounded ? 1f : KnockbackFinUtil.juggleModifier01;
+            // a falling one is caught first
+            var up = impulse * modifier - Mathf.Min(0f, motor.velocity.y) * motor.mass;
+            var away = body.corePosition - attacker.corePosition;
+            away.y = 0f;
+            motor.ApplyForce(up * Vector3.up + impulse * KnockbackFinUtil.knockBackardsRatio * modifier * away.normalized, alwaysApply: true);
         }
 
         // out of the map, it dies instead of being brought back; its last attacker gets the kill
