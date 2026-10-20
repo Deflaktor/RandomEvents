@@ -23,8 +23,8 @@ namespace RandomEvents
             // the explosion of ExplodingCorpses' monsters
             Breach = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC2/Scorchling/VFXScorchlingBreachExplosion.prefab");
             Tick = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/OmniExplosionVFXQuick.prefab");
-            // the flash of an Alloyed Collective vault taking its key
-            Strike = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC3/PowerOrbPedestal/PowerVaultActivationVFX.prefab");
+            // Luminous Shot's lightning strike, with its sound
+            Strike = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC2/Items/IncreasePrimaryDamage/IncreasePrimaryDamageImpact.prefab");
         }
 
         public override bool Fire(EquipmentSlot slot)
