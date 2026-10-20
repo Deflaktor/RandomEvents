@@ -10,9 +10,10 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace RandomEvents
 {
-    // Instead of its black hole, a bright white spot where the player aims that pulls everything in and swallows the
-    // monsters that reach it. Once it has swallowed none for 5 seconds, it bursts: the bigger the health it swallowed,
-    // the bigger the blast, the harder it hurts, and the further the swallowed monsters fly out of it.
+    // Instead of its black hole, a crackling spot where the player aims that pulls everything in and swallows the
+    // monsters that reach it: they shrink away, then grow back unseen. Once it has swallowed none for 5 seconds and all
+    // have grown back, it bursts: the bigger the health it swallowed, the bigger the blast, the harder it hurts, and the
+    // further the swallowed monsters fly out of it.
     public class ExperimentalPrimordialCube : ExperimentalEquipment
     {
         private const float AimRange = 200f;
@@ -21,10 +22,13 @@ namespace RandomEvents
         private static AsyncOperationHandle<GameObject> Nova;
         private static AsyncOperationHandle<GameObject> Fireball;
         private static AsyncOperationHandle<GameObject> BurstEffect;
+        // the spot: the Captain's shocking beacon's nova and his Tazer's, small
+        private static AsyncOperationHandle<GameObject> ShockNova;
+        private static AsyncOperationHandle<GameObject> ShockRing;
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.Blackhole;
-        public override string Description => "the Primordial Cube opens a bright spot where you aim that swallows monsters and bursts, the harder the more it swallowed";
-        public override string PopupDescription => "Opens a bright spot where you aim that pulls in and swallows monsters, then bursts, throwing them out. The more it swallowed, the bigger the burst.";
+        public override string Description => "the Primordial Cube opens a crackling spot where you aim that swallows monsters and bursts, the harder the more it swallowed";
+        public override string PopupDescription => "Opens a crackling spot where you aim that pulls in and swallows monsters, then bursts, throwing them out. The more it swallowed, the bigger the burst.";
 
         public override void Preload()
         {
@@ -34,6 +38,8 @@ namespace RandomEvents
             Nova = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Vagrant/VagrantNovaExplosion.prefab");
             Fireball = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/FusionCellDestructible/FusionCellExplosion.prefab");
             BurstEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Jellyfish/JellyfishNova.prefab");
+            ShockNova = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Captain/CaptainTazerSupplyDropNova.prefab");
+            ShockRing = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Captain/CaptainTazerNova.prefab");
         }
 
         // on the ground where the player aims, at once; with nothing to aim at, nothing happens and it keeps its charge
@@ -66,6 +72,9 @@ namespace RandomEvents
             public CharacterBody owner;
             public Vector3 center;
             private readonly List<CharacterBody> swallowed = new List<CharacterBody>();
+            // the swallowed that have shrunk away and now grow back unseen
+            private readonly HashSet<CharacterBody> hidden = new HashSet<CharacterBody>();
+            private bool spotRing;
             private float power;
             private float quietTimer = QuietTime;
             private float spotTimer;
@@ -76,13 +85,13 @@ namespace RandomEvents
                 {
                     return;
                 }
-                // the bright white spot, flashing again and again
+                // the spot, crackling again and again
                 spotTimer -= Time.fixedDeltaTime;
                 if (spotTimer <= 0f)
                 {
                     spotTimer = SpotInterval;
-                    FireEffects.SpawnEffect(FireEffects.WhiteGlint, center, 3f);
-                    FireEffects.SpawnEffect(FireEffects.LightBurst, center, 3f);
+                    spotRing = !spotRing;
+                    FireEffects.SpawnEffect(spotRing ? ShockRing : ShockNova, center, spotRing ? 6f : 4f);
                 }
                 foreach (var body in CharacterBody.readOnlyInstancesList.ToList())
                 {
@@ -103,9 +112,15 @@ namespace RandomEvents
                 foreach (var body in swallowed)
                 {
                     Hold(body);
+                    // its target size is only lowered once its stats are worked out again, after the shrink items
+                    if (body != null && !hidden.Contains(body) && body.desiredScale < 0.5f && body.currentScale <= body.desiredScale + 0.01f)
+                    {
+                        Hide(body);
+                    }
                 }
                 quietTimer -= Time.fixedDeltaTime;
-                if (quietTimer <= 0f)
+                // once all of them have grown back
+                if (quietTimer <= 0f && swallowed.All(body => body == null || !body.healthComponent.alive || hidden.Contains(body) && body.desiredScale >= 0.5f && body.currentScale >= body.desiredScale - 0.01f))
                 {
                     Burst();
                 }
@@ -167,6 +182,15 @@ namespace RandomEvents
                 }
                 TeleportHelper.TeleportBody(body, center);
                 EffectManager.SpawnEffect(Swallow.WaitForCompletion(), new EffectData { origin = center, scale = 3f }, transmit: true);
+            }
+
+            // Shrunk away: cloaked, with no hit boxes on any player's screen, it grows back to its size over the game's 2 seconds
+            private void Hide(CharacterBody body)
+            {
+                hidden.Add(body);
+                body.AddBuff(RoR2Content.Buffs.Cloak);
+                body.AddBuff(RoR2Content.Buffs.Intangible);
+                body.inventory.RemoveItemPermanent(DLC4Content.Items.ReduceCharacterScale, ShrinkStacks);
             }
 
             // its AI is off, so nothing presses its buttons any more
@@ -232,17 +256,26 @@ namespace RandomEvents
                     }
                 }
                 swallowed.Clear();
+                hidden.Clear();
                 Destroy(gameObject);
             }
 
-            // back to its size, over the 2 seconds the game takes, moving and fighting again
-            private static void Release(CharacterBody body)
+            // seen again at once, moving and fighting again; one still shrinking grows back too
+            private void Release(CharacterBody body)
             {
                 if (body == null)
                 {
                     return;
                 }
-                body.inventory?.RemoveItemPermanent(DLC4Content.Items.ReduceCharacterScale, ShrinkStacks);
+                if (hidden.Contains(body))
+                {
+                    body.RemoveBuff(RoR2Content.Buffs.Cloak);
+                    body.RemoveBuff(RoR2Content.Buffs.Intangible);
+                }
+                else
+                {
+                    body.inventory?.RemoveItemPermanent(DLC4Content.Items.ReduceCharacterScale, ShrinkStacks);
+                }
                 if (body.HasBuff(RoR2Content.Buffs.Immune))
                 {
                     body.RemoveBuff(RoR2Content.Buffs.Immune);
