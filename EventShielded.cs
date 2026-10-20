@@ -13,6 +13,7 @@ namespace RandomEvents
     {
         private ConfigEntry<float> ShieldedShare;
         private ConfigEntry<float> HealthFraction;
+        private ConfigEntry<float> ShieldedDamageTaken;
         private readonly BuffTracker buffs = new BuffTracker();
         private readonly HashSet<CharacterBody> shielded = new HashSet<CharacterBody>();
 
@@ -20,7 +21,7 @@ namespace RandomEvents
         {
             return true;
         }
-        // not while the teleporter or a Simulacrum boss wave has a boss to fight, who could stay invincible for long;
+        // not while the teleporter or a Simulacrum boss wave has a boss to fight, who could stay shielded for long;
         // Mirrored Enemies marks its monsters with the same shine
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
@@ -38,7 +39,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Three quarters of the monsters can't be hurt. The others have a quarter of their health, and when one dies, the nearest monster that can't be hurt can be from then on.";
+            return "Three quarters of the monsters are shielded and take only 5% of the damage. The others have a quarter of their health, and when one dies, the nearest shielded monster loses its shield.";
         }
         public override string GetConditionDescription()
         {
@@ -46,8 +47,9 @@ namespace RandomEvents
         }
         protected override void AddConfig(ConfigFile config)
         {
-            ShieldedShare = config.Bind(GetEventConfigName(), "Shielded Share", 0.75f, "The share of the monsters that can't be hurt.");
-            HealthFraction = config.Bind(GetEventConfigName(), "Health Fraction", 0.25f, "The share of their health the monsters that can be hurt keep.");
+            ShieldedShare = config.Bind(GetEventConfigName(), "Shielded Share", 0.75f, "The share of the monsters that are shielded.");
+            HealthFraction = config.Bind(GetEventConfigName(), "Health Fraction", 0.25f, "The share of their health the monsters that aren't shielded keep.");
+            ShieldedDamageTaken = config.Bind(GetEventConfigName(), "Shielded Damage Taken", 0.05f, "The share of the damage shielded monsters take.");
         }
         public override void Preload()
         {
@@ -56,6 +58,16 @@ namespace RandomEvents
         {
             CharacterBody.onBodyStartGlobal += CharacterBody_onBodyStartGlobal;
             GlobalEventManager.onCharacterDeathGlobal += GlobalEventManager_onCharacterDeathGlobal;
+            On.RoR2.HealthComponent.TakeDamage += HealthComponent_TakeDamage;
+        }
+
+        private void HealthComponent_TakeDamage(On.RoR2.HealthComponent.orig_TakeDamage orig, HealthComponent self, DamageInfo damageInfo)
+        {
+            if (ModConfig.Enabled.Value && NetworkServer.active && IsActive() && damageInfo != null && self.body != null && shielded.Contains(self.body))
+            {
+                damageInfo.damage *= Mathf.Clamp01(ShieldedDamageTaken.Value);
+            }
+            orig(self, damageInfo);
         }
 
         private static bool IsMonster(CharacterBody body)
@@ -85,11 +97,10 @@ namespace RandomEvents
             }
         }
 
-        // the Immune buff rejects all damage; the shine is that of the Solus Wing's invulnerable elite
+        // the host cuts the damage it takes; the shine is that of the Solus Wing's invulnerable elite
         private void Shield(CharacterBody body)
         {
             shielded.Add(body);
-            buffs.Add(body, RoR2Content.Buffs.Immune);
             buffs.Add(body, DLC3Content.Buffs.SolusWingInvulnerability);
         }
 
@@ -97,7 +108,6 @@ namespace RandomEvents
         {
             if (shielded.Remove(body))
             {
-                buffs.Remove(body, RoR2Content.Buffs.Immune);
                 buffs.Remove(body, DLC3Content.Buffs.SolusWingInvulnerability);
             }
             var healthComponent = body.healthComponent;
@@ -106,7 +116,7 @@ namespace RandomEvents
             healthComponent.Networkshield = Mathf.Min(healthComponent.shield, healthComponent.fullShield * fraction);
         }
 
-        // the nearest shielded monster to one that died can be hurt from then on, shown by the vine of Zombies' infection
+        // the nearest shielded monster to one that died loses its shield, shown by the vine of Zombies' infection
         private void GlobalEventManager_onCharacterDeathGlobal(DamageReport report)
         {
             if (!ModConfig.Enabled.Value || !NetworkServer.active || !IsActive() || report.victimBody == null || shielded.Contains(report.victimBody)
