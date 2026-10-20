@@ -5,24 +5,19 @@ using UnityEngine.Networking;
 
 namespace RandomEvents
 {
-    // The Crowdfunder fires as usual, but costs no gold, its hits push monsters back, every 3 of its hits launch a
-    // monster like the Breaching Fin, even one in the air, and every 4 make it heavier. A monster made heavier dies when it
-    // falls out of the map, even one that would be brought back.
+    // The Crowdfunder fires as usual, but costs no gold, and each of its hits launches a monster like the Breaching Fin,
+    // even one in the air, and makes it lighter. A monster made lighter dies when it leaves the map, even one that would
+    // be brought back.
     public class ExperimentalCrowdfunder : ExperimentalEquipment
     {
-        private const int HitsPerLaunch = 3;
-        private const int HitsPerGravity = 4;
-        // each hit pushes it this fast away from the shooter, for its weight, a little up too
-        private const float KnockbackSpeed = 2.5f;
-        // how much the gravity grows each time, up to the most
-        private const float GravityStep = 1f;
-        private const float MaxGravityScale = 6f;
-        private readonly Dictionary<CharacterBody, int> hits = new Dictionary<CharacterBody, int>();
-        private readonly HashSet<CharacterBody> heavier = new HashSet<CharacterBody>();
+        // how much the gravity shrinks with each hit, down to the least
+        private const float GravityStep = 0.1f;
+        private const float MinGravityScale = 0f;
+        private readonly HashSet<CharacterBody> lighter = new HashSet<CharacterBody>();
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.GoldGat;
-        public override string Description => "the Crowdfunder costs no gold, its hits push monsters back, every 3 of its hits launch a monster like the Breaching Fin, again and again, and every 4 make it heavier, so it dies if it falls out of the map";
-        public override string PopupDescription => "Costs no gold and its hits push monsters back. Every 3 hits launch a monster like the Breaching Fin, again and again, and every 4 make it heavier. A heavier monster that falls out of the map dies.";
+        public override string Description => "the Crowdfunder costs no gold, and each of its hits launches a monster like the Breaching Fin, again and again, and makes it lighter, so it dies if it leaves the map";
+        public override string PopupDescription => "Costs no gold. Each hit launches a monster like the Breaching Fin, again and again, and makes it lighter. A lighter monster that leaves the map dies.";
 
         // it fires as usual, toggled by the player's own game
         public override bool ReplacesAction => false;
@@ -45,8 +40,7 @@ namespace RandomEvents
 
         public override void Stop()
         {
-            hits.Clear();
-            heavier.Clear();
+            lighter.Clear();
         }
 
         // the host takes the gold for each bullet, which goes back
@@ -73,33 +67,18 @@ namespace RandomEvents
             {
                 return;
             }
-            var away = body.corePosition - attackerBody.corePosition;
-            var mass = body.characterMotor != null ? body.characterMotor.mass : body.rigidbody != null ? body.rigidbody.mass : 100f;
-            body.healthComponent.TakeDamageForce((new Vector3(away.x, 0f, away.z).normalized + Vector3.up * 0.3f) * KnockbackSpeed * Mathf.Min(mass, 1000f), alwaysApply: true);
-            var count = hits.GetValueOrDefault(body) + 1;
-            hits[body] = count;
-            if (count % HitsPerLaunch == 0)
-            {
-                Launch(attackerBody, body);
-            }
-            if (count % HitsPerGravity == 0)
-            {
-                MakeHeavier(body);
-            }
+            Launch(attackerBody, body);
+            MakeLighter(body);
         }
 
-        // its AI runs on the host, so the host's motor is the one that moves it; one that flies starts to fall
-        private void MakeHeavier(CharacterBody body)
+        // its AI runs on the host, so the host's motor is the one that moves it
+        private void MakeLighter(CharacterBody body)
         {
             if (body.characterMotor != null)
             {
-                body.characterMotor.gravityScale = Mathf.Min(MaxGravityScale, body.characterMotor.gravityScale + GravityStep);
+                body.characterMotor.gravityScale = Mathf.Max(MinGravityScale, body.characterMotor.gravityScale - GravityStep);
             }
-            else if (body.rigidbody != null)
-            {
-                body.rigidbody.useGravity = true;
-            }
-            heavier.Add(body);
+            lighter.Add(body);
         }
 
         // The Breaching Fin's launch, as the game does it, but also in the air, with no limit and no cooldown: up and a
@@ -150,7 +129,7 @@ namespace RandomEvents
         // out of the map, it dies instead of being brought back; its last attacker gets the kill
         private bool MapZone_CharacterEligibleForTeleport(On.RoR2.MapZone.orig_CharacterEligibleForTeleport orig, MapZone self, CharacterBody characterBody)
         {
-            if (IsActive() && characterBody != null && heavier.Contains(characterBody) && characterBody.teamComponent.teamIndex != TeamIndex.Player)
+            if (IsActive() && characterBody != null && lighter.Contains(characterBody) && characterBody.teamComponent.teamIndex != TeamIndex.Player)
             {
                 return false;
             }
