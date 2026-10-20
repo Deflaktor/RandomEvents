@@ -193,7 +193,12 @@ namespace RandomEvents
         // quarter of it at the edge. The attacker gets the kills of monsters; players with no share to lose are spared.
         public static void Nuke(Vector3 groundZero, float radius, float playerShare, float monsterShare, float bossShare, GameObject attacker)
         {
-            new GameObject("RandomEventsMiniNuke").AddComponent<MiniNuke>().groundZero = groundZero;
+            var nuke = new GameObject("RandomEventsMiniNuke").AddComponent<MiniNuke>();
+            nuke.groundZero = groundZero;
+            nuke.attacker = attacker;
+            nuke.playerShare = playerShare;
+            nuke.monsterShare = monsterShare;
+            nuke.bossShare = bossShare;
             foreach (var body in CharacterBody.readOnlyInstancesList.ToList())
             {
                 if (body == null || body.healthComponent == null || !body.healthComponent.alive || body.teamComponent.teamIndex == TeamIndex.Neutral)
@@ -255,7 +260,8 @@ namespace RandomEvents
         }
 
         // The explosions around ground zero in quick succession: the flash and fireball, a burst for each shockwave ring,
-        // the stem and the rolling cap of the mushroom cloud, which go on after the event has ended
+        // the stem and the rolling cap of the mushroom cloud, then ground fire under a Grandparent's sun whose middle
+        // keeps burning, all of which goes on after the event has ended
         public class MiniNuke : MonoBehaviour
         {
             // the Diablo Strike's flash this far down, out of sight, for its screen tint, shake and boom
@@ -267,10 +273,23 @@ namespace RandomEvents
             private static AsyncOperationHandle<GameObject> Omni;
             private static AsyncOperationHandle<GameObject> Behemoth;
             private static AsyncOperationHandle<GameObject> Meteor;
+            // its middle keeps burning while the ground fire lasts: a tenth of the explosion's shares per second
+            private const float FireDuration = 10f;
+            private const float FireRadius = 15f;
+            private const float CoreRadius = 8f;
+            private const float CoreSharePerSecond = 0.1f;
+            private const float CoreTickInterval = 0.25f;
             public Vector3 groundZero;
+            public GameObject attacker;
+            public float playerShare;
+            public float monsterShare;
+            public float bossShare;
+            private float age;
+            private float coreTimer;
 
             public static void Preload()
             {
+                FireEffects.Preload();
                 if (Flash.IsValid())
                 {
                     return;
@@ -293,7 +312,56 @@ namespace RandomEvents
                 StartCoroutine(FireballAndShockwave());
                 StartCoroutine(Stem());
                 StartCoroutine(Cap());
-                Destroy(gameObject, 6f);
+                var fire = new GameObject("RandomEventsMiniNukeFire").AddComponent<GroundFire>();
+                fire.center = groundZero;
+                fire.radius = FireRadius;
+                fire.duration = FireDuration;
+                fire.sunHeight = 8f;
+                fire.sunDuration = 5f;
+                Destroy(gameObject, FireDuration);
+            }
+
+            private void FixedUpdate()
+            {
+                if (!NetworkServer.active)
+                {
+                    return;
+                }
+                age += Time.fixedDeltaTime;
+                coreTimer -= Time.fixedDeltaTime;
+                if (coreTimer <= 0f && age < FireDuration)
+                {
+                    coreTimer = CoreTickInterval;
+                    BurnCore();
+                }
+            }
+
+            private void BurnCore()
+            {
+                foreach (var body in CharacterBody.readOnlyInstancesList.ToList())
+                {
+                    if (body == null || body.healthComponent == null || !body.healthComponent.alive || body.teamComponent.teamIndex == TeamIndex.Neutral
+                        || (body.corePosition - groundZero).sqrMagnitude > (CoreRadius + body.radius) * (CoreRadius + body.radius))
+                    {
+                        continue;
+                    }
+                    var isPlayerTeam = body.teamComponent.teamIndex == TeamIndex.Player;
+                    var share = isPlayerTeam ? playerShare : body.isBoss ? bossShare : monsterShare;
+                    if (share <= 0f)
+                    {
+                        continue;
+                    }
+                    body.healthComponent.TakeDamage(new DamageInfo
+                    {
+                        damage = body.healthComponent.fullCombinedHealth * share * CoreSharePerSecond * CoreTickInterval,
+                        attacker = isPlayerTeam ? null : attacker,
+                        inflictor = gameObject,
+                        position = body.corePosition,
+                        damageType = DamageType.BypassArmor | DamageType.BypassBlock,
+                        procCoefficient = 0f,
+                        damageColorIndex = DamageColorIndex.Item
+                    });
+                }
             }
 
             // around ground zero: within the given distance to the side, and between the given heights above it
