@@ -15,7 +15,7 @@ namespace RandomEvents
         {
             new ExperimentalRoyalCapacitor(), new ExperimentalDisposableMissileLauncher(), new ExperimentalRadarScanner(), new ExperimentalSuperMassiveLeech(),
             new ExperimentalForgiveMePlease(), new ExperimentalCrowdfunder(), new ExperimentalMolotov(), new ExperimentalSawmerang(), new ExperimentalForeignFruit(),
-            new ExperimentalTotemOfSacrifice()
+            new ExperimentalPrimordialCube()
         };
 
         // the equipment the event gives this time
