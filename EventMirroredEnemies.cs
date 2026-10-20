@@ -76,6 +76,7 @@ namespace RandomEvents
             On.RoR2.HealthComponent.TakeDamage += HealthComponent_TakeDamage;
             On.RoR2.BullseyeSearch.RefreshCandidates += BullseyeSearch_RefreshCandidates;
             On.RoR2.SphereSearch.SearchData.FilterByHurtBoxTeam += SearchData_FilterByHurtBoxTeam;
+            On.RoR2.SiphonNearbyController.SearchForTargets += SiphonNearbyController_SearchForTargets;
             On.RoR2.CharacterAI.BaseAI.ManagedFixedUpdate += BaseAI_ManagedFixedUpdate;
         }
 
@@ -111,6 +112,17 @@ namespace RandomEvents
                         self.RemoveCandidate(i);
                     }
                 }
+            }
+        }
+
+        // Mired Urn's tethers too, also if its search doesn't go through the team filter. Each client's game searches for
+        // the tethers it shows by itself, so there they may still show.
+        private void SiphonNearbyController_SearchForTargets(On.RoR2.SiphonNearbyController.orig_SearchForTargets orig, SiphonNearbyController self, List<HurtBox> dest)
+        {
+            orig(self, dest);
+            if (mirrored.Count > 0 && IsActive())
+            {
+                dest.RemoveAll(hurtBox => hurtBox != null && hurtBox.healthComponent != null && mirrored.Contains(hurtBox.healthComponent.body));
             }
         }
 
@@ -174,7 +186,8 @@ namespace RandomEvents
                 // and aren't sent back.
                 EffectManager.SpawnEffect(HealthComponent.AssetReferences.damageRejectedPrefab, new EffectData { origin = damageInfo.position }, true);
                 Shatter(self.body, damageInfo.position);
-                var directHit = damageInfo.procChainMask.mask == 0 && damageInfo.dotIndex == DotController.DotIndex.None;
+                // items' own damage, e.g. Mired Urn's siphon, carries the item color instead of a proc
+                var directHit = damageInfo.procChainMask.mask == 0 && damageInfo.dotIndex == DotController.DotIndex.None && damageInfo.damageColorIndex != DamageColorIndex.Item;
                 var fraction = directHit && attackerBody.healthComponent != null && attackerBody.healthComponent.alive ? GetReflectedFraction(attackerBody, damageInfo.damage / self.fullCombinedHealth) : 0f;
                 if (fraction > 0f && attackerBody.mainHurtBox != null)
                 {
