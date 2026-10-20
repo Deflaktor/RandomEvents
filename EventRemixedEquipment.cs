@@ -19,6 +19,8 @@ namespace RandomEvents
         private const float InflateFactor = 3f;
         private const float ScannerWaveSpeed = 125f;
         private const float ScannerWaveRadius = 500f;
+        // per missile, as a multiple of the player's damage
+        private const float ShrimpMissileDamage = 10f;
         private const float DollSpeed = 6f;
         private const float DollFuse = 10f;
         private const float DollNukeRadius = 40f;
@@ -235,7 +237,7 @@ namespace RandomEvents
                 var orb = new MissileVoidOrb
                 {
                     origin = body.aimOrigin,
-                    damageValue = body.damage * 3f,
+                    damageValue = body.damage * ShrimpMissileDamage,
                     isCrit = body.RollCrit(),
                     teamIndex = body.teamComponent.teamIndex,
                     attacker = body.gameObject,
