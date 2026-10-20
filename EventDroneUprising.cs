@@ -15,6 +15,7 @@ namespace RandomEvents
     {
         private ConfigEntry<float> DamageMultiplier;
         private ConfigEntry<float> MoveSpeedMultiplier;
+        private ConfigEntry<float> HealthMultiplier;
         // the drones and turrets that items, equipment and survivors bring, which the drone catalog lacks
         private static readonly string[] SummonedBodies =
         {
@@ -49,7 +50,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Hostile drones spawn instead of monsters, also those of items and survivors. They deal half their normal damage, move at half speed and leave no wreck.";
+            return "Hostile drones spawn instead of monsters, also those of items and survivors. They have a quarter of their health, deal half their normal damage, move at half speed and leave no wreck.";
         }
         public override string GetConditionDescription()
         {
@@ -59,6 +60,7 @@ namespace RandomEvents
         {
             DamageMultiplier = config.Bind(GetEventConfigName(), "Damage Multiplier", 0.5f, "The damage the hostile drones deal, relative to normal.");
             MoveSpeedMultiplier = config.Bind(GetEventConfigName(), "Move Speed Multiplier", 0.5f, "The hostile drones' movement speed, relative to normal.");
+            HealthMultiplier = config.Bind(GetEventConfigName(), "Health Multiplier", 0.25f, "The hostile drones' maximum health, relative to normal.");
         }
         public override void Preload()
         {
@@ -143,6 +145,12 @@ namespace RandomEvents
             if (reduceDamage > 0)
             {
                 body.inventory.GiveItemPermanent(DLC4Content.Items.ReduceDamage, reduceDamage);
+            }
+            // a hidden item that divides the maximum health by one more than its stacks
+            var cutHp = Mathf.RoundToInt(1f / Mathf.Clamp(HealthMultiplier.Value, 0.01f, 1f)) - 1;
+            if (cutHp > 0)
+            {
+                body.inventory.GiveItemPermanent(RoR2Content.Items.CutHp, cutHp);
             }
             if (body.bodyIndex == BodyCatalog.FindBodyIndex("EquipmentDroneBody") && body.inventory.currentEquipmentIndex == EquipmentIndex.None)
             {
