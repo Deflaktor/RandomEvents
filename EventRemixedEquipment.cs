@@ -393,7 +393,7 @@ namespace RandomEvents
             }
         }
 
-        // Walks along the ground until a wall stops it, then goes off like Hot Potato's bomb, sparing players
+        // Walks along the ground, bouncing off walls, then goes off like Hot Potato's bomb, sparing players
         public class WalkingDoll : MonoBehaviour
         {
             public CharacterBody owner;
@@ -409,7 +409,15 @@ namespace RandomEvents
                 age += Time.fixedDeltaTime;
                 var position = transform.position;
                 var step = direction * DollSpeed * Time.fixedDeltaTime;
-                if (!Physics.Raycast(position, direction, step.magnitude + 0.5f, LayerIndex.world.mask, QueryTriggerInteraction.Ignore))
+                // a ramp it walks up, a wall it bounces off
+                if (Physics.Raycast(position, direction, out var wall, step.magnitude + 0.5f, LayerIndex.world.mask, QueryTriggerInteraction.Ignore) && wall.normal.y < 0.5f)
+                {
+                    // reflected along the ground; straight back if that leaves no direction
+                    var reflected = Vector3.Reflect(direction, wall.normal);
+                    reflected.y = 0f;
+                    direction = reflected.sqrMagnitude > 0.01f ? reflected.normalized : -direction;
+                }
+                else
                 {
                     position += step;
                 }
