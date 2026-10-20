@@ -27,9 +27,6 @@ namespace RandomEvents
         private AsyncOperationHandle<GameObject> GreenLightFlash;
         private readonly Dictionary<CharacterBody, Vector3> lastPositions = new Dictionary<CharacterBody, Vector3>();
         private readonly HashSet<CharacterBody> caughtThisPhase = new HashSet<CharacterBody>();
-        // how many red lights in a row each player stood still through, an Irradiant Pearl for every second one
-        private const int CleanPhasesPerPearl = 2;
-        private readonly Dictionary<CharacterMaster, int> cleanPhases = new Dictionary<CharacterMaster, int>();
         private readonly Dictionary<CharacterBody, float> nextAfflictions = new Dictionary<CharacterBody, float>();
         private bool redLight;
         private float phaseTimer;
@@ -59,7 +56,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Red and green light take turns. During red light, monsters freeze, players who stand still can't be hurt, and players who move get Tonic Afflictions until the event ends. Players get an Irradiant Pearl until the event ends for every two red lights in a row they stay still through.";
+            return "Red and green light take turns. During red light, monsters freeze, players who stand still can't be hurt, and players who move get Tonic Afflictions until the event ends. Players get an Irradiant Pearl until the event ends for every red light they stay still through.";
         }
         public override string GetConditionDescription()
         {
@@ -235,24 +232,12 @@ namespace RandomEvents
             }
         }
 
-        // an Irradiant Pearl until the event ends for every second red light in a row a player didn't move during; being
-        // caught starts the count over
+        // an Irradiant Pearl until the event ends for every red light a player didn't move during
         private void RewardStillPlayers()
         {
             foreach (var body in Helper.GetLivingPlayerBodies())
             {
-                if (body.master == null)
-                {
-                    continue;
-                }
-                if (caughtThisPhase.Contains(body))
-                {
-                    cleanPhases.Remove(body.master);
-                    continue;
-                }
-                var count = cleanPhases.GetValueOrDefault(body.master) + 1;
-                cleanPhases[body.master] = count;
-                if (count % CleanPhasesPerPearl == 0)
+                if (!caughtThisPhase.Contains(body))
                 {
                     EventLoot.GetInventory(this, body).GiveTemporaryItem(RoR2Content.Items.ShinyPearl.itemIndex);
                     ItemOrb.Fly(body.corePosition + Vector3.up * OrbHeight, body.gameObject, RoR2Content.Items.ShinyPearl.itemIndex);
@@ -297,7 +282,6 @@ namespace RandomEvents
         {
             // starts with green light, which rewards no one
             redLight = false;
-            cleanPhases.Clear();
             GreenLight();
         }
 
