@@ -270,11 +270,15 @@ namespace RandomEvents
             private static AsyncOperationHandle<GameObject> Meteor;
             // Every half second while it explodes, a pulse hurts and throws back every monster in the radius, the first a
             // massive shockwave: 100000% of the attacker's damage in all at ground zero, a quarter of that at the edge.
+            // Once the sun burns out, the explosions go on for 2 more seconds, hurting and pushing half as hard.
             // Then, while the ground fire lasts, monsters in its middle burn for 2000% in all, and players there lose a
             // tenth of their share per second.
             private const float FireDuration = 10f;
             private const float PulseInterval = 0.5f;
-            private const int Pulses = 11;
+            private const float SunDuration = 4f;
+            // 0 to 4 seconds while the sun burns, then on until 6
+            private const int Pulses = 13;
+            private const float WeakPulseShare = 0.5f;
             private const float ExplosionDamage = 1000f;
             private const float CoreBurnDamage = 20f;
             private int pulsesDone;
@@ -319,7 +323,7 @@ namespace RandomEvents
                 fire.radius = FireRadius;
                 fire.duration = FireDuration;
                 fire.sunHeight = 8f;
-                fire.sunDuration = 5f;
+                fire.sunDuration = SunDuration;
                 Destroy(gameObject, FireDuration);
             }
 
@@ -332,7 +336,7 @@ namespace RandomEvents
                 age += Time.fixedDeltaTime;
                 while (pulsesDone < Pulses && age >= pulsesDone * PulseInterval)
                 {
-                    Pulse(pulsesDone == 0);
+                    Pulse(pulsesDone == 0, pulsesDone * PulseInterval > SunDuration);
                     pulsesDone++;
                 }
                 coreTimer -= Time.fixedDeltaTime;
@@ -357,8 +361,11 @@ namespace RandomEvents
                     && body.teamComponent.teamIndex != TeamIndex.Player;
             }
 
-            private void Pulse(bool shockwave)
+            private void Pulse(bool shockwave, bool weak)
             {
+                // the weak pulses after the sun count half, all of them together making up the explosion's damage
+                var strongPulses = Mathf.FloorToInt(SunDuration / PulseInterval) + 1;
+                var share = (weak ? WeakPulseShare : 1f) / (strongPulses + (Pulses - strongPulses) * WeakPulseShare);
                 var baseDamage = BaseDamage();
                 foreach (var body in CharacterBody.readOnlyInstancesList.ToList())
                 {
@@ -376,10 +383,10 @@ namespace RandomEvents
                     var direction = offset.sqrMagnitude > 0.01f ? offset.normalized : Vector3.up;
                     var mass = body.characterMotor != null ? body.characterMotor.mass : body.rigidbody != null ? body.rigidbody.mass : 100f;
                     // as fast for every monster, for its weight: very fast with the shockwave, a shove with the others
-                    var speed = shockwave ? 60f : 10f;
+                    var speed = shockwave ? 60f : weak ? 10f * WeakPulseShare : 10f;
                     body.healthComponent.TakeDamage(new DamageInfo
                     {
-                        damage = baseDamage * ExplosionDamage / Pulses * falloff,
+                        damage = baseDamage * ExplosionDamage * share * falloff,
                         attacker = attacker,
                         inflictor = gameObject,
                         position = body.corePosition,
@@ -483,11 +490,11 @@ namespace RandomEvents
                 }
             }
 
-            // 1.5-5 s: the cap, spread wide and high, at half the rate of before, thinning out at the end
+            // 1.5-6 s: the cap, spread wide and high, at half the rate of before, thinning out at the end
             private IEnumerator Cap()
             {
                 yield return new WaitForSeconds(1.5f);
-                const float duration = 3.5f;
+                const float duration = 4.5f;
                 const float step = 0.12f;
                 float rumbleTimer = 0f;
                 for (float time = 0f; time < duration; time += step)
