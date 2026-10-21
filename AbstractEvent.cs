@@ -19,6 +19,7 @@ namespace RandomEvents
         public ConfigEntry<float> Weight;
         // see HereticTransformation
         public virtual bool SuppressesHereticTransformation => false;
+        protected virtual float DefaultWeight => 1f;
         public abstract string GetEventConfigName();
         public abstract string GetAnnouncement();
         public void SetupConfig(ConfigFile config)
@@ -27,7 +28,7 @@ namespace RandomEvents
             if (!GetConditionDescription().IsNullOrWhiteSpace())
                 conditionDescription += "\nCondition: " + GetConditionDescription();
             Enabled = config.Bind(GetEventConfigName(), "SectionEnabled", true, $"Enable {GetEventConfigName()}: {GetDescription()}{conditionDescription}");
-            Weight = config.Bind(GetEventConfigName(), "Weight", 1.0f, $"Weight for the event.");
+            Weight = config.Bind(GetEventConfigName(), "Weight", DefaultWeight, $"Weight for the event.");
             AddConfig(config);
         }
         protected abstract void AddConfig(ConfigFile config);

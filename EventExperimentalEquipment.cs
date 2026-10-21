@@ -33,6 +33,8 @@ namespace RandomEvents
             return !enigmaArtifactActive && !Helper.IsSimulacrumBossWaveNext()
                 && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("EquipmentOnly", StringComparison.InvariantCultureIgnoreCase));
         }
+        protected override float DefaultWeight => 2f;
+
         public override string GetEventConfigName()
         {
             return "ExperimentalEquipment";
