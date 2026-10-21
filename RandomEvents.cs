@@ -46,6 +46,8 @@ namespace RandomEvents
             instance = this;
             Log.Init(Logger);
 
+            On.RoR2.Console.AutoComplete.ctor += AutoComplete_ctor;
+
             BodyCatalog.availability.CallWhenAvailable(() =>
             {
                 TemporaryInventory.Hook();
@@ -679,6 +681,26 @@ namespace RandomEvents
                 var state = instance.m_activeEvents.Contains(ev) ? " (active)" : instance.m_upcomingEvents.Contains(ev) ? " (queued)" : "";
                 Debug.Log($"{ev.Id}: {ev.GetEventConfigName()}{state}");
             }
+        }
+
+        // the console suggests the event commands with every event's name
+        private static void AutoComplete_ctor(On.RoR2.Console.AutoComplete.orig_ctor orig, RoR2.Console.AutoComplete self, RoR2.Console console)
+        {
+            orig(self, console);
+            if (instance == null)
+            {
+                return;
+            }
+            var strings = self.GetSearchableStrings;
+            foreach (var command in new[] { "start_event", "queue_event", "stop_event" })
+            {
+                foreach (var ev in instance.m_loadedEvents)
+                {
+                    strings.Add($"{command} {ev.GetEventConfigName()}");
+                }
+            }
+            strings.Add("stop_event all");
+            strings.Sort();
         }
 
 
