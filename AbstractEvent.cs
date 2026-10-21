@@ -17,6 +17,8 @@ namespace RandomEvents
     {
         public ConfigEntry<bool> Enabled;
         public ConfigEntry<float> Weight;
+        // its number in the list of all events, for the console commands
+        public int Id;
         // see HereticTransformation
         public virtual bool SuppressesHereticTransformation => false;
         protected virtual float DefaultWeight => 1f;

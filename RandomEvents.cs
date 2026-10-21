@@ -124,6 +124,7 @@ namespace RandomEvents
         }
         private AbstractEvent InitAndHookEvent(AbstractEvent ev)
         {
+            ev.Id = m_allEventsIncludingNotLoadedOnes.Count + 1;
             // an event that fails to load leaves out only itself
             try
             {
@@ -547,7 +548,7 @@ namespace RandomEvents
             }
         }
 
-        [ConCommand(commandName = "start_event", flags = ConVarFlags.ExecuteOnServer, helpText = "Starts the given event. Provide internal event name.")]
+        [ConCommand(commandName = "start_event", flags = ConVarFlags.ExecuteOnServer, helpText = "Starts the given event. Provide its internal name or its number from list_events.")]
         private static void Command_StartEvent(ConCommandArgs args)
         {
             if (!NetworkServer.active) {
@@ -570,7 +571,7 @@ namespace RandomEvents
             }
         }
 
-        [ConCommand(commandName = "queue_event", flags = ConVarFlags.ExecuteOnServer, helpText = "Queues the given event. Provide internal event name.")]
+        [ConCommand(commandName = "queue_event", flags = ConVarFlags.ExecuteOnServer, helpText = "Queues the given event. Provide its internal name or its number from list_events.")]
         private static void Command_QueueEvent(ConCommandArgs args)
         {
             if (!NetworkServer.active)
@@ -597,7 +598,7 @@ namespace RandomEvents
             }
         }
 
-        [ConCommand(commandName = "stop_event", flags = ConVarFlags.ExecuteOnServer, helpText = "Stop the given event. Keyword all for all currently active events.")]
+        [ConCommand(commandName = "stop_event", flags = ConVarFlags.ExecuteOnServer, helpText = "Stop the given event, by its internal name or its number from list_events. Keyword all for all currently active events.")]
         private static void Command_StopEvent(ConCommandArgs args)
         {
             if (!NetworkServer.active)
@@ -653,8 +654,13 @@ namespace RandomEvents
 #endif
         }
 
+        // by its internal name or its number
         private AbstractEvent FindEventByName(string eventName)
         {
+            if (int.TryParse(eventName, out var id))
+            {
+                return m_loadedEvents.FirstOrDefault(ev => ev.Id == id);
+            }
             foreach (var ev in m_loadedEvents)
             {
                 if (ev.GetEventConfigName().Equals(eventName, StringComparison.InvariantCultureIgnoreCase))
@@ -663,6 +669,16 @@ namespace RandomEvents
                 }
             }
             return null;
+        }
+
+        [ConCommand(commandName = "list_events", flags = ConVarFlags.None, helpText = "Lists the events with their numbers, and which are active or queued.")]
+        private static void Command_ListEvents(ConCommandArgs args)
+        {
+            foreach (var ev in instance.m_loadedEvents)
+            {
+                var state = instance.m_activeEvents.Contains(ev) ? " (active)" : instance.m_upcomingEvents.Contains(ev) ? " (queued)" : "";
+                Debug.Log($"{ev.Id}: {ev.GetEventConfigName()}{state}");
+            }
         }
 
 
