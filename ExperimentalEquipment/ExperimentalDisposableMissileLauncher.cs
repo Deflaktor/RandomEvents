@@ -137,9 +137,11 @@ namespace RandomEvents
         {
             public const float ZapInterval = 1f;
             private const float Speed = 8f;
-            // how far from its path it circles, and how fast, in radians per second
+            // how far from its path it circles, and how fast, in radians per second; closer than ConvergeDistance to its
+            // monster, the circles shrink until it flies straight at it
             private const float SpiralRadius = 3f;
             private const float SpiralRate = 3f;
+            private const float ConvergeDistance = 10f;
             private const float Lifetime = 30f;
             private const float ReachDistance = 1.5f;
             // the Charged Perforator's 500%, and the Ukulele's 80% to 3 monsters within 20 meters
@@ -196,7 +198,8 @@ namespace RandomEvents
                 side = side.sqrMagnitude > 0.01f ? side.normalized : Vector3.right;
                 var up = Vector3.Cross(forward, side);
                 var angle = SpiralRate * age;
-                SetVelocity(forward * Speed + (up * Mathf.Cos(angle) - side * Mathf.Sin(angle)) * (SpiralRadius * SpiralRate));
+                var radius = SpiralRadius * Mathf.Clamp01(offset.magnitude / ConvergeDistance);
+                SetVelocity(forward * Speed + (up * Mathf.Cos(angle) - side * Mathf.Sin(angle)) * (radius * SpiralRate));
             }
 
             private void SetVelocity(Vector3 velocity)
