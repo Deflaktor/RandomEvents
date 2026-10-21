@@ -11,7 +11,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 namespace RandomEvents
 {
     // The Disposable Missile Launcher sends out an Overloading Worm's electric orb for each monster nearby, one every 0.2
-    // seconds, up to 10. Each snakes its way slowly to its monster, sending out the Ukulele's chain lightning every second,
+    // seconds, up to 10. Each spirals its way slowly to its monster, sending out the Ukulele's chain lightning every second,
     // and calls down the Charged Perforator's lightning strike on it when it gets there. All of it is electric, which
     // Faulty Conductor's energizing and conductive monsters work with.
     public class ExperimentalDisposableMissileLauncher : ExperimentalEquipment
@@ -24,8 +24,8 @@ namespace RandomEvents
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.CommandMissile;
         public override float CooldownScale => 0.25f;
-        public override string Description => "Disposable Missile Launcher sends an electric orb snaking at each monster nearby, up to 10, which zaps chain lightning on the way and calls down a lightning strike when it gets there";
-        public override string PopupDescription => "Sends an electric orb snaking at each monster nearby, up to 10. They zap chain lightning on the way and call down a lightning strike when they get there.";
+        public override string Description => "Disposable Missile Launcher sends an electric orb spiraling at each monster nearby, up to 10, which zaps chain lightning on the way and calls down a lightning strike when it gets there";
+        public override string PopupDescription => "Sends an electric orb spiraling at each monster nearby, up to 10. They zap chain lightning on the way and call down a lightning strike when they get there.";
 
         public override void Preload()
         {
@@ -123,23 +123,23 @@ namespace RandomEvents
                 {
                     projectileDamage.damage = 0f;
                 }
-                var snake = orb.AddComponent<Snake>();
-                snake.owner = owner;
-                snake.target = target;
+                var spiral = orb.AddComponent<Spiral>();
+                spiral.owner = owner;
+                spiral.target = target;
                 // the chain lightning of each a little apart from the others'
-                snake.zapTimer = Snake.ZapInterval + index * 0.1f;
+                spiral.zapTimer = Spiral.ZapInterval + index * 0.1f;
                 NetworkServer.Spawn(orb);
             }
         }
 
-        // Inches towards its monster, side to side, which the host moves and its projectile transform passes on to everyone
-        public class Snake : MonoBehaviour
+        // Inches towards its monster in a corkscrew, which the host moves and its projectile transform passes on to everyone
+        public class Spiral : MonoBehaviour
         {
             public const float ZapInterval = 1f;
             private const float Speed = 8f;
-            // how far and how often it swings to either side
-            private const float SwingWidth = 3f;
-            private const float SwingRate = 3f;
+            // how far from its path it circles, and how fast, in radians per second
+            private const float SpiralRadius = 3f;
+            private const float SpiralRate = 3f;
             private const float Lifetime = 30f;
             private const float ReachDistance = 1.5f;
             // the Charged Perforator's 500%, and the Ukulele's 80% to 3 monsters within 20 meters
@@ -194,7 +194,9 @@ namespace RandomEvents
                 var forward = offset.normalized;
                 var side = Vector3.Cross(Vector3.up, forward);
                 side = side.sqrMagnitude > 0.01f ? side.normalized : Vector3.right;
-                SetVelocity(forward * Speed + side * (SwingWidth * SwingRate * Mathf.Cos(SwingRate * age)));
+                var up = Vector3.Cross(forward, side);
+                var angle = SpiralRate * age;
+                SetVelocity(forward * Speed + (up * Mathf.Cos(angle) - side * Mathf.Sin(angle)) * (SpiralRadius * SpiralRate));
             }
 
             private void SetVelocity(Vector3 velocity)
