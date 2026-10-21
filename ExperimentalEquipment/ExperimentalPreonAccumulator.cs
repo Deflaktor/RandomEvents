@@ -10,7 +10,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 namespace RandomEvents
 {
     // The Preon Accumulator charges as usual, then fires a Malachite elite's poison orb instead of its own. Where the orb
-    // hits the ground, Void Jailer death bombs fly out in every direction and each hunts down a monster, the strongest
+    // hits the ground, it implodes like a Void Jailer's death, if smaller, and Void Jailer death bombs fly out in every direction and each hunts down a monster, the strongest
     // first, imploding when it gets there.
     public class ExperimentalPreonAccumulator : ExperimentalEquipment
     {
@@ -19,11 +19,15 @@ namespace RandomEvents
         // per bomb, as a multiple of the player's damage
         private const float BombDamage = 10f;
         private const float BombSpeed = 30f;
+        // the orb's own implosion, smaller than the bombs'
+        private const float ImplosionDamage = 5f;
+        private const float ImplosionRadius = 4f;
         // only monsters within this many meters
         private const float Range = 100f;
         private static AsyncOperationHandle<GameObject> PoisonOrb;
         private static AsyncOperationHandle<GameObject> Bomb;
         private static AsyncOperationHandle<GameObject> OrbImpact;
+        private static AsyncOperationHandle<GameObject> Implosion;
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.BFG;
         public override string Description => "the Preon Accumulator fires a poison orb that bursts on the ground into void bombs, each hunting down a monster, the strongest first";
@@ -37,6 +41,7 @@ namespace RandomEvents
             PoisonOrb = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/ElitePoison/PoisonOrbProjectile.prefab");
             Bomb = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC1/VoidJailer/VoidJailerDeathBombProjectile.prefab");
             OrbImpact = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/ElitePoison/OmniExplosionVFXUrchin.prefab");
+            Implosion = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC1/VoidJailer/VoidJailerDeathBombExplosion.prefab");
         }
 
         public override void Hook()
@@ -79,12 +84,33 @@ namespace RandomEvents
             }
             var position = self.transform.position + Vector3.up * 1.5f;
             EffectManager.SpawnEffect(OrbImpact.WaitForCompletion(), new EffectData { origin = position, scale = 7f }, transmit: true);
+            Implode(owner, position);
             var targets = Targets(owner, position);
             for (int i = 0; i < Bombs; i++)
             {
                 var direction = Quaternion.Euler(-30f, 360f * i / Bombs, 0f) * Vector3.forward;
                 LaunchBomb(owner, position, direction, targets.Count > 0 ? targets[i % targets.Count] : null);
             }
+        }
+
+        // the Void Jailer's death implosion, which like the bombs kills outright what isn't immune to void deaths
+        private static void Implode(CharacterBody owner, Vector3 position)
+        {
+            EffectManager.SpawnEffect(Implosion.WaitForCompletion(), new EffectData { origin = position, scale = ImplosionRadius }, transmit: true);
+            new BlastAttack
+            {
+                position = position,
+                radius = ImplosionRadius,
+                falloffModel = BlastAttack.FalloffModel.None,
+                attacker = owner.gameObject,
+                baseDamage = owner.damage * ImplosionDamage,
+                crit = owner.RollCrit(),
+                procCoefficient = 1f,
+                damageType = DamageType.VoidDeath | DamageType.BypassBlock,
+                damageColorIndex = DamageColorIndex.Item,
+                attackerFiltering = AttackerFiltering.NeverHitSelf,
+                teamIndex = owner.teamComponent.teamIndex
+            }.Fire();
         }
 
         // the strongest first: bosses, then champions, then by health
