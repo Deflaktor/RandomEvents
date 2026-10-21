@@ -1,4 +1,5 @@
 using RoR2;
+using RoR2.Orbs;
 using RoR2.Projectile;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,63 +10,74 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace RandomEvents
 {
+    // The Disposable Missile Launcher sends out an Overloading Worm's electric orb for each monster nearby, one every 0.2
+    // seconds, up to 10. Each snakes its way slowly to its monster, sending out the Ukulele's chain lightning every second,
+    // and calls down the Charged Perforator's lightning strike on it when it gets there. All of it is electric, which
+    // Faulty Conductor's energizing and conductive monsters work with.
     public class ExperimentalDisposableMissileLauncher : ExperimentalEquipment
     {
-        // per orb, as a multiple of the player's damage
-        private const float OrbDamage = 10f;
-        private const float LaunchInterval = 0.1f;
-        // how many times each monster is hit
-        private const int Rounds = 3;
-        private static AsyncOperationHandle<GameObject> SunOrb;
-
+        private const int MaxOrbs = 10;
+        private const float LaunchInterval = 0.2f;
         // only monsters within this many meters
         private const float Range = 200f;
+        private static AsyncOperationHandle<GameObject> ElectricOrb;
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.CommandMissile;
         public override float CooldownScale => 0.25f;
-        public override string Description => "Disposable Missile Launcher sends out Egocentrism's orbs, one every tenth of a second, until every monster nearby is hit three times";
-        public override string PopupDescription => "Sends out Egocentrism's orbs, one every tenth of a second, until every monster nearby is hit three times.";
+        public override string Description => "Disposable Missile Launcher sends an electric orb snaking at each monster nearby, up to 10, which zaps chain lightning on the way and calls down a lightning strike when it gets there";
+        public override string PopupDescription => "Sends an electric orb snaking at each monster nearby, up to 10. They zap chain lightning on the way and call down a lightning strike when they get there.";
 
         public override void Preload()
         {
-            SunOrb = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC1/LunarSun/LunarSunProjectile.prefab");
+            ElectricOrb = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/ElectricWorm/ElectricOrbProjectile.prefab");
         }
 
         public override bool Fire(EquipmentSlot slot)
         {
             var body = slot.characterBody;
-            if (!Launcher.Targets(body).Any())
+            if (!Targets(body, body.corePosition).Any())
             {
                 return false;
             }
-            var launcher = new GameObject("RandomEventsSunOrbLauncher").AddComponent<Launcher>();
-            launcher.owner = body;
+            new GameObject("RandomEventsElectricOrbLauncher").AddComponent<Launcher>().owner = body;
             return true;
         }
 
-        // Each round, an orb for every monster alive then, one at a time; then the next round
+        // the nearest first
+        private static IEnumerable<CharacterBody> Targets(CharacterBody owner, Vector3 position)
+        {
+            return CharacterBody.readOnlyInstancesList.Where(body => IsTarget(owner, body) && (body.corePosition - position).sqrMagnitude <= Range * Range)
+                .OrderBy(body => (body.corePosition - position).sqrMagnitude);
+        }
+
+        private static bool IsTarget(CharacterBody owner, CharacterBody body)
+        {
+            return body != null && body.mainHurtBox != null && body.healthComponent != null && body.healthComponent.alive
+                && body.teamComponent.teamIndex != owner.teamComponent.teamIndex && body.teamComponent.teamIndex != TeamIndex.Neutral;
+        }
+
+        // One orb for each of the monsters nearby when it was used, one after another
         public class Launcher : MonoBehaviour
         {
             public CharacterBody owner;
             private readonly Queue<CharacterBody> queue = new Queue<CharacterBody>();
-            private int round;
+            private int launched;
             private float timer;
 
-            public static IEnumerable<CharacterBody> Targets(CharacterBody owner)
+            private void Start()
             {
-                return CharacterBody.readOnlyInstancesList.Where(body => IsTarget(owner, body));
-            }
-
-            private static bool IsTarget(CharacterBody owner, CharacterBody body)
-            {
-                return body != null && body.mainHurtBox != null && body.healthComponent != null && body.healthComponent.alive
-                    && body.teamComponent.teamIndex != owner.teamComponent.teamIndex && body.teamComponent.teamIndex != TeamIndex.Neutral
-                    && (body.corePosition - owner.corePosition).sqrMagnitude <= Range * Range;
+                if (owner != null)
+                {
+                    foreach (var target in Targets(owner, owner.corePosition).Take(MaxOrbs))
+                    {
+                        queue.Enqueue(target);
+                    }
+                }
             }
 
             private void FixedUpdate()
             {
-                if (!NetworkServer.active || owner == null || !owner.healthComponent.alive)
+                if (!NetworkServer.active || owner == null || !owner.healthComponent.alive || queue.Count == 0)
                 {
                     Destroy(gameObject);
                     return;
@@ -76,60 +88,28 @@ namespace RandomEvents
                     return;
                 }
                 timer = LaunchInterval;
-                // those that died or got out of reach in the meantime are left out
-                while (queue.Count > 0 && !IsTarget(owner, queue.Peek()))
-                {
-                    queue.Dequeue();
-                }
-                if (queue.Count == 0)
-                {
-                    if (round >= Rounds)
-                    {
-                        Destroy(gameObject);
-                        return;
-                    }
-                    round++;
-                    foreach (var target in Targets(owner).OrderBy(target => (target.corePosition - owner.corePosition).sqrMagnitude).ToList())
-                    {
-                        queue.Enqueue(target);
-                    }
-                    if (queue.Count == 0)
-                    {
-                        Destroy(gameObject);
-                        return;
-                    }
-                }
-                Launch(queue.Dequeue());
+                Launch(queue.Dequeue(), launched++);
             }
 
-            // Egocentrism's orb as it leaves its orbit for a target, which it does on the host: no orbit and no target
-            // search of its own, but flying and steering at the given monster, exploding when it hits
-            private void Launch(CharacterBody target)
+            private void Launch(CharacterBody target, int index)
             {
                 var position = owner.corePosition + Vector3.up * 2f;
-                var orb = Instantiate(SunOrb.WaitForCompletion(), position, Util.QuaternionSafeLookRotation(target.corePosition - position));
-                foreach (var behaviour in new Behaviour[] { orb.GetComponent<LunarSunProjectileController>(), orb.GetComponent<ProjectileOwnerOrbiter>(),
-                    orb.GetComponent<ProjectileSphereTargetFinder>(), orb.GetComponent<ProjectileDeployToOwner>() })
+                var orb = Instantiate(ElectricOrb.WaitForCompletion(), position, Util.QuaternionSafeLookRotation(Vector3.up));
+                // the host moves it and nothing sets it off but reaching its monster
+                foreach (var behaviour in new Behaviour[] { orb.GetComponent<ProjectileSimple>(), orb.GetComponent<ProjectileImpactExplosion>() })
                 {
                     if (behaviour != null)
                     {
                         behaviour.enabled = false;
                     }
                 }
-                foreach (var behaviour in new Behaviour[] { orb.GetComponent<ProjectileSimple>(), orb.GetComponent<ProjectileSteerTowardTarget>(), orb.GetComponent<ProjectileImpactExplosion>() })
+                foreach (var collider in orb.GetComponents<Collider>())
                 {
-                    if (behaviour != null)
-                    {
-                        behaviour.enabled = true;
-                    }
+                    collider.enabled = false;
                 }
                 if (orb.TryGetComponent(out Rigidbody rigidbody))
                 {
-                    rigidbody.isKinematic = false;
-                }
-                if (orb.TryGetComponent(out ProjectileTargetComponent targetComponent))
-                {
-                    targetComponent.target = target.mainHurtBox.transform;
+                    rigidbody.useGravity = false;
                 }
                 if (orb.TryGetComponent(out ProjectileController controller))
                 {
@@ -141,11 +121,141 @@ namespace RandomEvents
                 }
                 if (orb.TryGetComponent(out ProjectileDamage projectileDamage))
                 {
-                    projectileDamage.damage = owner.damage * OrbDamage;
-                    projectileDamage.crit = owner.RollCrit();
-                    projectileDamage.damageColorIndex = DamageColorIndex.Item;
+                    projectileDamage.damage = 0f;
                 }
+                var snake = orb.AddComponent<Snake>();
+                snake.owner = owner;
+                snake.target = target;
+                // the chain lightning of each a little apart from the others'
+                snake.zapTimer = Snake.ZapInterval + index * 0.1f;
                 NetworkServer.Spawn(orb);
+            }
+        }
+
+        // Inches towards its monster, side to side, which the host moves and its projectile transform passes on to everyone
+        public class Snake : MonoBehaviour
+        {
+            public const float ZapInterval = 1f;
+            private const float Speed = 8f;
+            // how far and how often it swings to either side
+            private const float SwingWidth = 3f;
+            private const float SwingRate = 3f;
+            private const float Lifetime = 30f;
+            private const float ReachDistance = 1.5f;
+            // the Charged Perforator's 500%, and the Ukulele's 80% to 3 monsters within 20 meters
+            private const float StrikeDamage = 5f;
+            private const float ZapDamage = 0.8f;
+            private const int ZapBounces = 2;
+            public CharacterBody owner;
+            public CharacterBody target;
+            public float zapTimer;
+            private Rigidbody body;
+            private float age;
+
+            private void Awake()
+            {
+                body = GetComponent<Rigidbody>();
+            }
+
+            private void FixedUpdate()
+            {
+                if (!NetworkServer.active)
+                {
+                    return;
+                }
+                age += Time.fixedDeltaTime;
+                if (owner == null || age >= Lifetime)
+                {
+                    Destroy(gameObject);
+                    return;
+                }
+                if (target == null || !IsTarget(owner, target))
+                {
+                    target = Targets(owner, transform.position).FirstOrDefault();
+                }
+                zapTimer -= Time.fixedDeltaTime;
+                if (zapTimer <= 0f)
+                {
+                    zapTimer = ZapInterval;
+                    Zap();
+                }
+                if (target == null)
+                {
+                    SetVelocity(Vector3.zero);
+                    return;
+                }
+                var offset = target.corePosition - transform.position;
+                if (offset.sqrMagnitude <= (ReachDistance + target.radius) * (ReachDistance + target.radius))
+                {
+                    Strike();
+                    Destroy(gameObject);
+                    return;
+                }
+                var forward = offset.normalized;
+                var side = Vector3.Cross(Vector3.up, forward);
+                side = side.sqrMagnitude > 0.01f ? side.normalized : Vector3.right;
+                SetVelocity(forward * Speed + side * (SwingWidth * SwingRate * Mathf.Cos(SwingRate * age)));
+            }
+
+            private void SetVelocity(Vector3 velocity)
+            {
+                if (body != null)
+                {
+                    body.velocity = velocity;
+                }
+                if (velocity.sqrMagnitude > 0.01f)
+                {
+                    transform.rotation = Util.QuaternionSafeLookRotation(velocity);
+                }
+            }
+
+            // the Ukulele's chain lightning from where it is
+            private void Zap()
+            {
+                var orb = new LightningOrb
+                {
+                    origin = transform.position,
+                    damageValue = owner.damage * ZapDamage,
+                    isCrit = owner.RollCrit(),
+                    bouncesRemaining = ZapBounces,
+                    teamIndex = owner.teamComponent.teamIndex,
+                    attacker = owner.gameObject,
+                    bouncedObjects = new List<HealthComponent>(),
+                    procCoefficient = 0.2f,
+                    lightningType = LightningOrb.LightningType.Ukulele,
+                    damageColorIndex = DamageColorIndex.Item
+                };
+                orb.damageType.damageTypeExtended = DamageTypeExtended.Electrical;
+                orb.procChainMask.AddProc(ProcType.ChainLightning);
+                var hurtBox = orb.PickNextTarget(transform.position);
+                if (hurtBox != null)
+                {
+                    orb.target = hurtBox;
+                    OrbManager.instance.AddOrb(orb);
+                }
+            }
+
+            // the Charged Perforator's lightning strike on its monster
+            private void Strike()
+            {
+                var hurtBox = target.mainHurtBox;
+                if (target.hurtBoxGroup != null && target.hurtBoxGroup.hurtBoxes.Length > 0)
+                {
+                    hurtBox = target.hurtBoxGroup.hurtBoxes[Random.Range(0, target.hurtBoxGroup.hurtBoxes.Length)];
+                }
+                var procChainMask = default(ProcChainMask);
+                procChainMask.AddProc(ProcType.LightningStrikeOnHit);
+                OrbManager.instance.AddOrb(new SimpleLightningStrikeOrb
+                {
+                    attacker = owner.gameObject,
+                    damageColorIndex = DamageColorIndex.Item,
+                    damageValue = owner.damage * StrikeDamage,
+                    damageType = DamageTypeExtended.Electrical,
+                    isCrit = owner.RollCrit(),
+                    procChainMask = procChainMask,
+                    procCoefficient = 1f,
+                    target = hurtBox
+                });
             }
         }
     }
