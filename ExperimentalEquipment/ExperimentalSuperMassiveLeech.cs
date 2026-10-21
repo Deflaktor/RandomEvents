@@ -11,15 +11,15 @@ namespace RandomEvents
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.LifestealOnHit;
         public override float CooldownScale => 0.25f;
-        public override string Description => "Super Massive Leech causes hemorrhage instead of healing, the more the harder the hit";
-        public override string PopupDescription => "Your hits cause hemorrhage instead of healing you, the more the harder they hit.";
+        public override string Description => "Super Massive Leech also causes hemorrhage, the more the harder the hit";
+        public override string PopupDescription => "Your hits heal you and also cause hemorrhage, the more the harder they hit.";
 
         public override void Hook()
         {
             On.RoR2.GlobalEventManager.OnHitEnemy += GlobalEventManager_OnHitEnemy;
         }
 
-        // Not the leech's own buff, which would heal on hit. This one does nothing itself, but shows a red glow
+        // the leech's own buff, which heals on hit as usual
         public override bool Fire(EquipmentSlot slot)
         {
             var body = slot.characterBody;
@@ -29,7 +29,7 @@ namespace RandomEvents
             };
             effectData.SetNetworkedObjectReference(body.gameObject);
             EffectManager.SpawnEffect(LegacyResourcesAPI.Load<GameObject>("Prefabs/Effects/LifeStealOnHitActivation"), effectData, transmit: true);
-            body.AddTimedBuff(DLC3Content.Buffs.ShieldTankDamage, LeechDuration);
+            body.AddTimedBuff(RoR2Content.Buffs.LifeSteal, LeechDuration);
             return true;
         }
 
@@ -37,7 +37,7 @@ namespace RandomEvents
         {
             orig(self, damageInfo, victim);
             var attackerBody = damageInfo.attacker != null ? damageInfo.attacker.GetComponent<CharacterBody>() : null;
-            if (IsExperimental(attackerBody) && attackerBody.HasBuff(DLC3Content.Buffs.ShieldTankDamage) && damageInfo.procCoefficient > 0f && !damageInfo.rejected && victim != null)
+            if (IsExperimental(attackerBody) && attackerBody.HasBuff(RoR2Content.Buffs.LifeSteal) && damageInfo.procCoefficient > 0f && !damageInfo.rejected && victim != null)
             {
                 var damage = damageInfo.damage * (damageInfo.crit ? attackerBody.critMultiplier : 1f);
                 var stacks = Mathf.Clamp(Mathf.RoundToInt(damage / Mathf.Max(1f, attackerBody.damage)), 1, MaxStacksPerHit);
