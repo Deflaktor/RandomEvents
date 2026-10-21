@@ -19,6 +19,9 @@ namespace RandomEvents
         // per bomb, as a multiple of the player's damage
         private const float BombDamage = 10f;
         private const float BombSpeed = 30f;
+        // one after another while the implosion is at its biggest
+        private const float FirstBombDelay = 0.2f;
+        private const float BombInterval = 0.1f;
         // the orb's own implosion, smaller than the bombs'
         private const float ImplosionDamage = 5f;
         private const float ImplosionRadius = 4f;
@@ -85,11 +88,35 @@ namespace RandomEvents
             var position = self.transform.position + Vector3.up * 1.5f;
             EffectManager.SpawnEffect(OrbImpact.WaitForCompletion(), new EffectData { origin = position, scale = 7f }, transmit: true);
             Implode(owner, position);
-            var targets = Targets(owner, position);
-            for (int i = 0; i < Bombs; i++)
+            var burst = new GameObject("RandomEventsVoidBombBurst").AddComponent<Burst>();
+            burst.owner = owner;
+            burst.position = position;
+            burst.targets = Targets(owner, position);
+        }
+
+        // The bombs, one by one in a circle
+        public class Burst : MonoBehaviour
+        {
+            public CharacterBody owner;
+            public Vector3 position;
+            public List<CharacterBody> targets;
+            private int launched;
+            private float age;
+
+            private void FixedUpdate()
             {
-                var direction = Quaternion.Euler(-30f, 360f * i / Bombs, 0f) * Vector3.forward;
-                LaunchBomb(owner, position, direction, targets.Count > 0 ? targets[i % targets.Count] : null);
+                if (!NetworkServer.active || owner == null || launched >= Bombs)
+                {
+                    Destroy(gameObject);
+                    return;
+                }
+                age += Time.fixedDeltaTime;
+                while (launched < Bombs && age >= FirstBombDelay + launched * BombInterval)
+                {
+                    var direction = Quaternion.Euler(-30f, 360f * launched / Bombs, 0f) * Vector3.forward;
+                    LaunchBomb(owner, position, direction, targets.Count > 0 ? targets[launched % targets.Count] : null);
+                    launched++;
+                }
             }
         }
 
