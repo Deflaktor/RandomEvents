@@ -19,8 +19,10 @@ namespace RandomEvents
         private const float PassDistance = 3.5f;
         // so that two characters standing together don't pass the bomb back and forth every tick
         private const float PassCooldown = 1.5f;
-        private ConfigEntry<float> NukeRadius;
-        private ConfigEntry<float> PlayerDamage;
+        // how far the explosion reaches, in meters
+        private const float NukeRadius = 40f;
+        // the share of their maximum health players lose at the center of the explosion; a quarter of it at its edge
+        private const float PlayerDamage = 0.75f;
         private AsyncOperationHandle<GameObject> TickEffect;
         private readonly BuffTracker buffs = new BuffTracker();
         private CharacterBody holder;
@@ -63,8 +65,6 @@ namespace RandomEvents
         }
         protected override void AddConfig(ConfigFile config)
         {
-            NukeRadius = config.Bind(GetEventConfigName(), "Nuke Radius", 40f, "How far the explosion reaches, in meters.");
-            PlayerDamage = config.Bind(GetEventConfigName(), "Player Damage", 0.75f, "The share of their maximum health players lose at the center of the explosion; a quarter of it at its edge.");
         }
         public override void Preload()
         {
@@ -182,7 +182,7 @@ namespace RandomEvents
             // ground zero is on the floor below the carrier
             var groundZero = Physics.Raycast(victim.corePosition, Vector3.down, out var hit, 50f, LayerIndex.world.mask, QueryTriggerInteraction.Ignore) ? hit.point : victim.footPosition;
             var attacker = lastPlayerHolder != null && lastPlayerHolder.healthComponent.alive ? lastPlayerHolder.gameObject : null;
-            Nuke(groundZero, Mathf.Max(1f, NukeRadius.Value), PlayerDamage.Value, attacker);
+            Nuke(groundZero, NukeRadius, PlayerDamage, attacker);
         }
 
         // The mushroom cloud, players within the radius losing a share of their health, all of it at the center and a
