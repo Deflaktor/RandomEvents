@@ -67,8 +67,9 @@ namespace RandomEvents
             return fire;
         }
 
-        // It shines while it has an owner, which can be any object on the host, then fades out by itself
-        public static GenericOwnership SpawnSun(Vector3 position, GameObject owner, TeamIndex teamIndex)
+        // It shines while it has an owner, which is sent to every player's game, so a networked one: the sun itself, until
+        // its owner is cleared and it burns out
+        public static GenericOwnership SpawnSun(Vector3 position, TeamIndex teamIndex)
         {
             var sunObject = Object.Instantiate(Sun.WaitForCompletion(), position, Quaternion.identity);
             if (sunObject.TryGetComponent(out GrandParentSunController controller))
@@ -79,12 +80,13 @@ namespace RandomEvents
             {
                 teamFilter.teamIndex = teamIndex;
             }
+            NetworkServer.Spawn(sunObject);
+            // once spawned, so its network id is the one sent
             var ownership = sunObject.GetComponent<GenericOwnership>();
             if (ownership != null)
             {
-                ownership.ownerObject = owner;
+                ownership.ownerObject = sunObject;
             }
-            NetworkServer.Spawn(sunObject);
             return ownership;
         }
 
@@ -122,7 +124,7 @@ namespace RandomEvents
         {
             FireEffects.SpawnEffect(FireEffects.Ignition, center, radius);
             FireEffects.SpawnEffect(FireEffects.Fireball, center, radius * 0.5f);
-            sun = FireEffects.SpawnSun(center + Vector3.up * sunHeight, gameObject, teamIndex);
+            sun = FireEffects.SpawnSun(center + Vector3.up * sunHeight, teamIndex);
             fires.Add(FireEffects.SpawnFire(FireEffects.FirePool, center, null, teamIndex));
             for (int i = 0; i < FirePools; i++)
             {
