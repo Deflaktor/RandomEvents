@@ -16,6 +16,10 @@ namespace RandomEvents
         private ConfigEntry<float> ShieldedDamageTaken;
         private readonly BuffTracker buffs = new BuffTracker();
         private readonly HashSet<CharacterBody> shielded = new HashSet<CharacterBody>();
+        // Repulsion Armor Plate's block, at most this often for each monster
+        private const float BlockSoundInterval = 0.15f;
+        private NetworkSoundEventDef blockSound;
+        private readonly Dictionary<CharacterBody, float> lastBlockSound = new Dictionary<CharacterBody, float>();
 
         public override bool LoadCondition()
         {
@@ -53,6 +57,7 @@ namespace RandomEvents
         }
         public override void Preload()
         {
+            blockSound = UnityEngine.AddressableAssets.Addressables.LoadAssetAsync<NetworkSoundEventDef>("RoR2/Base/ArmorPlate/nseArmorPlateBlock.asset").WaitForCompletion();
         }
         public override void Hook()
         {
@@ -66,6 +71,7 @@ namespace RandomEvents
             if (ModConfig.Enabled.Value && NetworkServer.active && IsActive() && damageInfo != null && self.body != null && shielded.Contains(self.body))
             {
                 damageInfo.damage *= Mathf.Clamp01(ShieldedDamageTaken.Value);
+                PlayBlockSound(self.body, damageInfo);
             }
             orig(self, damageInfo);
         }
@@ -83,6 +89,18 @@ namespace RandomEvents
             {
                 Assign(body);
             }
+        }
+
+        // every player hears the hit being blocked, but not every tick of damage over time
+        private void PlayBlockSound(CharacterBody body, DamageInfo damageInfo)
+        {
+            if (blockSound == null || (damageInfo.damageType.damageType & DamageType.DoT) != 0
+                || lastBlockSound.TryGetValue(body, out var last) && Time.fixedTime - last < BlockSoundInterval)
+            {
+                return;
+            }
+            lastBlockSound[body] = Time.fixedTime;
+            RoR2.Audio.EntitySoundManager.EmitSoundServer(blockSound.index, body.gameObject);
         }
 
         private void Assign(CharacterBody body)
@@ -163,6 +181,7 @@ namespace RandomEvents
         {
             buffs.RemoveAll();
             shielded.Clear();
+            lastBlockSound.Clear();
         }
     }
 }
