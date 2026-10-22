@@ -76,8 +76,8 @@ namespace RandomEvents
                 spawnCard.hullSize = HullClassification.Golem;
                 spawnCard.nodeGraphType = MapNodeGroup.GraphType.Ground;
                 spawnCard.forbiddenFlags = NodeFlags.NoCharacterSpawn;
-                // ten times a Lynx Pup's health is an Elder Lemurian's
-                spawnCard.directorCreditCost = 40;
+                // twice a Lynx Pup's cost, for its one and a half times the health and size, about a Lesser Wisp's
+                spawnCard.directorCreditCost = 10;
             }
             return spawnCard;
         }
