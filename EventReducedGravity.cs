@@ -24,8 +24,8 @@ namespace RandomEvents
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            // Shadow Cloak comes with that expansion
-            return DLC4Content.DLC4 != null && Run.instance != null && Run.instance.IsExpansionEnabled(DLC4Content.DLC4);
+            // Shadow Cloak comes with Hallowed Concepts, but as a buff it works in any run
+            return true;
         }
         public override string GetEventConfigName()
         {
@@ -41,7 +41,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Hallowed Concepts is enabled.";
+            return "";
         }
         protected override void AddConfig(ConfigFile config)
         {
