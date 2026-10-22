@@ -12,7 +12,7 @@ namespace RandomEvents
         private ConfigEntry<float> StealCooldown;
         // what each monster stole from whom
         private readonly Dictionary<CharacterMaster, List<(CharacterMaster victim, ItemIndex itemIndex)>> loot = new Dictionary<CharacterMaster, List<(CharacterMaster victim, ItemIndex itemIndex)>>();
-        // when each player can be stolen from again
+        // when each monster can steal again
         private readonly Dictionary<CharacterMaster, float> nextStealTimes = new Dictionary<CharacterMaster, float>();
         private HashSet<ItemIndex> stealableItems = new HashSet<ItemIndex>();
 
@@ -34,7 +34,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Monsters that hit a player steal one of their items and use it. Kill the thief to get it back.";
+            return "Monsters that hit a player steal one of their items and use it, up to one every half second. Kill the thief to get them back.";
         }
         public override string GetConditionDescription()
         {
@@ -42,7 +42,7 @@ namespace RandomEvents
         }
         protected override void AddConfig(ConfigFile config)
         {
-            StealCooldown = config.Bind(GetEventConfigName(), "Steal Cooldown", 2f, "Seconds before a player can be stolen from again.");
+            StealCooldown = config.Bind(GetEventConfigName(), "Steal Cooldown", 0.5f, "Seconds before a monster can steal again.");
         }
         public override void Preload()
         {
@@ -62,7 +62,7 @@ namespace RandomEvents
                 return;
             }
             var victim = report.victimMaster;
-            if (nextStealTimes.TryGetValue(victim, out var nextStealTime) && Time.fixedTime < nextStealTime)
+            if (nextStealTimes.TryGetValue(report.attackerMaster, out var nextStealTime) && Time.fixedTime < nextStealTime)
             {
                 return;
             }
@@ -71,7 +71,7 @@ namespace RandomEvents
             {
                 return;
             }
-            nextStealTimes[victim] = Time.fixedTime + Mathf.Max(0f, StealCooldown.Value);
+            nextStealTimes[report.attackerMaster] = Time.fixedTime + Mathf.Max(0f, StealCooldown.Value);
             var itemIndex = candidates[RoR2Application.rng.RangeInt(0, candidates.Count)];
             // a negative channeled stack disables one of the player's items
             victim.inventory.GiveItemChanneled(itemIndex, -1);

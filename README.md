@@ -65,7 +65,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | SwarmQueen | Nobody comes alone | Every monster that spawns brings 3 Beetles along, or 3 Lesser Wisps if it flies. |  |
 | TagTeam | Tag, you're it | Only one player deals damage, 1.5 times as much for each player. Every 15 seconds another player is tagged in. | At least two players are alive and event "HotPotato" inactive. |
 | TheAlpha | The pack has a leader | A random monster becomes a big alpha with ten times its health. While it lives, all other monsters are in a frenzy. It drops an item when killed. |  |
-| Thieves | Watch your pockets | Monsters that hit a player steal one of their items and use it. Kill the thief to get it back. |  |
+| Thieves | Watch your pockets | Monsters that hit a player steal one of their items and use it, up to one every half second. Kill the thief to get them back. |  |
 | TimeWarp | Time slows for your foes | Slows all monsters to about a third of their speed. |  |
 | UmbraAmbush | Umbras emerge from the shadows | Each player is hunted by a tough enemy survivor with items, which attacks and moves slowly. | Event "BulletHell" inactive. |
 | UnitedWeStand | United we stand | Players close to each other share all their items. | At least two players are alive. |
