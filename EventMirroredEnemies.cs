@@ -234,6 +234,12 @@ namespace RandomEvents
             }
             if (attackerBody != null && mirrored.Contains(self.body) && attackerBody.teamComponent.teamIndex == TeamIndex.Player)
             {
+                // the ticks of damage over time, e.g. poison or burns, pass by without a sound, a shatter or anything sent
+                // back
+                if (damageInfo.dotIndex != DotController.DotIndex.None || (damageInfo.damageType.damageType & DamageType.DoT) != 0)
+                {
+                    return;
+                }
                 // The monster takes nothing, and the attacker loses the share of their health that a direct hit would
                 // have taken of the monster's. Blocked hits trigger no items, so item effects never started by hitting it
                 // and aren't sent back.
