@@ -58,7 +58,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | SkillsOnly | Primary sealed, skills unleashed | Disables primary skills, but the other skills recharge faster. Each Eclipse Lite becomes 2 Topaz Brooches. | Events "EquipmentOnly", "MonsterTransform" inactive and none of the players have a Bandolier. |
 | Slippery | The ground is slippery | All players and monsters get 3 Hexes of Acceleration, so all ground becomes slippery. | Hallowed Concepts is enabled, and event "CursedSpoils" inactive. |
 | SmallArena | Confined space | Halves the safe zone, but the wave is easier. | Simulacrum mode only |
-| StealthMission | Vanish from their sight | Players are cloaked. Attacking reveals them for 2 seconds. | Event "Hunted" inactive. |
+| StealthMission | Vanish from their sight | Players are cloaked, and monsters only fire at where they last saw them. Attacking reveals them for 2 seconds. | Event "Hunted" inactive. |
 | StrongEnemies | Fear the few | Only strong enemies spawn. | Not a Simulacrum boss wave, and events "WeakEnemies", "Mitosis", "LynxPups", "BlightedCorpses" and "BulletHell" inactive. |
 | SupplyDrop | Supplies inbound | Drops a random Captain beacon next to each player, which stays for the rest of the stage. |  |
 | SurvivorSwap | Walk in another's shoes | Players swap survivors and items with each other until the event ends. Alone, you become a random survivor with 40 armor. | Events "MonsterTransform" and "InventoryRoulette" inactive and currently not a boss wave. |

@@ -1,6 +1,9 @@
 ﻿using BepInEx.Configuration;
 using HG;
+using Mono.Cecil.Cil;
+using MonoMod.Cil;
 using RoR2;
+using RoR2.CharacterAI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,7 +33,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Players are cloaked. Attacking reveals them for 2 seconds.";
+            return "Players are cloaked, and monsters only fire at where they last saw them. Attacking reveals them for 2 seconds.";
         }
         public override string GetConditionDescription()
         {
@@ -46,6 +49,24 @@ namespace RandomEvents
         {
             CharacterBody.onBodyStartGlobal += CharacterBody_onBodyStartGlobal;
             On.RoR2.CharacterBody.OnSkillActivated += CharacterBody_OnSkillActivated;
+            IL.RoR2.CharacterAI.BaseAI.Target.GetBullseyePosition += Target_GetBullseyePosition;
+        }
+
+        // A monster keeps a cloaked player as its target and fires at where it last saw them, but the game gives it
+        // their new position every 2 seconds. A stealthed player's stays where they were until they are revealed. The
+        // monsters' AI runs on the host.
+        private void Target_GetBullseyePosition(ILContext il)
+        {
+            var c = new ILCursor(il);
+            if (!c.TryGotoNext(MoveType.After, x => x.MatchLdcR4(2f)))
+            {
+                Log.LogError("Could not find the cloaked target's update interval in BaseAI.Target.GetBullseyePosition.");
+                return;
+            }
+            c.Emit(OpCodes.Ldarg_0);
+            c.EmitDelegate<Func<float, BaseAI.Target, float>>((interval, target) =>
+                ModConfig.Enabled.Value && IsActive() && target.characterBody != null && target.characterBody.GetComponent<StealthComponent>() != null
+                    ? float.PositiveInfinity : interval);
         }
 
         private void CharacterBody_onBodyStartGlobal(CharacterBody body)
