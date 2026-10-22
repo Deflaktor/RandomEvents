@@ -224,7 +224,14 @@ namespace RandomEvents
             // ground zero is on the floor below the carrier
             var groundZero = Physics.Raycast(victim.corePosition, Vector3.down, out var hit, 50f, LayerIndex.world.mask, QueryTriggerInteraction.Ignore) ? hit.point : victim.footPosition;
             var attacker = lastPlayerHolder != null && lastPlayerHolder.healthComponent.alive ? lastPlayerHolder.gameObject : null;
-            Nuke(groundZero, NukeRadius, PlayerDamage, attacker);
+            var nuke = Nuke(groundZero, NukeRadius, PlayerDamage, attacker);
+            // It hurts with a Commando's base damage at the monsters' level, whoever carried it and whatever the players'
+            // survivors, items or levels
+            var commando = BodyCatalog.FindBodyPrefab("CommandoBody")?.GetComponent<CharacterBody>();
+            if (Run.instance != null && commando != null)
+            {
+                nuke.baseDamageOverride = commando.baseDamage + commando.levelDamage * (Run.instance.ambientLevel - 1f);
+            }
             // the one holding it when it goes off loses all of its health, not just its share
             if (victim.isPlayerControlled && victim.healthComponent != null && victim.healthComponent.alive)
             {
@@ -243,7 +250,7 @@ namespace RandomEvents
         // The mushroom cloud, players within the first blast's reach losing a share of their health, all of it at the center
         // and a quarter of it at the edge, and the explosion's pulses for the monsters. The attacker gets the kills of monsters;
         // players with no share to lose are spared.
-        public static void Nuke(Vector3 groundZero, float radius, float playerShare, GameObject attacker)
+        public static MiniNuke Nuke(Vector3 groundZero, float radius, float playerShare, GameObject attacker)
         {
             var nuke = new GameObject("RandomEventsMiniNuke").AddComponent<MiniNuke>();
             nuke.groundZero = groundZero;
@@ -280,6 +287,7 @@ namespace RandomEvents
                     damageColorIndex = DamageColorIndex.Item
                 });
             }
+            return nuke;
         }
 
         public override void Prepare()
@@ -352,6 +360,8 @@ namespace RandomEvents
             public float radius;
             public GameObject attacker;
             public float playerShare;
+            // instead of the attacker's damage, if set
+            public float? baseDamageOverride;
             private float age;
             private float coreTimer;
 
@@ -412,6 +422,10 @@ namespace RandomEvents
             // the attacker's damage, or, with none left, the strongest living player's
             private float BaseDamage()
             {
+                if (baseDamageOverride.HasValue)
+                {
+                    return baseDamageOverride.Value;
+                }
                 var attackerBody = attacker != null ? attacker.GetComponent<CharacterBody>() : null;
                 return attackerBody != null && attackerBody.healthComponent.alive ? attackerBody.damage
                     : Helper.GetLivingPlayerBodies().Select(body => body.damage).DefaultIfEmpty(0f).Max();
