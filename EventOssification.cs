@@ -35,7 +35,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "All players get 5 Hexes of Ossification, so their kills give nearby monsters barrier, but also enough Topaz Brooches for each kill to fill their own barrier.";
+            return "All players get 3 Hexes of Ossification, so their kills give nearby monsters barrier, but also enough Topaz Brooches for each kill to fill their own barrier.";
         }
         public override string GetConditionDescription()
         {
@@ -43,7 +43,7 @@ namespace RandomEvents
         }
         protected override void AddConfig(ConfigFile config)
         {
-            HexCount = config.Bind(GetEventConfigName(), "Hex Count", 5, "How many Hexes of Ossification each player gets.");
+            HexCount = config.Bind(GetEventConfigName(), "Hex Count", 3, "How many Hexes of Ossification each player gets.");
             HealthPerBrooch = config.Bind(GetEventConfigName(), "Health Per Brooch", 15f, "Each player gets a Topaz Brooch for this much of their combined maximum health. A brooch gives 15 barrier per kill, so 15 lets a kill fill the whole barrier.");
         }
         public override void Preload()
