@@ -9,9 +9,10 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace RandomEvents
 {
-    // The Preon Accumulator charges as usual, then fires a Malachite elite's poison orb straight ahead instead of its own. Where the orb
-    // hits the ground, it implodes like a Void Jailer's death, if smaller, and Void Jailer death bombs fly out in every direction and each hunts down a monster, the strongest
-    // first, imploding when it gets there.
+    // The Preon Accumulator charges as usual, then fires a Malachite elite's poison orb straight ahead instead of its own.
+    // Where the orb hits the ground, it implodes like a Void Jailer's death and leaves one of its death bombs behind,
+    // which implodes, smaller, a moment later. Meanwhile more of them fly out in every direction and each hunts down a
+    // monster, the strongest first, imploding when it gets there.
     public class ExperimentalPreonAccumulator : ExperimentalEquipment
     {
         private const float OrbSpeed = 40f;
@@ -22,14 +23,17 @@ namespace RandomEvents
         // one after another while the implosion is at its biggest
         private const float FirstBombDelay = 0.2f;
         private const float BombInterval = 0.1f;
-        // the orb's own implosion, smaller than the bombs'
+        // the orb's own Void Jailer death bomb, staying where it burst and imploding smaller than the others, once they
+        // are all out
         private const float ImplosionDamage = 5f;
         private const float ImplosionRadius = 4f;
+        private const float ImplosionTime = 1.2f;
         // only monsters within this many meters
         private const float Range = 100f;
         private static AsyncOperationHandle<GameObject> PoisonOrb;
         private static AsyncOperationHandle<GameObject> Bomb;
         private static AsyncOperationHandle<GameObject> OrbImpact;
+        private static AsyncOperationHandle<GameObject> StillBomb;
         private static AsyncOperationHandle<GameObject> Implosion;
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.BFG;
@@ -44,6 +48,7 @@ namespace RandomEvents
             PoisonOrb = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/ElitePoison/PoisonOrbProjectile.prefab");
             Bomb = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC1/VoidJailer/VoidJailerDeathBombProjectile.prefab");
             OrbImpact = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/ElitePoison/OmniExplosionVFXUrchin.prefab");
+            StillBomb = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC1/VoidJailer/VoidJailerDeathBombProjectileStill.prefab");
             Implosion = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC1/VoidJailer/VoidJailerDeathBombExplosion.prefab");
         }
 
@@ -133,24 +138,34 @@ namespace RandomEvents
             }
         }
 
-        // the Void Jailer's death implosion, which like the bombs kills outright what isn't immune to void deaths
+        // The Void Jailer's death implosion and a death bomb left where it was, which like the others kills outright what
+        // isn't immune to void deaths
         private static void Implode(CharacterBody owner, Vector3 position)
         {
+            // the Void Jailer's death implosion at once, only to look at
             EffectManager.SpawnEffect(Implosion.WaitForCompletion(), new EffectData { origin = position, scale = ImplosionRadius }, transmit: true);
-            new BlastAttack
+            var bomb = Object.Instantiate(StillBomb.WaitForCompletion(), position, Quaternion.identity);
+            if (bomb.TryGetComponent(out ProjectileImpactExplosion explosion))
             {
-                position = position,
-                radius = ImplosionRadius,
-                falloffModel = BlastAttack.FalloffModel.None,
-                attacker = owner.gameObject,
-                baseDamage = owner.damage * ImplosionDamage,
-                crit = owner.RollCrit(),
-                procCoefficient = 1f,
-                damageType = DamageType.VoidDeath | DamageType.BypassBlock,
-                damageColorIndex = DamageColorIndex.Item,
-                attackerFiltering = AttackerFiltering.NeverHitSelf,
-                teamIndex = owner.teamComponent.teamIndex
-            }.Fire();
+                explosion.lifetime = ImplosionTime;
+                explosion.blastRadius = ImplosionRadius;
+                explosion.blastAttackerFiltering = AttackerFiltering.NeverHitSelf;
+            }
+            if (bomb.TryGetComponent(out ProjectileController controller))
+            {
+                controller.owner = owner.gameObject;
+            }
+            if (bomb.TryGetComponent(out TeamFilter teamFilter))
+            {
+                teamFilter.teamIndex = owner.teamComponent.teamIndex;
+            }
+            if (bomb.TryGetComponent(out ProjectileDamage projectileDamage))
+            {
+                projectileDamage.damage = owner.damage * ImplosionDamage;
+                projectileDamage.crit = owner.RollCrit();
+                projectileDamage.damageColorIndex = DamageColorIndex.Item;
+            }
+            NetworkServer.Spawn(bomb);
         }
 
         // the strongest first: bosses, then champions, then by health
