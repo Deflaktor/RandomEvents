@@ -82,10 +82,18 @@ namespace RandomEvents
             return spawnCard;
         }
 
-        // every Lynx Pup during the event, also those the stage would spawn anyway
         private void CharacterBody_onBodyStartGlobal(CharacterBody body)
         {
-            if (!NetworkServer.active || !IsActive() || body.master == null || body.inventory == null || grown.Contains(body.master)
+            if (NetworkServer.active && IsActive())
+            {
+                Grow(body);
+            }
+        }
+
+        // every Lynx Pup during the event, also those the stage would spawn anyway and those already there
+        private void Grow(CharacterBody body)
+        {
+            if (body == null || body.master == null || body.inventory == null || grown.Contains(body.master)
                 || body.teamComponent.teamIndex == TeamIndex.Player || body.bodyIndex != BodyCatalog.FindBodyIndex("MiniLynxBody"))
             {
                 return;
@@ -105,6 +113,10 @@ namespace RandomEvents
         public override void Start(List<AbstractEvent> activeOtherEvents)
         {
             grown.Clear();
+            foreach (var body in CharacterBody.readOnlyInstancesList.ToList())
+            {
+                Grow(body);
+            }
             // the Artifact of Kin, e.g. on its Simulacrum wave, keeps to one kind of monster
             if (RunArtifactManager.instance != null && RunArtifactManager.instance.IsArtifactEnabled(RoR2Content.Artifacts.SingleMonsterType))
             {
