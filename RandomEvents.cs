@@ -563,23 +563,40 @@ namespace RandomEvents
             var ev = instance.FindEventByName(name);
             if (ev != null)
             {
-                // one already going starts over
+                // One already going starts over, a frame later: what its end removes, e.g. the components on players,
+                // only goes at the end of the frame, and starting before would find them still there.
                 if (instance.m_activeEvents.Contains(ev))
                 {
                     ev.Stop();
                     instance.m_activeEvents.Remove(ev);
                     Log.LogInfo($"Event {ev.GetEventConfigName()} stopped.");
+                    instance.StartCoroutine(StartNextFrame(ev));
+                    return;
                 }
-                ev.Prepare();
-                instance.m_activeEvents.Add(ev);
-                ev.Start(instance.m_activeEvents);
-                Log.LogInfo($"Event {ev.GetEventConfigName()} started.");
-                ChatHelper.Send($"<size=28px><style=cWorldEvent>{ev.GetAnnouncement()}</style></size>");
+                StartFromCommand(ev);
             }
             else
             {
                 Log.LogError($"Can not find event named {name}.");
             }
+        }
+
+        private static IEnumerator StartNextFrame(AbstractEvent ev)
+        {
+            yield return null;
+            if (NetworkServer.active && !instance.m_activeEvents.Contains(ev))
+            {
+                StartFromCommand(ev);
+            }
+        }
+
+        private static void StartFromCommand(AbstractEvent ev)
+        {
+            ev.Prepare();
+            instance.m_activeEvents.Add(ev);
+            ev.Start(instance.m_activeEvents);
+            Log.LogInfo($"Event {ev.GetEventConfigName()} started.");
+            ChatHelper.Send($"<size=28px><style=cWorldEvent>{ev.GetAnnouncement()}</style></size>");
         }
 
         [ConCommand(commandName = "queue_event", flags = ConVarFlags.ExecuteOnServer, helpText = "Queues the given event. Provide its internal name or its number from list_events.")]
