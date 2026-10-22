@@ -172,6 +172,9 @@ namespace RandomEvents
                 itemIndices.Remove(RoR2Content.Items.BeetleGland.itemIndex);
                 // can cause crash
                 itemIndices.Remove(RoR2Content.Items.Clover.itemIndex);
+                // Neutronium Weight: each hit takes a real one off its holder and gives it to the one hit, so the event's
+                // stacks would turn into real weights moving between players and monsters long after it ended
+                itemIndices.Remove(DLC3Content.Items.TransferDebuffOnHit.itemIndex);
                 itemCandidates = itemIndices.OrderBy(x => UnityEngine.Random.Range(0f, 1f)).ToList();
             }
 
