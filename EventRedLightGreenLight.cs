@@ -201,7 +201,7 @@ namespace RandomEvents
                 origin = body.corePosition,
                 scale = body.radius
             }, transmit: true);
-            RoR2.Audio.EntitySoundManager.EmitSoundServer(WrongSound.WaitForCompletion().index, body.gameObject);
+            EffectManager.SimpleSoundEffect(WrongSound.WaitForCompletion().index, body.corePosition, transmit: true);
         }
 
         private void RedLight()
@@ -250,7 +250,7 @@ namespace RandomEvents
                 {
                     EventLoot.GetInventory(this, body).GiveTemporaryItem(RoR2Content.Items.ShinyPearl.itemIndex);
                     ItemOrb.Fly(body.corePosition + Vector3.up * OrbHeight, body.gameObject, RoR2Content.Items.ShinyPearl.itemIndex);
-                    RoR2.Audio.EntitySoundManager.EmitSoundServer(CorrectSound.WaitForCompletion().index, body.gameObject);
+                    EffectManager.SimpleSoundEffect(CorrectSound.WaitForCompletion().index, body.corePosition, transmit: true);
                 }
             }
         }
