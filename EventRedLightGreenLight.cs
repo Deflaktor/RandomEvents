@@ -21,6 +21,9 @@ namespace RandomEvents
         // players who stand still during red light can't be hurt
         private readonly BuffTracker immunities = new BuffTracker();
         private AsyncOperationHandle<GameObject> AfflictionEffect;
+        // the artifact code dialer's sounds for a right and a wrong code
+        private AsyncOperationHandle<NetworkSoundEventDef> CorrectSound;
+        private AsyncOperationHandle<NetworkSoundEventDef> WrongSound;
         private AsyncOperationHandle<GameObject> RedLightEffect;
         // effects that tint everyone's screen
         private AsyncOperationHandle<GameObject> RedLightFlash;
@@ -69,6 +72,8 @@ namespace RandomEvents
         {
             // Symbiotic Scorpion's effect with the sound of its debuff hitting
             AfflictionEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC1/PermanentDebuffOnHit/PermanentDebuffEffect.prefab");
+            CorrectSound = Addressables.LoadAssetAsync<NetworkSoundEventDef>("RoR2/Base/skymeadow/nseEnvHiddenLabSuccess.asset");
+            WrongSound = Addressables.LoadAssetAsync<NetworkSoundEventDef>("RoR2/Base/skymeadow/nseEnvHiddenLabFail.asset");
             // the red burst of a monster leveling up
             RedLightEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/LevelUpEffectEnemy.prefab");
             // the flash and chime of a Solus portal appearing
@@ -196,6 +201,7 @@ namespace RandomEvents
                 origin = body.corePosition,
                 scale = body.radius
             }, transmit: true);
+            RoR2.Audio.EntitySoundManager.EmitSoundServer(WrongSound.WaitForCompletion().index, body.gameObject);
         }
 
         private void RedLight()
@@ -244,6 +250,7 @@ namespace RandomEvents
                 {
                     EventLoot.GetInventory(this, body).GiveTemporaryItem(RoR2Content.Items.ShinyPearl.itemIndex);
                     ItemOrb.Fly(body.corePosition + Vector3.up * OrbHeight, body.gameObject, RoR2Content.Items.ShinyPearl.itemIndex);
+                    RoR2.Audio.EntitySoundManager.EmitSoundServer(CorrectSound.WaitForCompletion().index, body.gameObject);
                 }
             }
         }
