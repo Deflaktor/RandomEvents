@@ -56,7 +56,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | SecondWind | Fragile, but never finished | Revives dead players. Everyone else drops to 1% health, but anyone who dies is revived once. |  |
 | Shielded | Shields up | Three quarters of the monsters are shielded, with 300 more armor, and take only 5% of the damage. The others have a quarter of their health, and when one dies, the nearest shielded monster loses its shield. | Not during the teleporter event or a Simulacrum boss wave, and event "MirroredEnemies" inactive. |
 | SkillsOnly | Primary sealed, skills unleashed | Disables primary skills, but the other skills recharge faster. Each Eclipse Lite becomes 2 Topaz Brooches. | Events "EquipmentOnly", "MonsterTransform" inactive and none of the players have a Bandolier. |
-| Slippery | Watch your step | All players and monsters get 3 Hexes of Acceleration, so all ground becomes slippery. | Hallowed Concepts is enabled, and event "CursedSpoils" inactive. |
+| Slippery | The ground is slippery | All players and monsters get 3 Hexes of Acceleration, so all ground becomes slippery. | Hallowed Concepts is enabled, and event "CursedSpoils" inactive. |
 | SmallArena | Confined space | Halves the safe zone, but the wave is easier. | Simulacrum mode only |
 | StealthMission | Vanish from their sight | Players are cloaked. Attacking reveals them for 2 seconds. | Event "Hunted" inactive. |
 | StrongEnemies | Fear the few | Only strong enemies spawn. | Not a Simulacrum boss wave, and events "WeakEnemies", "Mitosis", "LynxPups", "BlightedCorpses" and "BulletHell" inactive. |
