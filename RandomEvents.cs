@@ -551,7 +551,7 @@ namespace RandomEvents
             }
         }
 
-        [ConCommand(commandName = "start_event", flags = ConVarFlags.ExecuteOnServer, helpText = "Starts the given event. Provide its internal name or its number from list_events.")]
+        [ConCommand(commandName = "start_event", flags = ConVarFlags.ExecuteOnServer, helpText = "Starts the given event, over again if it's already going. Provide its internal name or its number from list_events.")]
         private static void Command_StartEvent(ConCommandArgs args)
         {
             if (!NetworkServer.active) {
@@ -562,6 +562,13 @@ namespace RandomEvents
             var ev = instance.FindEventByName(name);
             if (ev != null)
             {
+                // one already going starts over
+                if (instance.m_activeEvents.Contains(ev))
+                {
+                    ev.Stop();
+                    instance.m_activeEvents.Remove(ev);
+                    Log.LogInfo($"Event {ev.GetEventConfigName()} stopped.");
+                }
                 ev.Prepare();
                 instance.m_activeEvents.Add(ev);
                 ev.Start(instance.m_activeEvents);
