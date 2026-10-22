@@ -119,6 +119,7 @@ namespace RandomEvents
                 InitAndHookEvent(new EventWeakEnemies());
                 InitAndHookEvent(new EventZombies());
                 ModConfig.InLobbyConfig();
+                DebugToolkitAutoComplete.Register(m_loadedEvents);
             });
 
             someMonster = Addressables.LoadAssetAsync<CharacterSpawnCard>("RoR2/DLC1/MajorAndMinorConstruct/cscMinorConstruct.asset");
