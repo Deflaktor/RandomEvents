@@ -62,13 +62,13 @@ namespace RandomEvents
         }
 
         // The experimental Molotov: where it lands, a Grandparent's sun flares up and burns out at once. In that moment it
-        // blasts every monster within 20 meters for 2000% of the thrower's damage and throws it back, all of it within 6
+        // blasts every monster within 40 meters for 2000% of the thrower's damage and throws it back, all of it within 6
         // meters and a quarter at the edge, and sets every one it sees within 100 meters ablaze with the Ignition Tank's stronger burn, 2000% in all
         // up close, less the further away.
         public class Flare : MonoBehaviour
         {
             private const float SunHeight = 4f;
-            private const float Radius = 20f;
+            private const float Radius = 40f;
             private const float SweetSpot = 6f;
             private const float EdgeShare = 0.25f;
             private const float BlastDamage = 20f;
@@ -78,12 +78,17 @@ namespace RandomEvents
             // each stack of the burn, up close; one at the edge of its sight
             private const int BurnStacks = 10;
             private const float BurnRange = 100f;
+            // the stacks come one after another, this far apart
+            private const float BurnInterval = 0.1f;
             // what the Grandparent's sun shows on everything it heats
             private static AsyncOperationHandle<GameObject> HeatEffect;
             // what the sun shows as it appears and as it burns out
             private static AsyncOperationHandle<GameObject> SunBurst;
             public CharacterBody owner;
             public Vector3 center;
+            // the burn stacks still to come for each that the sun saw
+            private readonly Dictionary<CharacterBody, int> pendingStacks = new Dictionary<CharacterBody, int>();
+            private float burnTimer;
 
             public static void Preload()
             {
@@ -106,7 +111,52 @@ namespace RandomEvents
                 {
                     Blast();
                 }
-                Destroy(gameObject);
+            }
+
+            private void FixedUpdate()
+            {
+                if (!NetworkServer.active || owner == null || pendingStacks.Count == 0)
+                {
+                    Destroy(gameObject);
+                    return;
+                }
+                burnTimer -= Time.fixedDeltaTime;
+                if (burnTimer > 0f)
+                {
+                    return;
+                }
+                burnTimer = BurnInterval;
+                foreach (var (body, stacks) in pendingStacks.ToList())
+                {
+                    if (body == null || body.healthComponent == null || !body.healthComponent.alive || stacks <= 0)
+                    {
+                        pendingStacks.Remove(body);
+                        continue;
+                    }
+                    Burn(body);
+                    pendingStacks[body] = stacks - 1;
+                }
+            }
+
+            // a stack of the stronger burn, with the sun's heat flash
+            private void Burn(CharacterBody body)
+            {
+                EffectManager.SpawnEffect(HeatEffect.WaitForCompletion(), new EffectData
+                {
+                    origin = body.corePosition,
+                    rotation = Util.QuaternionSafeLookRotation(SunPosition - body.corePosition),
+                    scale = body.bestFitRadius
+                }, transmit: true);
+                var info = new InflictDotInfo
+                {
+                    attackerObject = owner.gameObject,
+                    victimObject = body.gameObject,
+                    dotIndex = DotController.DotIndex.StrongerBurn,
+                    damageMultiplier = 1f,
+                    totalDamage = owner.damage * BurnDamage / BurnStacks,
+                    hitHurtBox = body.mainHurtBox
+                };
+                DotController.InflictDot(ref info);
             }
 
             private void Blast()
@@ -143,26 +193,7 @@ namespace RandomEvents
                     {
                         continue;
                     }
-                    var stacks = Mathf.Max(1, Mathf.RoundToInt(BurnStacks * (1f - Mathf.Clamp01((distance - SweetSpot) / (BurnRange - SweetSpot)))));
-                    EffectManager.SpawnEffect(HeatEffect.WaitForCompletion(), new EffectData
-                    {
-                        origin = body.corePosition,
-                        rotation = Util.QuaternionSafeLookRotation(SunPosition - body.corePosition),
-                        scale = body.bestFitRadius
-                    }, transmit: true);
-                    for (int i = 0; i < stacks; i++)
-                    {
-                        var info = new InflictDotInfo
-                        {
-                            attackerObject = owner.gameObject,
-                            victimObject = body.gameObject,
-                            dotIndex = DotController.DotIndex.StrongerBurn,
-                            damageMultiplier = 1f,
-                            totalDamage = owner.damage * BurnDamage / BurnStacks,
-                            hitHurtBox = body.mainHurtBox
-                        };
-                        DotController.InflictDot(ref info);
-                    }
+                    pendingStacks[body] = Mathf.Max(1, Mathf.RoundToInt(BurnStacks * (1f - Mathf.Clamp01((distance - SweetSpot) / (BurnRange - SweetSpot)))));
                 }
             }
         }
