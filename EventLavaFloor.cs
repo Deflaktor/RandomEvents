@@ -11,11 +11,17 @@ namespace RandomEvents
     public class EventLavaFloor : AbstractEvent
     {
         private const float UpdateInterval = 0.25f;
+        // a Molotov's fire on the ground under a burning player, for show: a new one this far from their last, each
+        // burning for a while
+        private const float FireSpacing = 3f;
+        private const float FireDuration = 3f;
         private ConfigEntry<float> GraceTime;
         private ConfigEntry<float> DamagePerSecond;
         private ConfigEntry<int> Feathers;
         // how long each player has been on the ground
         private readonly Dictionary<CharacterBody, float> groundedTimes = new Dictionary<CharacterBody, float>();
+        private readonly Dictionary<CharacterBody, (Vector3 position, GameObject fire)> lastFires = new Dictionary<CharacterBody, (Vector3 position, GameObject fire)>();
+        private readonly List<(GameObject fire, float end)> fires = new List<(GameObject fire, float end)>();
         private float updateTimer;
 
         public override bool LoadCondition()
@@ -37,7 +43,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Players burn while on the ground for more than half a second. All players get 2 Hopoo Feathers.";
+            return "Players burn while on the ground for more than half a second, which sets the ground beneath them on fire. All players get 2 Hopoo Feathers.";
         }
         public override string GetPopupDescription()
         {
@@ -55,6 +61,7 @@ namespace RandomEvents
         }
         public override void Preload()
         {
+            FireEffects.Preload();
         }
         public override void Hook()
         {
@@ -91,6 +98,7 @@ namespace RandomEvents
                 return;
             }
             updateTimer = UpdateInterval;
+            PutOutFires(false);
             foreach (var body in Helper.GetLivingPlayerBodies())
             {
                 if (body.characterMotor == null || !body.characterMotor.isGrounded)
@@ -103,7 +111,42 @@ namespace RandomEvents
                 if (groundedTime > GraceTime.Value)
                 {
                     Burn(body);
+                    SetGroundOnFire(body);
                 }
+            }
+        }
+
+        private void SetGroundOnFire(CharacterBody body)
+        {
+            var position = body.footPosition;
+            // still standing in their last one
+            if (lastFires.TryGetValue(body, out var last) && last.fire != null && (last.position - position).sqrMagnitude < FireSpacing * FireSpacing)
+            {
+                return;
+            }
+            var fire = FireEffects.SpawnFire(FireEffects.FirePool, position, null, TeamIndex.Neutral);
+            lastFires[body] = (position, fire);
+            fires.Add((fire, Time.fixedTime + FireDuration));
+        }
+
+        // those burnt out, or all of them
+        private void PutOutFires(bool all)
+        {
+            fires.RemoveAll(entry =>
+            {
+                if (!all && entry.fire != null && Time.fixedTime < entry.end)
+                {
+                    return false;
+                }
+                if (entry.fire != null)
+                {
+                    UnityEngine.Object.Destroy(entry.fire);
+                }
+                return true;
+            });
+            if (all)
+            {
+                lastFires.Clear();
             }
         }
 
@@ -137,6 +180,7 @@ namespace RandomEvents
         public override void Stop()
         {
             groundedTimes.Clear();
+            PutOutFires(true);
             EventLoot.Clear(this);
         }
     }
