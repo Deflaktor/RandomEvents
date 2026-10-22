@@ -10,11 +10,12 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace RandomEvents
 {
-    // The Disposable Missile Launcher sends out an Overloading Worm's electric orb for each monster nearby, one every 0.2
-    // seconds, at least 4 and up to 10. Each spirals its way slowly to its monster, sending out the Ukulele's chain lightning every second,
-    // and calls down the Charged Perforator's lightning strike, three times as strong, on it when it gets there. With no
-    // monster left it roams about in search of one, and when its time runs out the strike comes down where it is. All of it is electric, which
-    // Faulty Conductor's energizing and conductive monsters work with.
+    // The Disposable Missile Launcher sends out an Overloading Worm's electric orb for each monster nearby, one every
+    // 0.2 seconds, at least 4 and up to 10. Each spirals its way slowly to its monster, sending out the Ukulele's chain
+    // lightning four times a second, and calls down the Charged Perforator's lightning strike, three times as strong,
+    // on it when it gets there. With no monster left it roams about in search of one, and when its time runs out the
+    // strike comes down where it is. All of it is electric, which Faulty Conductor's energizing and conductive monsters
+    // work with.
     public class ExperimentalDisposableMissileLauncher : ExperimentalEquipment
     {
         private const int MinOrbs = 4;
@@ -130,7 +131,7 @@ namespace RandomEvents
                 spiral.owner = owner;
                 spiral.target = target;
                 // the chain lightning of each a little apart from the others'
-                spiral.zapTimer = Spiral.ZapInterval + index * 0.1f;
+                spiral.zapTimer = Spiral.ZapInterval + index * 0.025f;
                 NetworkServer.Spawn(orb);
             }
         }
@@ -138,7 +139,7 @@ namespace RandomEvents
         // Inches towards its monster in a corkscrew, which the host moves and its projectile transform passes on to everyone
         public class Spiral : MonoBehaviour
         {
-            public const float ZapInterval = 1f;
+            public const float ZapInterval = 0.25f;
             private const float Speed = 8f;
             // how far from its path it circles, and how fast, in radians per second; closer than ConvergeDistance to its
             // monster, the circles shrink until it flies straight at it
