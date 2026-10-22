@@ -15,7 +15,7 @@ namespace RandomEvents
         {
             new ExperimentalRoyalCapacitor(), new ExperimentalDisposableMissileLauncher(), new ExperimentalRadarScanner(), new ExperimentalSuperMassiveLeech(),
             new ExperimentalForgiveMePlease(), new ExperimentalCrowdfunder(), new ExperimentalMolotov(), new ExperimentalSawmerang(), new ExperimentalForeignFruit(),
-            new ExperimentalPrimordialCube(), new ExperimentalPreonAccumulator()
+            new ExperimentalPrimordialCube(), new ExperimentalPreonAccumulator(), new ExperimentalGnarledWoodsprite()
         };
 
         // the equipment the event gives this time
@@ -113,8 +113,8 @@ namespace RandomEvents
         public override void Prepare()
         {
             // only those of the run's expansions, e.g. the Molotov (6-Pack) with Survivors of the Void
-            var available = equipments.Where(experimental => experimental.EquipmentDef != null && (experimental.EquipmentDef.requiredExpansion == null || Run.instance == null
-                || Run.instance.IsExpansionEnabled(experimental.EquipmentDef.requiredExpansion))).ToList();
+            var available = equipments.Where(experimental => experimental.EquipmentDef != null && experimental.IsAvailable && (experimental.EquipmentDef.requiredExpansion == null
+                || Run.instance == null || Run.instance.IsExpansionEnabled(experimental.EquipmentDef.requiredExpansion))).ToList();
             Current = available[RoR2Application.rng.RangeInt(0, available.Count)];
         }
 
