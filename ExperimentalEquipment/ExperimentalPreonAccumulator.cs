@@ -11,7 +11,7 @@ namespace RandomEvents
 {
     // The Preon Accumulator charges as usual, then fires a Malachite elite's poison orb straight ahead instead of its own.
     // Where the orb hits the ground, it implodes like a Void Jailer's death and leaves one of its death bombs behind,
-    // which implodes, smaller, a moment later. Meanwhile more of them fly out in every direction and each hunts down a
+    // which implodes, smaller, once all the others have. Meanwhile more of them fly out in every direction and each hunts down a
     // monster, the strongest first, imploding when it gets there.
     public class ExperimentalPreonAccumulator : ExperimentalEquipment
     {
@@ -23,11 +23,10 @@ namespace RandomEvents
         // one after another while the implosion is at its biggest
         private const float FirstBombDelay = 0.2f;
         private const float BombInterval = 0.1f;
-        // the orb's own Void Jailer death bomb, staying where it burst and imploding smaller than the others, once they
-        // are all out
+        // the orb's own Void Jailer death bomb, staying where it burst and imploding smaller than the others once they
+        // have all imploded, or at the latest when they would have run out of time
         private const float ImplosionDamage = 5f;
         private const float ImplosionRadius = 4f;
-        private const float ImplosionTime = 1.2f;
         // only monsters within this many meters
         private const float Range = 100f;
         private static AsyncOperationHandle<GameObject> PoisonOrb;
@@ -105,49 +104,60 @@ namespace RandomEvents
             }
             var position = self.transform.position + Vector3.up * 1.5f;
             EffectManager.SpawnEffect(OrbImpact.WaitForCompletion(), new EffectData { origin = position, scale = 7f }, transmit: true);
-            Implode(owner, position);
             var burst = new GameObject("RandomEventsVoidBombBurst").AddComponent<Burst>();
+            burst.center = Implode(owner, position);
             burst.owner = owner;
             burst.position = position;
             burst.targets = Targets(owner, position);
         }
 
-        // The bombs, one by one in a circle
+        // The bombs, one by one in a circle; then the one in the middle, once they are all gone
         public class Burst : MonoBehaviour
         {
             public CharacterBody owner;
             public Vector3 position;
             public List<CharacterBody> targets;
+            public GameObject center;
+            private readonly List<GameObject> bombs = new List<GameObject>();
             private int launched;
             private float age;
 
             private void FixedUpdate()
             {
-                if (!NetworkServer.active || owner == null || launched >= Bombs)
+                if (!NetworkServer.active)
                 {
                     Destroy(gameObject);
                     return;
                 }
                 age += Time.fixedDeltaTime;
-                while (launched < Bombs && age >= FirstBombDelay + launched * BombInterval)
+                while (owner != null && launched < Bombs && age >= FirstBombDelay + launched * BombInterval)
                 {
                     var direction = Quaternion.Euler(-30f, 360f * launched / Bombs, 0f) * Vector3.forward;
-                    LaunchBomb(owner, position, direction, targets.Count > 0 ? targets[launched % targets.Count] : null);
+                    bombs.Add(LaunchBomb(owner, position, direction, targets.Count > 0 ? targets[launched % targets.Count] : null));
                     launched++;
+                }
+                if ((owner == null || launched >= Bombs) && bombs.TrueForAll(bomb => bomb == null))
+                {
+                    if (center != null && center.TryGetComponent(out ProjectileImpactExplosion explosion))
+                    {
+                        explosion.Detonate();
+                    }
+                    Destroy(gameObject);
                 }
             }
         }
 
         // The Void Jailer's death implosion and a death bomb left where it was, which like the others kills outright what
         // isn't immune to void deaths
-        private static void Implode(CharacterBody owner, Vector3 position)
+        private static GameObject Implode(CharacterBody owner, Vector3 position)
         {
             // the Void Jailer's death implosion at once, only to look at
             EffectManager.SpawnEffect(Implosion.WaitForCompletion(), new EffectData { origin = position, scale = ImplosionRadius }, transmit: true);
             var bomb = Object.Instantiate(StillBomb.WaitForCompletion(), position, Quaternion.identity);
             if (bomb.TryGetComponent(out ProjectileImpactExplosion explosion))
             {
-                explosion.lifetime = ImplosionTime;
+                // after the others' longest flight
+                explosion.lifetime = Range / BombSpeed + 2f + FirstBombDelay + Bombs * BombInterval + 0.5f;
                 explosion.blastRadius = ImplosionRadius;
                 explosion.blastAttackerFiltering = AttackerFiltering.NeverHitSelf;
             }
@@ -166,6 +176,7 @@ namespace RandomEvents
                 projectileDamage.damageColorIndex = DamageColorIndex.Item;
             }
             NetworkServer.Spawn(bomb);
+            return bomb;
         }
 
         // the strongest first: bosses, then champions, then by health
@@ -182,7 +193,7 @@ namespace RandomEvents
                 && body.teamComponent.teamIndex != owner.teamComponent.teamIndex && body.teamComponent.teamIndex != TeamIndex.Neutral;
         }
 
-        private static void LaunchBomb(CharacterBody owner, Vector3 position, Vector3 direction, CharacterBody target)
+        private static GameObject LaunchBomb(CharacterBody owner, Vector3 position, Vector3 direction, CharacterBody target)
         {
             var bomb = Object.Instantiate(Bomb.WaitForCompletion(), position, Util.QuaternionSafeLookRotation(direction));
             // its own search would pick the nearest
@@ -218,6 +229,7 @@ namespace RandomEvents
             hunter.owner = owner;
             hunter.SetTarget(target);
             NetworkServer.Spawn(bomb);
+            return bomb;
         }
 
         // Keeps the bomb on its monster, a new one if it dies first, and sets it off once it gets there
