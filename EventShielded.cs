@@ -39,7 +39,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Three quarters of the monsters are shielded and take only 5% of the damage. The others have a quarter of their health, and when one dies, the nearest shielded monster loses its shield.";
+            return "Three quarters of the monsters are shielded, with 300 more armor, and take only 5% of the damage. The others have a quarter of their health, and when one dies, the nearest shielded monster loses its shield.";
         }
         public override string GetConditionDescription()
         {
@@ -97,11 +97,13 @@ namespace RandomEvents
             }
         }
 
-        // the host cuts the damage it takes; the shine is that of the Solus Wing's invulnerable elite
+        // the host cuts the damage it takes; the shine is that of the Solus Wing's invulnerable elite, and on top the
+        // armor of a Twisted elite's bead
         private void Shield(CharacterBody body)
         {
             shielded.Add(body);
             buffs.Add(body, DLC3Content.Buffs.SolusWingInvulnerability);
+            buffs.Add(body, DLC2Content.Buffs.BeadArmor);
         }
 
         private void Weaken(CharacterBody body)
@@ -109,6 +111,7 @@ namespace RandomEvents
             if (shielded.Remove(body))
             {
                 buffs.Remove(body, DLC3Content.Buffs.SolusWingInvulnerability);
+                buffs.Remove(body, DLC2Content.Buffs.BeadArmor);
             }
             var healthComponent = body.healthComponent;
             var fraction = Mathf.Clamp01(HealthFraction.Value);
