@@ -19,8 +19,10 @@ namespace RandomEvents
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            // the faster attacks would undo the hunters' slowdown
-            return !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("UmbraAmbush", StringComparison.InvariantCultureIgnoreCase));
+            // only monsters whose primary fires projectiles spawn, so most of the stage's should; the faster attacks would
+            // undo UmbraAmbush's hunters' slowdown
+            return MonsterTraits.WeightShare(MonsterPool.GetChoices(), MonsterTraits.PrimaryFiresProjectiles) > 0.5f && !MonsterPool.OtherChangingEventActive(this, activeOtherEvents)
+                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("UmbraAmbush", StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
         {
@@ -32,11 +34,11 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Increases the fire rate of enemies but lowers their damage.";
+            return "Only monsters whose primary attack fires projectiles spawn. Increases the fire rate of enemies but lowers their damage.";
         }
         public override string GetConditionDescription()
         {
-            return "Event \"UmbraAmbush\" inactive.";
+            return "Most of the stage's monsters' primary attacks fire projectiles, and events \"WeakEnemies\", \"StrongEnemies\", \"Mitosis\", \"DroneUprising\", \"FallingEnemies\", \"RitualHelmets\", \"Bouncy\", \"LynxPups\", \"BlightedCorpses\" and \"UmbraAmbush\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {
@@ -68,6 +70,7 @@ namespace RandomEvents
 
         public override void Start(List<AbstractEvent> activeOtherEvents)
         {
+            MonsterPool.Filter(this, choice => MonsterTraits.PrimaryFiresProjectiles(choice.value));
             foreach (var body in CharacterBody.instancesList)
             {
                 if (body != null && body.teamComponent.teamIndex != TeamIndex.Player)
@@ -80,6 +83,7 @@ namespace RandomEvents
 
         public override void Stop()
         {
+            MonsterPool.Restore(this);
             foreach (var body in CharacterBody.instancesList)
             {
                 if (body != null)
