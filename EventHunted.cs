@@ -11,7 +11,6 @@ namespace RandomEvents
     public class EventHunted : AbstractEvent
     {
         private const float RetargetInterval = 0.5f;
-        private readonly BuffTracker buffs = new BuffTracker();
         private CharacterBody hunted;
         private float retargetTimer;
 
@@ -35,7 +34,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "All monsters chase one random player, who gets 100 armor.";
+            return "All monsters chase one random player.";
         }
         public override string GetConditionDescription()
         {
@@ -76,12 +75,10 @@ namespace RandomEvents
 
         private void ChooseHunted()
         {
-            buffs.RemoveAll();
             var candidates = Helper.GetLivingPlayerBodies();
             hunted = candidates.Count > 0 ? candidates[RoR2Application.rng.RangeInt(0, candidates.Count)] : null;
             if (hunted != null)
             {
-                buffs.Add(hunted, RoR2Content.Buffs.SmallArmorBoost);
                 ChatHelper.SendEventMessage("EVENT_HUNTED_TARGET", ChatHelper.GetColoredPlayerName(hunted));
             }
         }
@@ -119,7 +116,6 @@ namespace RandomEvents
 
         public override void Stop()
         {
-            buffs.RemoveAll();
             hunted = null;
         }
     }
