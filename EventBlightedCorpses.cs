@@ -42,9 +42,10 @@ namespace RandomEvents
         {
             return true;
         }
+        // only monsters that leave a corpse spawn, so most of the stage's should
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            return true;
+            return MonsterTraits.WeightShare(MonsterPool.GetChoices(), MonsterTraits.LeavesCorpse) > 0.5f && !MonsterPool.OtherChangingEventActive(this, activeOtherEvents);
         }
         public override string GetEventConfigName()
         {
@@ -56,15 +57,15 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Monsters leave their corpse in a pool of acid until the event ends, and being near them blights players.";
+            return "Only monsters that leave a corpse spawn. Their corpses lie in a pool of acid until the event ends, and being near them blights players.";
         }
         public override string GetPopupDescription()
         {
-            return "Monsters leave their corpse in a pool of acid. Being near them blights you.";
+            return "Only monsters that leave a corpse spawn, and their corpses lie in a pool of acid. Being near them blights you.";
         }
         public override string GetConditionDescription()
         {
-            return "";
+            return "Most of the stage's monsters leave a corpse, and events \"WeakEnemies\", \"StrongEnemies\", \"Mitosis\", \"DroneUprising\", \"FallingEnemies\", \"RitualHelmets\", \"Bouncy\", \"LynxPups\" and \"BulletHell\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {
@@ -203,11 +204,13 @@ namespace RandomEvents
             corpses.Clear();
             released.Clear();
             tickTimer = TickInterval;
+            MonsterPool.Filter(this, choice => MonsterTraits.LeavesCorpse(choice.value));
         }
 
         // the bodies kept go now, as the death states remove them again; then each player's game keeps their corpses as usual
         public override void Stop()
         {
+            MonsterPool.Restore(this);
             foreach (var corpse in corpses)
             {
                 if (corpse.pool != null)

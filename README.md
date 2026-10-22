@@ -14,7 +14,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | Event Name | Announcement | Description | Condition |
 |------------|--------------|-------------|-----------|
 | Behemoths | Everything goes boom | All players and monsters get 3 Brilliant Behemoths, a Will-o'-the-wisp and a Voidsent Flame, but monsters deal half damage, and players take half the damage from the wisps and flames. | Event "CursedSpoils" inactive. |
-| BlightedCorpses | The dead linger | Monsters leave their corpse in a pool of acid until the event ends, and being near them blights players. |  |
+| BlightedCorpses | The dead linger | Only monsters that leave a corpse spawn. Their corpses lie in a pool of acid until the event ends, and being near them blights players. | Most of the stage's monsters leave a corpse, and events "WeakEnemies", "StrongEnemies", "Mitosis", "DroneUprising", "FallingEnemies", "RitualHelmets", "Bouncy", "LynxPups" and "BulletHell" inactive. |
 | Bouncy | Everything bounces | All players get 3 Earthbound Vessels and a Breaching Fin without a cooldown. Only walking monsters spawn, which jump at random, also in mid-air, and are on a leash. | Hallowed Concepts or Seekers of the Storm is enabled, not a Simulacrum boss wave, the stage has walking monsters, and events "DroneUprising" and "CursedSpoils" inactive. |
 | BulletHell | Projectile density dialed to eleven | Increases the fire rate of enemies but lowers their damage. | Event "UmbraAmbush" inactive. |
 | CasinoItem | Ancient relic cycling through its many powers | Gives all players 10 of a random item, which changes every 10 seconds. | Event "CursedSpoils" inactive. |
