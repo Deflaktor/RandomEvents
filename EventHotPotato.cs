@@ -217,6 +217,19 @@ namespace RandomEvents
             var groundZero = Physics.Raycast(victim.corePosition, Vector3.down, out var hit, 50f, LayerIndex.world.mask, QueryTriggerInteraction.Ignore) ? hit.point : victim.footPosition;
             var attacker = lastPlayerHolder != null && lastPlayerHolder.healthComponent.alive ? lastPlayerHolder.gameObject : null;
             Nuke(groundZero, NukeRadius, PlayerDamage, attacker);
+            // the one holding it when it goes off loses all of its health, not just its share
+            if (victim.isPlayerControlled && victim.healthComponent != null && victim.healthComponent.alive)
+            {
+                victim.healthComponent.TakeDamage(new DamageInfo
+                {
+                    damage = victim.healthComponent.fullCombinedHealth,
+                    attacker = null,
+                    position = victim.corePosition,
+                    damageType = DamageType.BypassArmor | DamageType.BypassBlock | DamageType.BypassOneShotProtection,
+                    procCoefficient = 0f,
+                    damageColorIndex = DamageColorIndex.Item
+                });
+            }
         }
 
         // The mushroom cloud, players within the first blast's reach losing a share of their health, all of it at the center
