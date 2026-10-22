@@ -11,10 +11,11 @@ namespace RandomEvents
     public class EventLavaFloor : AbstractEvent
     {
         private const float UpdateInterval = 0.25f;
-        // a Molotov's fire on the ground under a burning player, for show: a new one this far from their last, each
-        // burning for a while
+        // a Molotov's fire on the ground under a burning player, which burns the monsters in it: a new one this far from
+        // their last, each burning for a while, three times a second for this much of the player's damage
         private const float FireSpacing = 3f;
         private const float FireDuration = 3f;
+        private const float FireDamage = 0.5f;
         private ConfigEntry<float> GraceTime;
         private ConfigEntry<float> DamagePerSecond;
         private ConfigEntry<int> Feathers;
@@ -43,7 +44,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Players burn while on the ground for more than half a second, which sets the ground beneath them on fire. All players get 2 Hopoo Feathers.";
+            return "Players burn while on the ground for more than half a second, which sets the ground beneath them on fire, burning the monsters in it. All players get 2 Hopoo Feathers.";
         }
         public override string GetPopupDescription()
         {
@@ -124,7 +125,21 @@ namespace RandomEvents
             {
                 return;
             }
-            var fire = FireEffects.SpawnFire(FireEffects.FirePool, position, null, TeamIndex.Neutral);
+            var fire = UnityEngine.Object.Instantiate(FireEffects.FirePool.WaitForCompletion(), position, Quaternion.identity);
+            if (fire.TryGetComponent(out RoR2.Projectile.ProjectileController controller))
+            {
+                controller.owner = body.gameObject;
+            }
+            if (fire.TryGetComponent(out TeamFilter teamFilter))
+            {
+                teamFilter.teamIndex = body.teamComponent.teamIndex;
+            }
+            if (fire.TryGetComponent(out RoR2.Projectile.ProjectileDamage projectileDamage))
+            {
+                projectileDamage.damage = body.damage * FireDamage;
+                projectileDamage.crit = body.RollCrit();
+            }
+            NetworkServer.Spawn(fire);
             lastFires[body] = (position, fire);
             fires.Add((fire, Time.fixedTime + FireDuration));
         }
