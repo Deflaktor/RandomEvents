@@ -8,6 +8,7 @@ namespace RandomEvents
 {
     public class EventEgocentrism : AbstractEvent
     {
+        private const int Egocentrisms = 3;
         private ConfigEntry<float> DamageTakenMultiplier;
 
         public override bool LoadCondition()
@@ -29,11 +30,11 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "All monsters get an Egocentrism, but players take 75% less damage.";
+            return "All monsters get 3 Egocentrisms, but players take 75% less damage.";
         }
         public override string GetPopupDescription()
         {
-            return "All monsters have an Egocentrism. You take 75% less damage.";
+            return "All monsters have 3 Egocentrisms. You take 75% less damage.";
         }
         public override string GetConditionDescription()
         {
@@ -61,13 +62,13 @@ namespace RandomEvents
             }
         }
 
-        // a temporary one, which doesn't turn the monster's items into more Egocentrism
+        // temporary ones, which don't turn the monster's items into more Egocentrism
         private void GiveEgocentrism(CharacterBody body)
         {
             if (body != null && body.inventory != null && body.teamComponent.teamIndex != TeamIndex.Player && body.teamComponent.teamIndex != TeamIndex.Neutral
                 && body.inventory.GetItemCountEffective(DLC1Content.Items.LunarSun) <= 0)
             {
-                EventLoot.GetInventory(this, body).GiveTemporaryItem(DLC1Content.Items.LunarSun.itemIndex);
+                EventLoot.GetInventory(this, body).GiveTemporaryItem(DLC1Content.Items.LunarSun.itemIndex, Egocentrisms);
             }
         }
 
