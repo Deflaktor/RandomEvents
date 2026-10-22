@@ -25,6 +25,8 @@ namespace RandomEvents
         private const float PlayerDamage = 0.75f;
         private AsyncOperationHandle<GameObject> TickEffect;
         private AsyncOperationHandle<GameObject> Beeper;
+        // a Void Reaver's bomb about to go off, as a warning in each of the last seconds
+        private AsyncOperationHandle<NetworkSoundEventDef> WarningSound;
         private readonly BuffTracker buffs = new BuffTracker();
         private CharacterBody holder;
         // the last player who had the bomb, who gets the kills
@@ -73,6 +75,7 @@ namespace RandomEvents
             // a Sticky Bomb, whose countdown beep is the only one there is: every player's game plays it 0.2 seconds after
             // it appears, so one shown for a moment beeps once
             Beeper = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/StickyBomb/StickyBomb.prefab");
+            WarningSound = Addressables.LoadAssetAsync<NetworkSoundEventDef>("RoR2/Base/Nullifier/nseNullifierAttack1BombPreDetonate.asset");
             MiniNuke.Preload();
         }
         public override void Hook()
@@ -110,6 +113,10 @@ namespace RandomEvents
             if (Mathf.CeilToInt(timeLeft) < countdown)
             {
                 countdown = Mathf.CeilToInt(timeLeft);
+                if (countdown <= CountdownSeconds)
+                {
+                    RoR2.Audio.EntitySoundManager.EmitSoundServer(WarningSound.WaitForCompletion().index, holder.gameObject);
+                }
                 if (countdown == CountdownSeconds)
                 {
                     ChatHelper.SendEventMessage("EVENT_HOT_POTATO_WARNING", ChatHelper.GetColoredPlayerName(holder), countdown);
