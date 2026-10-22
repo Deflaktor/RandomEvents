@@ -71,14 +71,14 @@ namespace RandomEvents
             }
         }
 
-        // +1% size per stack: 20 times the size for small monsters, 10 times for medium and 5 times for large ones
+        // +1% size per stack: 10 times the size for small monsters, 5 times for medium and 3 times for large ones
         private static int GetMaxScale(CharacterBody body)
         {
             switch (body.hullClassification)
             {
-                case HullClassification.Human: return 1900;
-                case HullClassification.Golem: return 900;
-                default: return 400;
+                case HullClassification.Human: return 900;
+                case HullClassification.Golem: return 400;
+                default: return 200;
             }
         }
 
