@@ -9,7 +9,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace RandomEvents
 {
-    // The Preon Accumulator charges as usual, then fires a Malachite elite's poison orb instead of its own. Where the orb
+    // The Preon Accumulator charges as usual, then fires a Malachite elite's poison orb straight ahead instead of its own. Where the orb
     // hits the ground, it implodes like a Void Jailer's death, if smaller, and Void Jailer death bombs fly out in every direction and each hunts down a monster, the strongest
     // first, imploding when it gets there.
     public class ExperimentalPreonAccumulator : ExperimentalEquipment
@@ -63,17 +63,30 @@ namespace RandomEvents
                 orig(self, prefab, position, rotation, owner, damage, force, crit, damageColorIndex, target, speedOverride);
                 return;
             }
-            self.FireProjectile(new FireProjectileInfo
+            // straight ahead: the orb would drop, but the host moves it and passes that on to everyone
+            var orb = Object.Instantiate(PoisonOrb.WaitForCompletion(), position, rotation);
+            if (orb.TryGetComponent(out Rigidbody rigidbody))
             {
-                projectilePrefab = PoisonOrb.WaitForCompletion(),
-                owner = owner,
-                position = position,
-                rotation = rotation,
-                damage = body.damage,
-                crit = crit,
-                useSpeedOverride = true,
-                speedOverride = OrbSpeed
-            });
+                rigidbody.useGravity = false;
+            }
+            if (orb.TryGetComponent(out ProjectileSimple simple))
+            {
+                simple.desiredForwardSpeed = OrbSpeed;
+            }
+            if (orb.TryGetComponent(out ProjectileController controller))
+            {
+                controller.owner = owner;
+            }
+            if (orb.TryGetComponent(out TeamFilter teamFilter))
+            {
+                teamFilter.teamIndex = body.teamComponent.teamIndex;
+            }
+            if (orb.TryGetComponent(out ProjectileDamage projectileDamage))
+            {
+                projectileDamage.damage = body.damage;
+                projectileDamage.crit = crit;
+            }
+            NetworkServer.Spawn(orb);
         }
 
         // the orb bursts into the bombs instead of its own blast and spike
