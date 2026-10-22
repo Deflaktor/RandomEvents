@@ -19,7 +19,7 @@ namespace RandomEvents
         private const float PassDistance = 3.5f;
         // so that two characters standing together don't pass the bomb back and forth every tick
         private const float PassCooldown = 1.5f;
-        // how far the explosion reaches, in meters
+        // how far the explosion's pulses after its first reach, in meters
         private const float NukeRadius = 40f;
         // the share of their maximum health players lose at the center of the explosion; a quarter of it at its edge
         private const float PlayerDamage = 0.75f;
@@ -185,8 +185,8 @@ namespace RandomEvents
             Nuke(groundZero, NukeRadius, PlayerDamage, attacker);
         }
 
-        // The mushroom cloud, players within the radius losing a share of their health, all of it at the center and a
-        // quarter of it at the edge, and the explosion's pulses for the monsters. The attacker gets the kills of monsters;
+        // The mushroom cloud, players within the first blast's reach losing a share of their health, all of it at the center
+        // and a quarter of it at the edge, and the explosion's pulses for the monsters. The attacker gets the kills of monsters;
         // players with no share to lose are spared.
         public static void Nuke(Vector3 groundZero, float radius, float playerShare, GameObject attacker)
         {
@@ -195,6 +195,7 @@ namespace RandomEvents
             nuke.radius = radius;
             nuke.attacker = attacker;
             nuke.playerShare = playerShare;
+            var reach = Mathf.Max(radius, MiniNuke.ShockwaveRadius);
             foreach (var body in CharacterBody.readOnlyInstancesList.ToList())
             {
                 if (body == null || body.healthComponent == null || !body.healthComponent.alive || body.teamComponent.teamIndex == TeamIndex.Neutral)
@@ -203,11 +204,11 @@ namespace RandomEvents
                 }
                 var offset = body.corePosition - groundZero;
                 var distance = offset.magnitude;
-                if (distance > radius)
+                if (distance > reach)
                 {
                     continue;
                 }
-                var falloff = 1f - 0.75f * distance / radius;
+                var falloff = 1f - 0.75f * distance / reach;
                 // the monsters are hit by the explosion's pulses
                 if (body.teamComponent.teamIndex != TeamIndex.Player || playerShare <= 0f)
                 {
@@ -269,7 +270,8 @@ namespace RandomEvents
             private static AsyncOperationHandle<GameObject> Behemoth;
             private static AsyncOperationHandle<GameObject> Meteor;
             // Every half second while it explodes, a pulse hurts and throws back every monster in the radius, the first a
-            // massive shockwave: 100000% of the attacker's damage in all at ground zero, a quarter of that at the edge.
+            // massive shockwave reaching 80 meters: 100000% of the attacker's damage in all at ground zero, a quarter of
+            // that at the edge.
             // Once the sun burns out, the explosions go on for 2 more seconds, hurting and pushing half as hard. Players
             // in the radius are thrown back just the same, but take only 1% of the damage.
             // Then, while the ground fire lasts, monsters in its middle burn for 2000% in all, and players there lose a
@@ -282,6 +284,7 @@ namespace RandomEvents
             private const float WeakPulseShare = 0.5f;
             // the shockwave counts as this many pulses
             private const float ShockwaveShare = 5f;
+            public const float ShockwaveRadius = 80f;
             private const float ExplosionDamage = 1000f;
             private const float FriendlyFireShare = 0.01f;
             private const float CoreBurnDamage = 20f;
@@ -380,11 +383,12 @@ namespace RandomEvents
                     }
                     var offset = body.corePosition - groundZero;
                     var distance = offset.magnitude;
-                    if (distance > radius + body.radius)
+                    var reach = shockwave ? Mathf.Max(radius, ShockwaveRadius) : radius;
+                    if (distance > reach + body.radius)
                     {
                         continue;
                     }
-                    var falloff = 1f - 0.75f * Mathf.Clamp01(distance / radius);
+                    var falloff = 1f - 0.75f * Mathf.Clamp01(distance / reach);
                     var direction = offset.sqrMagnitude > 0.01f ? offset.normalized : Vector3.up;
                     var mass = body.characterMotor != null ? body.characterMotor.mass : body.rigidbody != null ? body.rigidbody.mass : 100f;
                     // as fast for every monster, for its weight: very fast with the shockwave, a shove with the others
