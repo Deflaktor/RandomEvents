@@ -97,7 +97,7 @@ namespace RandomEvents
 
             private void Launch(CharacterBody target, int index)
             {
-                var position = owner.corePosition + Vector3.up * 2f;
+                var position = owner.corePosition + Vector3.up * 0.75f;
                 var orb = Instantiate(ElectricOrb.WaitForCompletion(), position, Util.QuaternionSafeLookRotation(Vector3.up));
                 // the host moves it and nothing sets it off but reaching its monster
                 foreach (var behaviour in new Behaviour[] { orb.GetComponent<ProjectileSimple>(), orb.GetComponent<ProjectileImpactExplosion>() })
