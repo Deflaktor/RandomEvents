@@ -24,6 +24,7 @@ namespace RandomEvents
         // the share of their maximum health players lose at the center of the explosion; a quarter of it at its edge
         private const float PlayerDamage = 0.75f;
         private AsyncOperationHandle<GameObject> TickEffect;
+        private AsyncOperationHandle<GameObject> Beeper;
         private readonly BuffTracker buffs = new BuffTracker();
         private CharacterBody holder;
         // the last player who had the bomb, who gets the kills
@@ -69,6 +70,9 @@ namespace RandomEvents
         public override void Preload()
         {
             TickEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/OmniExplosionVFXQuick.prefab");
+            // a Sticky Bomb, whose countdown beep is the only one there is: every player's game plays it 0.2 seconds after
+            // it appears, so one shown for a moment beeps once
+            Beeper = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/StickyBomb/StickyBomb.prefab");
             MiniNuke.Preload();
         }
         public override void Hook()
@@ -141,7 +145,8 @@ namespace RandomEvents
                 && (body.isPlayerControlled || body.teamComponent.teamIndex != TeamIndex.Player) && body.master != null);
         }
 
-        // a small blast at the carrier, faster and faster as the detonation nears
+        // A small blast and a bomb timer's beep at the carrier, once a second, then in the last 10 seconds faster and
+        // faster until it goes off
         private void Tick(float timeLeft)
         {
             tickTimer -= Time.fixedDeltaTime;
@@ -149,12 +154,41 @@ namespace RandomEvents
             {
                 return;
             }
-            tickTimer = Mathf.Lerp(0.15f, 1f, timeLeft / 20f);
+            tickTimer = Mathf.Lerp(0.1f, 1f, timeLeft / 10f);
             EffectManager.SpawnEffect(TickEffect.WaitForCompletion(), new EffectData
             {
                 origin = holder.corePosition,
                 scale = holder.radius * 2f
             }, transmit: true);
+            Beep(holder.corePosition);
+        }
+
+        // the Sticky Bomb inside the carrier, hurting nothing and gone right after its first beep
+        private void Beep(Vector3 position)
+        {
+            var beeper = UnityEngine.Object.Instantiate(Beeper.WaitForCompletion(), position, Quaternion.identity);
+            foreach (var behaviour in new Behaviour[] { beeper.GetComponent<RoR2.Projectile.ProjectileImpactExplosion>(), beeper.GetComponent<RoR2.Projectile.ProjectileStickOnImpact>(),
+                beeper.GetComponent<RoR2.Projectile.ProjectileSimple>() })
+            {
+                if (behaviour != null)
+                {
+                    behaviour.enabled = false;
+                }
+            }
+            foreach (var collider in beeper.GetComponents<Collider>())
+            {
+                collider.enabled = false;
+            }
+            if (beeper.TryGetComponent(out Rigidbody rigidbody))
+            {
+                rigidbody.isKinematic = true;
+            }
+            if (beeper.TryGetComponent(out RoR2.Projectile.ProjectileDamage projectileDamage))
+            {
+                projectileDamage.damage = 0f;
+            }
+            NetworkServer.Spawn(beeper);
+            UnityEngine.Object.Destroy(beeper, 0.3f);
         }
 
         private void GiveBomb(CharacterBody body)
