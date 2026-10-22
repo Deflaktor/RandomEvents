@@ -56,6 +56,7 @@ namespace RandomEvents
                 EventLoot.Hook();
                 Slowdown.Hook();
                 MonsterPool.Hook();
+                ScaledMonsterAi.Hook();
 
                 ModConfig.Init();
                 InitAndHookEvent(new EventBehemoths());
