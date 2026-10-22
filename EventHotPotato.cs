@@ -200,9 +200,10 @@ namespace RandomEvents
                 lastPlayerHolder = body;
             }
             tickTimer = 0f;
-            // Essence of Heresy's marks show everyone who carries the bomb; only Hooks of Heresy could detonate them,
-            // unlike Death Mark's skull, which adds 50% damage taken
-            buffs.Add(holder, RoR2Content.Buffs.LunarDetonationCharge);
+            // everyone sees who carries the bomb: it is marked like the Wake's target, which only shows, and is brutal like
+            // the Shrine of Malice's monsters, half again as strong, fast and tough
+            buffs.Add(holder, DLC4Content.Buffs.WakeTarget);
+            buffs.Add(holder, DLC4Content.Buffs.Brutal);
             passTimer = PassCooldown;
         }
 
