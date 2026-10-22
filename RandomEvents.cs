@@ -215,6 +215,7 @@ namespace RandomEvents
             On.RoR2.Run.Start += Run_Start;
             On.RoR2.Run.OnFixedUpdate += Run_OnFixedUpdate;
             Stage.onServerStageComplete += Stage_onServerStageComplete;
+            Run.onRunDestroyGlobal += Run_onRunDestroyGlobal;
         }
 
         private void OnDisable()
@@ -228,6 +229,7 @@ namespace RandomEvents
             On.RoR2.Run.Start -= Run_Start;
             On.RoR2.Run.OnFixedUpdate -= Run_OnFixedUpdate;
             Stage.onServerStageComplete -= Stage_onServerStageComplete;
+            Run.onRunDestroyGlobal -= Run_onRunDestroyGlobal;
         }
 
         private void Run_OnFixedUpdate(On.RoR2.Run.orig_OnFixedUpdate orig, Run self)
@@ -302,6 +304,13 @@ namespace RandomEvents
         private void Stage_onServerStageComplete(Stage stage)
         {
             // events end with their stage, so nothing they changed (e.g. artifacts or a player's body) carries over into the next stage or ProperSave's save
+            StopAllActiveEvents();
+            m_upcomingEvents.Clear();
+        }
+
+        // leaving the run, e.g. for the lobby, where the host is still the server and the events would keep going
+        private void Run_onRunDestroyGlobal(Run run)
+        {
             StopAllActiveEvents();
             m_upcomingEvents.Clear();
         }
