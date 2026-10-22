@@ -19,7 +19,7 @@ namespace RandomEvents
         // the drones and turrets that items, equipment and survivors bring, which the drone catalog lacks
         private static readonly string[] SummonedBodies =
         {
-            "BackupDroneBody", "DroneCommanderBody", "DTGunnerDroneBody", "DTHaulerDroneBody", "DTHealingDroneBody", "EngiTurretBody", "EngiWalkerTurretBody"
+            "BackupDroneBody", "DroneCommanderBody", "DTGunnerDroneBody", "DTHaulerDroneBody", "EngiTurretBody", "EngiWalkerTurretBody"
         };
         // its freezing is too strong against players
         private const string FreezeDroneBody = "CopycatDroneBody";
@@ -75,13 +75,13 @@ namespace RandomEvents
         }
 
         // All drones of the run's expansions with their cost: those of the drone catalog, also those not found on
-        // stages, and those that items and survivors bring, without the Freeze Drone and the utility drones, which only
-        // help their owner, e.g. the Junk Drone's temporary items or the Cleanup Drone's gold. The Equipment Drone gets one of
+        // stages, and those that items and survivors bring, without the Freeze Drone, the healing drones and the utility
+        // drones, which only help their side, e.g. healing it, the Junk Drone's temporary items or the Cleanup Drone's gold. The Equipment Drone gets one of
         // EquipmentOnly's equipment.
         private static List<(GameObject masterPrefab, int cost)> GetDroneCandidates()
         {
             var candidates = DroneCatalog.allDroneDefs
-                .Where(droneDef => droneDef != null && droneDef.masterPrefab != null && droneDef.CheckRequiredExpansionEnabled() && droneDef.droneType != DroneType.Utility
+                .Where(droneDef => droneDef != null && droneDef.masterPrefab != null && droneDef.CheckRequiredExpansionEnabled() && droneDef.droneType != DroneType.Utility && droneDef.droneType != DroneType.Healing
                     && droneDef != DLC3Content.DroneDefs.JunkDrone && droneDef != DLC3Content.DroneDefs.CleanupDrone)
                 // about the cost of monsters of similar strength
                 .Select(droneDef => (droneDef.masterPrefab, droneDef.tier == ItemTier.Tier3 ? 120 : droneDef.tier == ItemTier.Tier2 ? 40 : 15))
