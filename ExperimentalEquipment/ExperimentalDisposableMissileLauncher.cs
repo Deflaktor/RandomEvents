@@ -11,12 +11,13 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 namespace RandomEvents
 {
     // The Disposable Missile Launcher sends out an Overloading Worm's electric orb for each monster nearby, one every 0.2
-    // seconds, up to 10. Each spirals its way slowly to its monster, sending out the Ukulele's chain lightning every second,
+    // seconds, at least 4 and up to 10. Each spirals its way slowly to its monster, sending out the Ukulele's chain lightning every second,
     // and calls down the Charged Perforator's lightning strike, three times as strong, on it when it gets there. With no
     // monster left it roams about in search of one, and when its time runs out the strike comes down where it is. All of it is electric, which
     // Faulty Conductor's energizing and conductive monsters work with.
     public class ExperimentalDisposableMissileLauncher : ExperimentalEquipment
     {
+        private const int MinOrbs = 4;
         private const int MaxOrbs = 10;
         private const float LaunchInterval = 0.2f;
         // only monsters within this many meters
@@ -25,8 +26,8 @@ namespace RandomEvents
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.CommandMissile;
         public override float CooldownScale => 0.25f;
-        public override string Description => "Disposable Missile Launcher sends an electric orb spiraling at each monster nearby, up to 10, which zaps chain lightning on the way and calls down a lightning strike when it gets there";
-        public override string PopupDescription => "Sends an electric orb spiraling at each monster nearby, up to 10. They zap chain lightning on the way and call down a lightning strike when they get there.";
+        public override string Description => "Disposable Missile Launcher sends an electric orb spiraling at each monster nearby, at least 4 and up to 10, which zaps chain lightning on the way and calls down a lightning strike when it gets there";
+        public override string PopupDescription => "Sends an electric orb spiraling at each monster nearby, at least 4 and up to 10. They zap chain lightning on the way and call down a lightning strike when they get there.";
 
         public override void Preload()
         {
@@ -36,10 +37,6 @@ namespace RandomEvents
         public override bool Fire(EquipmentSlot slot)
         {
             var body = slot.characterBody;
-            if (!Targets(body, body.corePosition).Any())
-            {
-                return false;
-            }
             new GameObject("RandomEventsElectricOrbLauncher").AddComponent<Launcher>().owner = body;
             return true;
         }
@@ -57,7 +54,8 @@ namespace RandomEvents
                 && body.teamComponent.teamIndex != owner.teamComponent.teamIndex && body.teamComponent.teamIndex != TeamIndex.Neutral;
         }
 
-        // One orb for each of the monsters nearby when it was used, one after another
+        // One orb for each of the monsters nearby when it was used, one after another; the ones beyond the monsters look
+        // for one themselves
         public class Launcher : MonoBehaviour
         {
             public CharacterBody owner;
@@ -72,6 +70,10 @@ namespace RandomEvents
                     foreach (var target in Targets(owner, owner.corePosition).Take(MaxOrbs))
                     {
                         queue.Enqueue(target);
+                    }
+                    while (queue.Count < MinOrbs)
+                    {
+                        queue.Enqueue(null);
                     }
                 }
             }
