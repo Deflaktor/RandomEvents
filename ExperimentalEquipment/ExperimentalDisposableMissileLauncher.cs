@@ -12,7 +12,8 @@ namespace RandomEvents
 {
     // The Disposable Missile Launcher sends out an Overloading Worm's electric orb for each monster nearby, one every 0.2
     // seconds, up to 10. Each spirals its way slowly to its monster, sending out the Ukulele's chain lightning every second,
-    // and calls down the Charged Perforator's lightning strike on it when it gets there. All of it is electric, which
+    // and calls down the Charged Perforator's lightning strike, three times as strong, on it when it gets there. With no
+    // monster left it roams about in search of one, and when its time runs out the strike comes down where it is. All of it is electric, which
     // Faulty Conductor's energizing and conductive monsters work with.
     public class ExperimentalDisposableMissileLauncher : ExperimentalEquipment
     {
@@ -142,10 +143,13 @@ namespace RandomEvents
             private const float SpiralRadius = 3f;
             private const float SpiralRate = 3f;
             private const float ConvergeDistance = 10f;
+            // and a random 1 to 3 seconds more, so they don't all end at once
             private const float Lifetime = 30f;
             private const float ReachDistance = 1.5f;
-            // the Charged Perforator's 500%, and the Ukulele's 80% to 3 monsters within 20 meters
-            private const float StrikeDamage = 5f;
+            // how fast it turns while roaming, in degrees per second
+            private const float RoamTurnRate = 90f;
+            // three times the Charged Perforator's 500%, and the Ukulele's 80% to 3 monsters within 20 meters
+            private const float StrikeDamage = 15f;
             private const float ZapDamage = 0.8f;
             private const int ZapBounces = 2;
             public CharacterBody owner;
@@ -153,10 +157,18 @@ namespace RandomEvents
             public float zapTimer;
             private Rigidbody body;
             private float age;
+            private float lifetime;
+            private Vector3 roamDirection;
+            private float roamTurn;
 
             private void Awake()
             {
                 body = GetComponent<Rigidbody>();
+                lifetime = Lifetime + Random.Range(1f, 3f);
+                roamDirection = Random.onUnitSphere;
+                roamDirection.y = 0f;
+                roamDirection = roamDirection.sqrMagnitude > 0.01f ? roamDirection.normalized : Vector3.forward;
+                roamTurn = Random.value < 0.5f ? -RoamTurnRate : RoamTurnRate;
             }
 
             private void FixedUpdate()
@@ -166,8 +178,14 @@ namespace RandomEvents
                     return;
                 }
                 age += Time.fixedDeltaTime;
-                if (owner == null || age >= Lifetime)
+                if (owner == null)
                 {
+                    Destroy(gameObject);
+                    return;
+                }
+                if (age >= lifetime)
+                {
+                    StrikeHere();
                     Destroy(gameObject);
                     return;
                 }
@@ -183,7 +201,9 @@ namespace RandomEvents
                 }
                 if (target == null)
                 {
-                    SetVelocity(Vector3.zero);
+                    // round and round in wide circles, until a monster shows up
+                    roamDirection = Quaternion.Euler(0f, roamTurn * Time.fixedDeltaTime, 0f) * roamDirection;
+                    Move(roamDirection, SpiralRadius);
                     return;
                 }
                 var offset = target.corePosition - transform.position;
@@ -193,12 +213,16 @@ namespace RandomEvents
                     Destroy(gameObject);
                     return;
                 }
-                var forward = offset.normalized;
+                Move(offset.normalized, SpiralRadius * Mathf.Clamp01(offset.magnitude / ConvergeDistance));
+            }
+
+            // along the given direction, circling it
+            private void Move(Vector3 forward, float radius)
+            {
                 var side = Vector3.Cross(Vector3.up, forward);
                 side = side.sqrMagnitude > 0.01f ? side.normalized : Vector3.right;
                 var up = Vector3.Cross(forward, side);
                 var angle = SpiralRate * age;
-                var radius = SpiralRadius * Mathf.Clamp01(offset.magnitude / ConvergeDistance);
                 SetVelocity(forward * Speed + (up * Mathf.Cos(angle) - side * Mathf.Sin(angle)) * (radius * SpiralRate));
             }
 
@@ -238,6 +262,33 @@ namespace RandomEvents
                     orb.target = hurtBox;
                     OrbManager.instance.AddOrb(orb);
                 }
+            }
+
+            // the Charged Perforator's lightning strike where it is, as if it had hit a monster there
+            private void StrikeHere()
+            {
+                EffectManager.SpawnEffect(LegacyResourcesAPI.Load<GameObject>("Prefabs/Effects/ImpactEffects/SimpleLightningStrikeImpact"), new EffectData
+                {
+                    origin = transform.position
+                }, transmit: true);
+                var procChainMask = default(ProcChainMask);
+                procChainMask.AddProc(ProcType.LightningStrikeOnHit);
+                var blastAttack = new BlastAttack
+                {
+                    attacker = owner.gameObject,
+                    baseDamage = owner.damage * StrikeDamage,
+                    bonusForce = Vector3.down * 1500f,
+                    crit = owner.RollCrit(),
+                    damageColorIndex = DamageColorIndex.Item,
+                    falloffModel = BlastAttack.FalloffModel.None,
+                    position = transform.position,
+                    procChainMask = procChainMask,
+                    procCoefficient = 1f,
+                    radius = 3f,
+                    teamIndex = owner.teamComponent.teamIndex
+                };
+                blastAttack.damageType.damageTypeExtended = DamageTypeExtended.Electrical;
+                blastAttack.Fire();
             }
 
             // the Charged Perforator's lightning strike on its monster
