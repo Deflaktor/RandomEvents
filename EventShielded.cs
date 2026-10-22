@@ -26,7 +26,7 @@ namespace RandomEvents
             return true;
         }
         // not while the teleporter or a Simulacrum boss wave has a boss to fight, who could stay shielded for long;
-        // Mirrored Enemies marks its monsters with the same shine
+        // both change how monsters take damage
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
             var teleporter = TeleporterInteraction.instance;

@@ -40,7 +40,7 @@ namespace RandomEvents
         {
             return true;
         }
-        // Shielded marks its monsters with the same shine
+        // both change how monsters take damage
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
             return !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("Shielded", StringComparison.InvariantCultureIgnoreCase));
@@ -156,8 +156,6 @@ namespace RandomEvents
             }
         }
 
-        // the Lunar Chimera's shell and the shine of invulnerable Solus Wing parts mark them, and their health decays like
-        // a ghost's
         private void MasterSpawnSlotController_SpawnRandomOpen(On.RoR2.MasterSpawnSlotController.orig_SpawnRandomOpen orig, MasterSpawnSlotController self, int spawnCount, Xoroshiro128Plus rng, GameObject summonerBodyObject, Action<MasterSpawnSlotController.ISlot, SpawnCard.SpawnResult> callback)
         {
             orig(self, spawnCount, rng, summonerBodyObject, RememberSummoner(summonerBodyObject, callback));
@@ -201,9 +199,16 @@ namespace RandomEvents
             if (mirror)
             {
                 mirrored.Add(body);
-                body.AddBuff(RoR2Content.Buffs.LunarShell);
-                body.AddBuff(DLC3Content.Buffs.SolusWingInvulnerability);
-                if (DecayTime.Value > 0 && body.inventory != null)
+                if (body.inventory == null)
+                {
+                    return;
+                }
+                // the shine of a Kinetic Dampener's shield marks them, which shows while they have shield, and their health
+                // decays like a ghost's
+                EventLoot.GetInventory(this, body).GiveTemporaryItem(DLC3Content.Items.ShieldBooster.itemIndex);
+                body.RecalculateStats();
+                body.healthComponent.RechargeShieldFull();
+                if (DecayTime.Value > 0)
                 {
                     EventLoot.GetInventory(this, body).GiveTemporaryItem(RoR2Content.Items.HealthDecay.itemIndex, DecayTime.Value);
                 }
@@ -212,11 +217,19 @@ namespace RandomEvents
 
         private void HealthComponent_TakeDamage(On.RoR2.HealthComponent.orig_TakeDamage orig, HealthComponent self, DamageInfo damageInfo)
         {
-            // their shell takes the void fog's ticks down to 1 damage, so the fog speeds up their decay instead
-            if (NetworkServer.active && IsActive() && damageInfo != null && self.body != null && mirrored.Contains(self.body)
-                && (damageInfo.damageType.damageTypeExtended & DamageTypeExtended.DamageField) != 0)
+            // Only players can hurt them, so that their shield never breaks into the Kinetic Dampener's stunning pulse: the
+            // void fog speeds up their decay instead, and anything else, e.g. a fall or another monster, does nothing
+            if (NetworkServer.active && IsActive() && damageInfo != null && self.body != null && mirrored.Contains(self.body))
             {
-                SpeedUpDecay(self.body);
+                if ((damageInfo.damageType.damageTypeExtended & DamageTypeExtended.DamageField) != 0)
+                {
+                    SpeedUpDecay(self.body);
+                }
+                var hitter = damageInfo.attacker != null ? damageInfo.attacker.GetComponent<CharacterBody>() : null;
+                if (hitter == null || hitter.teamComponent.teamIndex != TeamIndex.Player)
+                {
+                    damageInfo.damage = 0f;
+                }
             }
             if (!NetworkServer.active || !IsActive() || damageInfo == null || damageInfo.rejected || damageInfo.damage <= 0f || damageInfo.attacker == null)
             {
@@ -319,7 +332,7 @@ namespace RandomEvents
             return fraction;
         }
 
-        // the shell would limit damage, so the health goes directly; the player gets the kill
+        // the health goes directly, past the shield, which stays for its shine; the player gets the kill
         private void LoseHealth(HealthComponent healthComponent, CharacterBody player)
         {
             var loss = healthComponent.fullCombinedHealth * HealthLossPerHit.Value;
@@ -331,9 +344,6 @@ namespace RandomEvents
             var fromBarrier = Mathf.Min(loss, healthComponent.barrier);
             healthComponent.Networkbarrier = healthComponent.barrier - fromBarrier;
             loss -= fromBarrier;
-            var fromShield = Mathf.Min(loss, healthComponent.shield);
-            healthComponent.Networkshield = healthComponent.shield - fromShield;
-            loss -= fromShield;
             healthComponent.Networkhealth = healthComponent.health - loss;
         }
 
@@ -356,19 +366,17 @@ namespace RandomEvents
             reflectedThisSecond.Clear();
             lastShatter.Clear();
             lastFogDecay.Clear();
+            EventLoot.Clear(this);
+            // the Kinetic Dampener's shield goes with it, set directly so that it doesn't break into its pulse
             foreach (var body in mirrored)
             {
-                if (body != null && body.HasBuff(RoR2Content.Buffs.LunarShell))
+                if (body != null && body.healthComponent != null)
                 {
-                    body.RemoveBuff(RoR2Content.Buffs.LunarShell);
-                }
-                if (body != null && body.HasBuff(DLC3Content.Buffs.SolusWingInvulnerability))
-                {
-                    body.RemoveBuff(DLC3Content.Buffs.SolusWingInvulnerability);
+                    body.RecalculateStats();
+                    body.healthComponent.Networkshield = Mathf.Min(body.healthComponent.shield, body.healthComponent.fullShield);
                 }
             }
             mirrored.Clear();
-            EventLoot.Clear(this);
         }
     }
 }
