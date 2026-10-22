@@ -36,7 +36,10 @@ namespace RandomEvents
                 && MonsterPool.GetChoices().Any(IsWalker)
                 && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("DroneUprising", StringComparison.InvariantCultureIgnoreCase))
                 // Cursed Spoils' hexes would disable the event's items
-                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("CursedSpoils", StringComparison.InvariantCultureIgnoreCase));
+                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("CursedSpoils", StringComparison.InvariantCultureIgnoreCase))
+                // they keep only monsters that leave a corpse or fire projectiles
+                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("BlightedCorpses", StringComparison.InvariantCultureIgnoreCase)
+                    || e.GetEventConfigName().Equals("BulletHell", StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
         {
@@ -52,7 +55,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Hallowed Concepts or Seekers of the Storm is enabled, not a Simulacrum boss wave, the stage has walking monsters, and events \"DroneUprising\" and \"CursedSpoils\" inactive.";
+            return "Hallowed Concepts or Seekers of the Storm is enabled, not a Simulacrum boss wave, the stage has walking monsters, and events \"DroneUprising\", \"CursedSpoils\", \"BlightedCorpses\" and \"BulletHell\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {

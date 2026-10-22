@@ -44,7 +44,9 @@ namespace RandomEvents
                 && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("StrongEnemies", StringComparison.InvariantCultureIgnoreCase)
                     || e.GetEventConfigName().Equals("WeakEnemies", StringComparison.InvariantCultureIgnoreCase)
                     || e.GetEventConfigName().Equals("DroneUprising", StringComparison.InvariantCultureIgnoreCase)
-                    || e.GetEventConfigName().Equals("LynxPups", StringComparison.InvariantCultureIgnoreCase));
+                    || e.GetEventConfigName().Equals("LynxPups", StringComparison.InvariantCultureIgnoreCase)
+                    || e.GetEventConfigName().Equals("BlightedCorpses", StringComparison.InvariantCultureIgnoreCase)
+                    || e.GetEventConfigName().Equals("BulletHell", StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
         {
@@ -60,7 +62,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Not a Simulacrum boss wave, the stage's monsters include such a pair, and events \"StrongEnemies\", \"WeakEnemies\", \"DroneUprising\" and \"LynxPups\" inactive.";
+            return "Not a Simulacrum boss wave, the stage's monsters include such a pair, and events \"StrongEnemies\", \"WeakEnemies\", \"DroneUprising\", \"LynxPups\", \"BlightedCorpses\" and \"BulletHell\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {

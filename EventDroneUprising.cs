@@ -38,7 +38,9 @@ namespace RandomEvents
                 || e.GetEventConfigName().Equals("RitualHelmets", StringComparison.InvariantCultureIgnoreCase)
                 || e.GetEventConfigName().Equals("FallingEnemies", StringComparison.InvariantCultureIgnoreCase)
                 || e.GetEventConfigName().Equals("Bouncy", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("LynxPups", StringComparison.InvariantCultureIgnoreCase));
+                || e.GetEventConfigName().Equals("LynxPups", StringComparison.InvariantCultureIgnoreCase)
+                || e.GetEventConfigName().Equals("BlightedCorpses", StringComparison.InvariantCultureIgnoreCase)
+                || e.GetEventConfigName().Equals("BulletHell", StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
         {
@@ -54,7 +56,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Not a Simulacrum boss wave, and events \"Mitosis\", \"RitualHelmets\", \"FallingEnemies\", \"Bouncy\" and \"LynxPups\" inactive.";
+            return "Not a Simulacrum boss wave, and events \"Mitosis\", \"RitualHelmets\", \"FallingEnemies\", \"Bouncy\", \"LynxPups\", \"BlightedCorpses\" and \"BulletHell\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {

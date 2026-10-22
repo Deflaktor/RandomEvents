@@ -21,7 +21,9 @@ namespace RandomEvents
         {
             return !Helper.IsSimulacrumBossWaveNext() && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("WeakEnemies", StringComparison.InvariantCultureIgnoreCase)
                 || e.GetEventConfigName().Equals("Mitosis", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("LynxPups", StringComparison.InvariantCultureIgnoreCase));
+                || e.GetEventConfigName().Equals("LynxPups", StringComparison.InvariantCultureIgnoreCase)
+                || e.GetEventConfigName().Equals("BlightedCorpses", StringComparison.InvariantCultureIgnoreCase)
+                || e.GetEventConfigName().Equals("BulletHell", StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
         {
@@ -37,7 +39,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Not a Simulacrum boss wave, and events \"WeakEnemies\", \"Mitosis\" and \"LynxPups\" inactive.";
+            return "Not a Simulacrum boss wave, and events \"WeakEnemies\", \"Mitosis\", \"LynxPups\", \"BlightedCorpses\" and \"BulletHell\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {

@@ -31,7 +31,9 @@ namespace RandomEvents
                 && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("DroneUprising", StringComparison.InvariantCultureIgnoreCase)
                     || e.GetEventConfigName().Equals("Mitosis", StringComparison.InvariantCultureIgnoreCase)
                     || e.GetEventConfigName().Equals("StrongEnemies", StringComparison.InvariantCultureIgnoreCase)
-                    || e.GetEventConfigName().Equals("WeakEnemies", StringComparison.InvariantCultureIgnoreCase));
+                    || e.GetEventConfigName().Equals("WeakEnemies", StringComparison.InvariantCultureIgnoreCase)
+                    || e.GetEventConfigName().Equals("BlightedCorpses", StringComparison.InvariantCultureIgnoreCase)
+                    || e.GetEventConfigName().Equals("BulletHell", StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
         {
@@ -47,7 +49,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Hallowed Concepts is enabled, not a Simulacrum boss wave, and events \"DroneUprising\", \"Mitosis\", \"StrongEnemies\" and \"WeakEnemies\" inactive.";
+            return "Hallowed Concepts is enabled, not a Simulacrum boss wave, and events \"DroneUprising\", \"Mitosis\", \"StrongEnemies\", \"WeakEnemies\", \"BlightedCorpses\" and \"BulletHell\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {
