@@ -76,6 +76,10 @@ namespace RandomEvents
                 || body.teamComponent.teamIndex == TeamIndex.Player || body.teamComponent.teamIndex == TeamIndex.Neutral
                 // the spirits themselves, which would summon spirits in turn
                 || body.bodyIndex == BodyCatalog.FindBodyIndex("VengefulSpiritFollowerBody")
+                // Artifact of Soul's wisps, which come out of every dying spirit: with spirits of their own, killing a
+                // wisp would kill its spirit and bring out the next wisp, without end
+                || (GlobalEventManager.CommonAssets.wispSoulMasterPrefabMasterComponent != null
+                    && master.masterIndex == GlobalEventManager.CommonAssets.wispSoulMasterPrefabMasterComponent.masterIndex)
                 || master.inventory.GetItemCountEffective(DLC4Content.Items.VengefulSpirit) > 0
                 || master.inventory.GetItemCountEffective(DLC4Content.Items.VengefulSpiritRageMode) > 0)
             {
