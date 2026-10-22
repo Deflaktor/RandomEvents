@@ -1,6 +1,7 @@
 ﻿using BepInEx.Configuration;
 using RoR2;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -93,10 +94,6 @@ namespace RandomEvents
             return selection;
         }
 
-        // An aspect gives an elite's powers, while its extra health and damage come from items the director adds
-        // when it spawns an elite, so the gained elite types keep the monster's normal stats. A monster that isn't
-        // an elite yet holds the first aspect; the others, like an elite's own, work through their buff, as with
-        // Wake of Vultures.
         private void CharacterBody_onBodyStartGlobal(CharacterBody body)
         {
             if (NetworkServer.active && IsActive() && body.isPlayerControlled)
@@ -104,7 +101,16 @@ namespace RandomEvents
                 GiveWakeOfVultures(body);
                 return;
             }
-            if (!NetworkServer.active || !IsActive() || aspects == null || aspects.Count == 0 || body.master == null || body.inventory == null
+            MakeElite(body);
+        }
+
+        // An aspect gives an elite's powers, while its extra health and damage come from items the director adds
+        // when it spawns an elite, so the gained elite types keep the monster's normal stats. A monster that isn't
+        // an elite yet holds the first aspect; the others, like an elite's own, work through their buff, as with
+        // Wake of Vultures.
+        private void MakeElite(CharacterBody body)
+        {
+            if (!NetworkServer.active || !IsActive() || body == null || aspects == null || aspects.Count == 0 || body.master == null || body.inventory == null
                 || body.teamComponent.teamIndex == TeamIndex.Player || body.teamComponent.teamIndex == TeamIndex.Neutral
                 || RoR2Application.rng.nextNormalizedFloat >= EliteChance.Value)
             {
@@ -193,6 +199,14 @@ namespace RandomEvents
             foreach (var body in Helper.GetLivingPlayerBodies())
             {
                 GiveWakeOfVultures(body);
+            }
+            // the monsters already there too
+            foreach (var body in CharacterBody.readOnlyInstancesList.ToList())
+            {
+                if (body != null && body.healthComponent != null && body.healthComponent.alive && !body.isPlayerControlled)
+                {
+                    MakeElite(body);
+                }
             }
             // Simulacrum's waves get their credits from the wave instead
             if (Run.instance is InfiniteTowerRun infiniteTowerRun && infiniteTowerRun.waveController != null)
