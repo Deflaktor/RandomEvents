@@ -11,12 +11,13 @@ namespace RandomEvents
 {
     public class ExperimentalRadarScanner : ExperimentalEquipment
     {
-        private const float ScannerWaveSpeed = 100f;
-        private const float ScannerWaveRadius = 100f;
+        // out to 200 meters in 2.5 seconds, as long as Mithrix's shockwaves show anything
+        private const float ScannerWaveSpeed = 80f;
+        private const float ScannerWaveRadius = 200f;
         // per monster the wave reaches, as a multiple of the player's damage
         private const float ScannerWaveDamage = 25f;
         // Mithrix's shockwaves, this many in a ring, running out with the wave
-        private const int WaveEffects = 16;
+        private const int WaveEffects = 24;
         private static AsyncOperationHandle<GameObject> WaveEffect;
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.Scanner;
