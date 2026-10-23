@@ -11,8 +11,9 @@ namespace RandomEvents
     public class EventLavaFloor : AbstractEvent
     {
         private const float UpdateInterval = 0.25f;
-        // a Molotov's fire on the ground under a burning player, which burns the monsters in it: a new one this far from
-        // their last, each burning for a while, three times a second for this much of the player's damage
+        // a Molotov's fire on the ground under a burning player, which belongs to the monsters and burns the players in it:
+        // a new one this far from their last, each burning for a while, three times a second for this much of a
+        // Commando's base damage at the monsters' level
         private const float FireSpacing = 3f;
         private const float FireDuration = 3f;
         private const float FireDamage = 0.5f;
@@ -44,7 +45,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Players burn while on the ground for more than half a second, which sets the ground beneath them on fire, burning the monsters in it. All players get 2 Hopoo Feathers.";
+            return "Players burn while on the ground for more than half a second, which sets the ground beneath them on fire, burning the players in it. All players get 2 Hopoo Feathers.";
         }
         public override string GetPopupDescription()
         {
@@ -126,18 +127,16 @@ namespace RandomEvents
                 return;
             }
             var fire = UnityEngine.Object.Instantiate(FireEffects.FirePool.WaitForCompletion(), position, Quaternion.identity);
-            if (fire.TryGetComponent(out RoR2.Projectile.ProjectileController controller))
-            {
-                controller.owner = body.gameObject;
-            }
             if (fire.TryGetComponent(out TeamFilter teamFilter))
             {
-                teamFilter.teamIndex = body.teamComponent.teamIndex;
+                teamFilter.teamIndex = TeamIndex.Monster;
             }
-            if (fire.TryGetComponent(out RoR2.Projectile.ProjectileDamage projectileDamage))
+            // whatever the players' survivors, items or levels
+            var commando = BodyCatalog.FindBodyPrefab("CommandoBody")?.GetComponent<CharacterBody>();
+            if (fire.TryGetComponent(out RoR2.Projectile.ProjectileDamage projectileDamage) && commando != null)
             {
-                projectileDamage.damage = body.damage * FireDamage;
-                projectileDamage.crit = body.RollCrit();
+                projectileDamage.damage = (commando.baseDamage + commando.levelDamage * (Run.instance.ambientLevel - 1f)) * FireDamage;
+                projectileDamage.crit = false;
             }
             NetworkServer.Spawn(fire);
             lastFires[body] = (position, fire);
