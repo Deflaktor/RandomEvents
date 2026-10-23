@@ -266,6 +266,14 @@ namespace RandomEvents
         }
 
         // the bodies of connected players who are alive
+        // The damage of the environment, like the void fog's, which the events' damage reductions leave alone
+        public static DamageTypeCombo HazardDamageType => new DamageTypeCombo(DamageType.BypassArmor | DamageType.BypassBlock, DamageTypeExtended.DamageField, DamageSource.Hazard);
+
+        public static bool IsHazard(DamageInfo damageInfo)
+        {
+            return (damageInfo.damageType.damageTypeExtended & DamageTypeExtended.DamageField) != 0 && damageInfo.damageType.damageSource == DamageSource.Hazard;
+        }
+
         public static List<CharacterBody> GetLivingPlayerBodies()
         {
             var bodies = new List<CharacterBody>();

@@ -132,7 +132,7 @@ namespace RandomEvents
 
         private void HealthComponent_TakeDamage(On.RoR2.HealthComponent.orig_TakeDamage orig, HealthComponent self, DamageInfo damageInfo)
         {
-            if (NetworkServer.active && IsActive() && damageInfo != null && self.body != null && self.body.isPlayerControlled)
+            if (NetworkServer.active && IsActive() && damageInfo != null && self.body != null && self.body.isPlayerControlled && !Helper.IsHazard(damageInfo))
             {
                 damageInfo.damage *= Mathf.Max(0f, DamageTakenMultiplier.Value);
             }

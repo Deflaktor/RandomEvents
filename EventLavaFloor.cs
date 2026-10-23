@@ -172,7 +172,8 @@ namespace RandomEvents
             {
                 damage = body.healthComponent.fullCombinedHealth * Mathf.Max(0f, DamagePerSecond.Value) * UpdateInterval,
                 position = body.footPosition,
-                damageType = DamageType.BypassArmor | DamageType.BypassBlock,
+                // like the void fog's, irrespective of defenses
+                damageType = Helper.HazardDamageType,
                 procCoefficient = 0f,
                 damageColorIndex = DamageColorIndex.Item
             });

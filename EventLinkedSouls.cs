@@ -212,7 +212,8 @@ namespace RandomEvents
 
         private void HealthComponent_TakeDamage(On.RoR2.HealthComponent.orig_TakeDamage orig, HealthComponent self, DamageInfo damageInfo)
         {
-            if (sharing || !NetworkServer.active || damageInfo == null || damageInfo.damage <= 0f || !ModConfig.Enabled.Value || !IsActive())
+            // the environment's damage, e.g. the void fog, hits each player in full
+            if (sharing || !NetworkServer.active || damageInfo == null || damageInfo.damage <= 0f || !ModConfig.Enabled.Value || !IsActive() || Helper.IsHazard(damageInfo))
             {
                 orig(self, damageInfo);
                 return;
