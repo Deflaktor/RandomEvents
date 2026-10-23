@@ -23,7 +23,7 @@ namespace RandomEvents
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.Scanner;
         public override float CooldownScale => 0.25f;
         public override string Description => "Radar Scanner sends out a shockwave instead of scanning, which hurts, stuns and throws back monsters";
-        public override string PopupDescription => "Sends out a shockwave instead of scanning, which hurts, stuns and throws back monsters.";
+        public override string PopupDescription => "Sends out a shockwave instead of scanning, which hurts, stuns and knocks back monsters.";
 
         public override void Preload()
         {

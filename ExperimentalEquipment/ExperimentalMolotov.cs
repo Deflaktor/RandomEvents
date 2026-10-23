@@ -15,7 +15,7 @@ namespace RandomEvents
 
         public override EquipmentDef EquipmentDef => DLC1Content.Equipment.Molotov;
         public override string Description => "the Molotov (6-Pack) flares up like a sun, blasting everything nearby and setting what it sees ablaze";
-        public override string PopupDescription => "One bottle that flares up like a sun where it lands, blasting everything nearby and setting what it sees ablaze.";
+        public override string PopupDescription => "One bottle that flares up like a sun, blasting everything nearby and setting what it sees ablaze.";
 
         public override void Preload()
         {

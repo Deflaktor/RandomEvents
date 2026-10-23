@@ -53,6 +53,10 @@ namespace RandomEvents
         {
             return "All players get 3 Earthbound Vessels and a Breaching Fin without a cooldown. Only walking monsters spawn, which jump at random, also in mid-air, and are on a leash.";
         }
+        public override string GetPopupDescription()
+        {
+            return "Boing! You get Earthbound Vessels and a Breaching Fin without cooldown. Monsters jump around at random.";
+        }
         public override string GetConditionDescription()
         {
             return "Hallowed Concepts or Seekers of the Storm is enabled, not a Simulacrum boss wave, the stage has walking monsters, and events \"DroneUprising\", \"CursedSpoils\", \"BlightedCorpses\" and \"BulletHell\" inactive.";

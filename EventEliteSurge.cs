@@ -35,6 +35,10 @@ namespace RandomEvents
         {
             return "Every monster gains random elite types, usually one, sometimes two or three, with stronger ones rarer and without an elite's extra health and damage. A quarter fewer monsters spawn, and every player gets a Wake of Vultures.";
         }
+        public override string GetPopupDescription()
+        {
+            return "Every monster is an elite, sometimes of two or three kinds. You get a Wake of Vultures.";
+        }
         public override string GetConditionDescription()
         {
             return "";

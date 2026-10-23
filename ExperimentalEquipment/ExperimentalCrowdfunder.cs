@@ -26,7 +26,7 @@ namespace RandomEvents
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.GoldGat;
         public override string Description => "the Crowdfunder costs no gold, and each of its hits launches a monster like the Breaching Fin, again and again, and makes it lighter, until it's left alone for 2 seconds and gets three times as heavy for a moment, and it dies if it leaves the map";
-        public override string PopupDescription => "Costs no gold. Each hit launches a monster like the Breaching Fin, again and again, and makes it lighter; left alone for 2 seconds, it gets three times as heavy for a moment. A monster hit that leaves the map dies.";
+        public override string PopupDescription => "Free to use. Each hit launches a monster into the air and makes it lighter. Monsters knocked off the map die.";
 
         // it fires as usual, toggled by the player's own game
         public override bool ReplacesAction => false;

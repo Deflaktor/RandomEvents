@@ -38,6 +38,10 @@ namespace RandomEvents
         {
             return "Only one player deals damage, as much as all players together, e.g. 4 times as much with 4 players, and so do their drones and other allies; nothing else on the players' side does. Every 15 seconds another player is tagged in.";
         }
+        public override string GetPopupDescription()
+        {
+            return "Only the tagged player and their drones deal damage, as much as the whole team. The tag passes every 15 seconds.";
+        }
         public override string GetConditionDescription()
         {
             return "At least two players are alive and event \"HotPotato\" inactive.";

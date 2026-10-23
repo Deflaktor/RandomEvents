@@ -37,6 +37,10 @@ namespace RandomEvents
         {
             return "All players get 3 Hexes of Ossification, so their kills give nearby monsters barrier, but also enough Topaz Brooches for each kill to fill their own barrier.";
         }
+        public override string GetPopupDescription()
+        {
+            return "Your kills give nearby monsters barrier, but you get Topaz Brooches to fill your own.";
+        }
         public override string GetConditionDescription()
         {
             return "Hallowed Concepts is enabled, and events \"Ghosts\" and \"CursedSpoils\" inactive.";

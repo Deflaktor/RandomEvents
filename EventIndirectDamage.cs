@@ -50,7 +50,7 @@ namespace RandomEvents
         }
         public override string GetPopupDescription()
         {
-            return "Your hits deal no damage, but your item effects and damage over time still do. You get 10 common and 5 uncommon items with on-hit effects temporarily.";
+            return "Your hits deal no damage, but your item effects and damage over time still do. You get extra on-hit items.";
         }
         public override string GetConditionDescription()
         {

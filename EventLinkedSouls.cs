@@ -54,6 +54,10 @@ namespace RandomEvents
         {
             return "Damage a player takes is split among all living players, but players take 25% less damage. Tethers link the players.";
         }
+        public override string GetPopupDescription()
+        {
+            return "Your souls are linked: damage you take is split among all living players, but you take 25% less.";
+        }
         public override string GetConditionDescription()
         {
             return "At least two players are alive.";

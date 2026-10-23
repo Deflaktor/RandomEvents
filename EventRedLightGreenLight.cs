@@ -61,6 +61,10 @@ namespace RandomEvents
         {
             return "Red and green light take turns. During red light, monsters freeze, players who stand still can't be hurt, and players who move get Tonic Afflictions until the event ends. Players get an Irradiant Pearl until the event ends for every red light they stay still through.";
         }
+        public override string GetPopupDescription()
+        {
+            return "Red light, green light! Don't move on red, or you get Tonic Afflictions. Staying still through a red light earns an Irradiant Pearl.";
+        }
         public override string GetConditionDescription()
         {
             return "";

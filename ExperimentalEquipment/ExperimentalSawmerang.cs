@@ -14,7 +14,7 @@ namespace RandomEvents
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.Saw;
         public override string Description => "the Sawmerang's blades hunt monsters, cutting through them back and forth for 20 seconds";
-        public override string PopupDescription => "The blades hunt the nearest monster, cutting through it back and forth, then the next, for 20 seconds.";
+        public override string PopupDescription => "The blades hunt monsters for 20 seconds.";
 
         public override void Preload()
         {

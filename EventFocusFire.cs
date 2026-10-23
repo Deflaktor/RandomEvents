@@ -44,7 +44,7 @@ namespace RandomEvents
         }
         public override string GetPopupDescription()
         {
-            return "Monsters are very tough, but the more damage they take, the more damage they take. Focus your fire!";
+            return "Monsters are very tough, but take more and more damage as you keep hurting them. Focus your fire!";
         }
         public override string GetConditionDescription()
         {

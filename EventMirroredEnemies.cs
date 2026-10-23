@@ -60,7 +60,7 @@ namespace RandomEvents
         }
         public override string GetPopupDescription()
         {
-            return "Mirrored monsters heal you when they hit you and hurt themselves. Shooting them hurts you.";
+            return "Mirrored monsters decay, and their hits heal you. Don't shoot them, it hurts you instead!";
         }
         public override string GetConditionDescription()
         {

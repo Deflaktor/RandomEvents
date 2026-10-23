@@ -32,6 +32,10 @@ namespace RandomEvents
         {
             return "Every player gets the items of another player until the event ends.";
         }
+        public override string GetPopupDescription()
+        {
+            return "You get another player's items for a while.";
+        }
         public override string GetConditionDescription()
         {
             return "At least two players are alive and event \"SurvivorSwap\" inactive.";

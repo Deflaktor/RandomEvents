@@ -57,6 +57,10 @@ namespace RandomEvents
         {
             return "Disables primary skills, but the other skills recharge faster. Each Eclipse Lite becomes 2 Topaz Brooches.";
         }
+        public override string GetPopupDescription()
+        {
+            return "No primary skill, but your other skills recharge faster.";
+        }
         public override string GetConditionDescription()
         {
             return "Events \"EquipmentOnly\", \"MonsterTransform\" inactive and none of the players have a Bandolier.";

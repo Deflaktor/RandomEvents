@@ -33,6 +33,10 @@ namespace RandomEvents
         {
             return "Chests bought with gold may turn into a monster instead of giving their item.";
         }
+        public override string GetPopupDescription()
+        {
+            return "Careful: chests bought with gold may turn out to be monsters!";
+        }
         public override string GetConditionDescription()
         {
             return "Not in Simulacrum, and the stage has an unopened chest bought with gold.";

@@ -62,6 +62,10 @@ namespace RandomEvents
         {
             return "A player carries a bomb, which goes to any player or monster they touch. Near the end of the event it explodes like a mini nuke.";
         }
+        public override string GetPopupDescription()
+        {
+            return "Pass the bomb! Touch another player or a monster to hand it over. Near the end, it explodes like a mini nuke.";
+        }
         public override string GetConditionDescription()
         {
             return "Not during the teleporter event or a Simulacrum boss wave, and event \"TagTeam\" inactive.";

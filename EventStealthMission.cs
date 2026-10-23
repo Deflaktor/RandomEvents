@@ -35,6 +35,10 @@ namespace RandomEvents
         {
             return "Players are cloaked, and monsters only fire at where they last saw them. Attacking reveals them for 2 seconds.";
         }
+        public override string GetPopupDescription()
+        {
+            return "You're cloaked. Monsters shoot where they last saw you, and attacking reveals you.";
+        }
         public override string GetConditionDescription()
         {
             return "Event \"Hunted\" inactive.";

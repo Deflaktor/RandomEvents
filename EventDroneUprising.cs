@@ -55,6 +55,10 @@ namespace RandomEvents
         {
             return "Hostile drones spawn instead of monsters, also those of items and survivors. They have a quarter of their health, deal half their normal damage, move at half speed and leave no wreck.";
         }
+        public override string GetPopupDescription()
+        {
+            return "The drones have turned on you! They're weaker and slower than usual, though.";
+        }
         public override string GetConditionDescription()
         {
             return "Not a Simulacrum boss wave, and events \"Mitosis\", \"RitualHelmets\", \"FallingEnemies\", \"Bouncy\", \"LynxPups\", \"BlightedCorpses\" and \"BulletHell\" inactive.";

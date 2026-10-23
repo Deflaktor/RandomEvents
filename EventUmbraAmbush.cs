@@ -72,6 +72,10 @@ namespace RandomEvents
         {
             return "Each player is hunted by a tough enemy survivor with items, which attacks and moves slowly.";
         }
+        public override string GetPopupDescription()
+        {
+            return "A tough enemy survivor with items hunts each of you. It moves and attacks slowly.";
+        }
         public override string GetConditionDescription()
         {
             return "Event \"BulletHell\" inactive.";

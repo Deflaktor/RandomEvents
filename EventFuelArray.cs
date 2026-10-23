@@ -36,6 +36,10 @@ namespace RandomEvents
         {
             return "Heals all players and gives them a Fuel Array until the event ends, but they take less damage.";
         }
+        public override string GetPopupDescription()
+        {
+            return "You're healed and carry a Fuel Array, which explodes if your health drops below half. You're much tougher meanwhile.";
+        }
         public override string GetConditionDescription()
         {
             return "Events \"EquipmentOnly\" and \"Vampires\" inactive.";

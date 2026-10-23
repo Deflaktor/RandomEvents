@@ -37,6 +37,10 @@ namespace RandomEvents
         {
             return "Only monsters whose primary attack fires projectiles spawn. Increases the fire rate of enemies but lowers their damage.";
         }
+        public override string GetPopupDescription()
+        {
+            return "Only monsters that shoot projectiles spawn. They fire much faster, but each shot hurts less.";
+        }
         public override string GetConditionDescription()
         {
             return "Most of the stage's monsters' primary attacks fire projectiles, and events \"WeakEnemies\", \"StrongEnemies\", \"Mitosis\", \"DroneUprising\", \"FallingEnemies\", \"RitualHelmets\", \"Bouncy\", \"LynxPups\", \"BlightedCorpses\" and \"UmbraAmbush\" inactive.";

@@ -45,6 +45,10 @@ namespace RandomEvents
         {
             return "Some monsters are infected: they infect others nearby when they die and come back once.";
         }
+        public override string GetPopupDescription()
+        {
+            return "Some monsters are infected: they infect others nearby when they die, and come back once.";
+        }
         public override string GetConditionDescription()
         {
             return "Currently not a boss wave.";

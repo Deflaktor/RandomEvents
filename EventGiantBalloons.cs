@@ -37,6 +37,10 @@ namespace RandomEvents
         {
             return "Fewer monsters spawn, but they are inflated to giant size with ten times their health. They shrink as they lose health.";
         }
+        public override string GetPopupDescription()
+        {
+            return "Fewer monsters, but giant, tough ones. They shrink as you hurt them.";
+        }
         public override string GetConditionDescription()
         {
             return "Hallowed Concepts is enabled.";

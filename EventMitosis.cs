@@ -61,6 +61,10 @@ namespace RandomEvents
         {
             return "Only monsters with a weaker relative spawn, and they split into several of them when they die.";
         }
+        public override string GetPopupDescription()
+        {
+            return "Only monsters with a weaker relative spawn, and they split into several of them when they die.";
+        }
         public override string GetConditionDescription()
         {
             return "Not a Simulacrum boss wave, the stage's monsters include such a pair, and events \"StrongEnemies\", \"WeakEnemies\", \"DroneUprising\", \"LynxPups\", \"BlightedCorpses\" and \"BulletHell\" inactive.";

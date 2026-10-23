@@ -39,7 +39,7 @@ namespace RandomEvents
         }
         public override string GetPopupDescription()
         {
-            return "You heal by a fifth of the damage you deal. You lose health while monsters are near.";
+            return "You heal by a fifth of the damage you deal, but lose health while monsters are near.";
         }
         public override string GetConditionDescription()
         {

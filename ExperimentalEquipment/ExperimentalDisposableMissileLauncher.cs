@@ -28,7 +28,7 @@ namespace RandomEvents
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.CommandMissile;
         public override float CooldownScale => 0.25f;
         public override string Description => "Disposable Missile Launcher sends an electric orb spiraling at each monster nearby, at least 4 and up to 10, which zaps chain lightning on the way and calls down a lightning strike when it gets there";
-        public override string PopupDescription => "Sends an electric orb spiraling at each monster nearby, at least 4 and up to 10. They zap chain lightning on the way and call down a lightning strike when they get there.";
+        public override string PopupDescription => "Sends an electric orb at each monster nearby, which zaps chain lightning and calls down a lightning strike.";
 
         public override void Preload()
         {

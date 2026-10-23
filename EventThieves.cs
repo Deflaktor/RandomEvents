@@ -37,6 +37,10 @@ namespace RandomEvents
         {
             return "Monsters that hit a player steal one of their items and use it, up to one every half second. Kill the thief to get them back.";
         }
+        public override string GetPopupDescription()
+        {
+            return "Monsters that hit you steal your items and use them. Kill the thief to get them back!";
+        }
         public override string GetConditionDescription()
         {
             return "";

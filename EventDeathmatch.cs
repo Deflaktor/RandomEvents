@@ -114,7 +114,7 @@ namespace RandomEvents
         }
         public override string GetPopupDescription()
         {
-            return "Fight the other players, alone or in teams! You revive when you die, and each kill scores a point. The winner gets a green item.";
+            return "Fight the other players, alone or in teams! You revive when you die, and each kill scores a point. Items deal other players 30% damage. The winner gets a green item.";
         }
         public override string GetConditionDescription()
         {

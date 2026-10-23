@@ -40,6 +40,10 @@ namespace RandomEvents
         {
             return "All players and monsters get 3 Brilliant Behemoths, a Will-o'-the-wisp and a Voidsent Flame, but monsters deal half damage, and players take half the damage from the wisps and flames.";
         }
+        public override string GetPopupDescription()
+        {
+            return "Everyone gets 3 Brilliant Behemoths, a Will-o'-the-wisp and a Voidsent Flame. Monsters deal half damage.";
+        }
         public override string GetConditionDescription()
         {
             return "Event \"CursedSpoils\" inactive.";

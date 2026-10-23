@@ -49,7 +49,7 @@ namespace RandomEvents
         }
         public override string GetPopupDescription()
         {
-            return "You burn while on the ground for more than half a second. You get 2 Hopoo Feathers temporarily.";
+            return "The floor is lava! Don't stay on the ground. You get 2 Hopoo Feathers.";
         }
         public override string GetConditionDescription()
         {

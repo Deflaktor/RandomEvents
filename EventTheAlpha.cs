@@ -55,6 +55,10 @@ namespace RandomEvents
         {
             return "A random monster becomes a big alpha with ten times its health. While it lives, all other monsters are in a frenzy. It drops an item when killed.";
         }
+        public override string GetPopupDescription()
+        {
+            return "A big alpha with ten times its health drives the other monsters into a frenzy. Kill it for an item!";
+        }
         public override string GetConditionDescription()
         {
             return "";

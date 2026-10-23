@@ -37,6 +37,10 @@ namespace RandomEvents
         {
             return "Revives dead players. Everyone else drops to 1% health, but anyone who dies is revived once.";
         }
+        public override string GetPopupDescription()
+        {
+            return "Fallen players are back! Everyone else drops to 1% health, but anyone who dies is revived once.";
+        }
         public override string GetConditionDescription()
         {
             return "";

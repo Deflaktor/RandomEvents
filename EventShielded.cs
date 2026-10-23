@@ -46,6 +46,10 @@ namespace RandomEvents
         {
             return "Three quarters of the monsters are shielded, with 300 more armor, and take only 5% of the damage. The others have a quarter of their health, and when one dies, the nearest shielded monster loses its shield.";
         }
+        public override string GetPopupDescription()
+        {
+            return "Most monsters are shielded. Kill an unshielded one to break the nearest shield.";
+        }
         public override string GetConditionDescription()
         {
             return "Not during the teleporter event or a Simulacrum boss wave, and event \"MirroredEnemies\" inactive.";

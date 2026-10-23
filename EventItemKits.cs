@@ -49,7 +49,7 @@ namespace RandomEvents
         }
         public override string GetPopupDescription()
         {
-            return "Gives all players the items of the kit temporarily.";
+            return "You get the items of this kit until the event ends.";
         }
         public override string GetConditionDescription()
         {

@@ -55,7 +55,7 @@ namespace RandomEvents
         }
         public override string GetPopupDescription()
         {
-            return "Players swap survivors and items with each other until the event ends. Alone, you become a random survivor.";
+            return "Swap survivors and items with another player! Alone, you become a random survivor.";
         }
         public override string GetConditionDescription()
         {

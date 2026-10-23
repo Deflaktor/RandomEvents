@@ -48,6 +48,10 @@ namespace RandomEvents
         {
             return "Half of the monsters that spawn are Lynx Pups, one and a half times as big, with one and a half times the health and attacking half as often.";
         }
+        public override string GetPopupDescription()
+        {
+            return "Half the monsters are big, tough Lynx Pups that attack slowly.";
+        }
         public override string GetConditionDescription()
         {
             return "Hallowed Concepts is enabled, not a Simulacrum boss wave, and events \"DroneUprising\", \"Mitosis\", \"StrongEnemies\", \"WeakEnemies\", \"BlightedCorpses\" and \"BulletHell\" inactive.";

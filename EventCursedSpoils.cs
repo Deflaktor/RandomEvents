@@ -42,6 +42,10 @@ namespace RandomEvents
         {
             return "Every kill gives each player a temporary item, but taking damage from monsters brings hexes that disable items.";
         }
+        public override string GetPopupDescription()
+        {
+            return "Every kill gives you a temporary item, but monster hits curse you with hexes that disable items.";
+        }
         public override string GetConditionDescription()
         {
             return "Hallowed Concepts is enabled, and events \"Behemoths\", \"Bouncy\", \"CasinoItem\", \"EquipmentOnly\", \"IndirectDamage\", \"ItemKits\", \"LavaFloor\", \"Ossification\" and \"Slippery\" inactive.";

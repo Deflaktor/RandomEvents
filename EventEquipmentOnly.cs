@@ -53,6 +53,10 @@ namespace RandomEvents
         {
             return "Disables all skills, but gives all players a random equipment with a short cooldown. Molotovs burst in the air next to flying monsters, dealing 800% damage to all monsters within 6 m.";
         }
+        public override string GetPopupDescription()
+        {
+            return "No skills, just a random equipment with a short cooldown.";
+        }
         public override string GetConditionDescription()
         {
             return "Events \"SkillsOnly\", \"FuelArray\", \"ExperimentalEquipment\", \"CursedSpoils\" inactive. Artifact of Enigma inactive.";

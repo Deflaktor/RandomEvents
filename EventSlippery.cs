@@ -35,6 +35,10 @@ namespace RandomEvents
         {
             return "All players and monsters get 3 Hexes of Acceleration, so all ground becomes slippery.";
         }
+        public override string GetPopupDescription()
+        {
+            return "You and the monsters get 3 Hexes of Acceleration: everything is slippery!";
+        }
         public override string GetConditionDescription()
         {
             return "Hallowed Concepts is enabled, and event \"CursedSpoils\" inactive.";

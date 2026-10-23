@@ -38,6 +38,10 @@ namespace RandomEvents
         {
             return "Every monster that spawns brings 3 Beetles along, or 3 Lesser Wisps if it flies.";
         }
+        public override string GetPopupDescription()
+        {
+            return "Every monster brings 3 Beetles along, or 3 Lesser Wisps if it flies.";
+        }
         public override string GetConditionDescription()
         {
             return "";

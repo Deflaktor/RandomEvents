@@ -33,6 +33,10 @@ namespace RandomEvents
         {
             return "Gives each player a random drone with their items until the event ends. It deals half damage.";
         }
+        public override string GetPopupDescription()
+        {
+            return "A random drone with your items escorts you for a while. It deals half damage.";
+        }
         public override string GetConditionDescription()
         {
             return "";

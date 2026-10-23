@@ -44,6 +44,10 @@ namespace RandomEvents
         {
             return "Drops a random Captain beacon next to each player, which stays for the rest of the stage.";
         }
+        public override string GetPopupDescription()
+        {
+            return "You get a random Captain beacon, which stays for the rest of the stage.";
+        }
         public override string GetConditionDescription()
         {
             return "";

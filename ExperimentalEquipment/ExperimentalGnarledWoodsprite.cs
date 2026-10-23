@@ -18,7 +18,7 @@ namespace RandomEvents
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.PassiveHealing;
         public override string Description => "Gnarled Woodsprite gives the other player it is sent to no cooldowns and Spinel Tonic's boost without its downside";
-        public override string PopupDescription => "Send it to another player: while it stays with them, they have no cooldowns and Spinel Tonic's boost, without its downside.";
+        public override string PopupDescription => "Send it to another player: while it stays with them, they have no cooldowns and Spinel Tonic's boost without the downside.";
         public override bool IsAvailable => PlayerCharacterMasterController.instances.Count(player => player.isConnected) > 1;
 
         // it is sent and heals as usual
