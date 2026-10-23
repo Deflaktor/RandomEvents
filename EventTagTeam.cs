@@ -36,7 +36,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Only one player deals damage, 1.5 times as much for each player, and so do their drones and other allies; nothing else on the players' side does. Every 15 seconds another player is tagged in.";
+            return "Only one player deals damage, as much as all players together, e.g. 4 times as much with 4 players, and so do their drones and other allies; nothing else on the players' side does. Every 15 seconds another player is tagged in.";
         }
         public override string GetConditionDescription()
         {
@@ -45,7 +45,7 @@ namespace RandomEvents
         protected override void AddConfig(ConfigFile config)
         {
             TagInterval = config.Bind(GetEventConfigName(), "Tag Interval", 15f, "Seconds until the next player is tagged in.");
-            DamageMultiplierPerPlayer = config.Bind(GetEventConfigName(), "Damage Multiplier Per Player", 1.5f, "The tagged player's damage is multiplied by this times the number of players.");
+            DamageMultiplierPerPlayer = config.Bind(GetEventConfigName(), "Damage Multiplier Per Player", 1f, "The tagged player's damage is multiplied by this times the number of players.");
         }
         public override void Preload()
         {
