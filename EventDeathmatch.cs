@@ -14,8 +14,8 @@ namespace RandomEvents
     //
     // Up to three players, each fights alone, on a team of their own; from four on, they fight in two teams. Each player
     // is on their team along with what they own, e.g. drones and turrets, so that everything in every player's game
-    // takes the others for enemies: their attacks, their homing missiles, their allies' targets. CHEF's hot and icy
-    // glows of Yes, Chef!, which only show, tell the teams apart.
+    // takes the others for enemies: their attacks, their homing missiles, their allies' targets. Each player sees the
+    // players they fight marked, see OpponentMarks.
     //
     // So that nobody dies in an instant, however strong their items, the damage players take from other players weakens
     // the more health they recently lost to them: it approaches a share of their health per second without reaching it,
@@ -74,15 +74,6 @@ namespace RandomEvents
         // the team each player's character or ally was on before, and the level of each team the players borrowed
         private readonly Dictionary<CharacterMaster, TeamIndex> originalTeams = new Dictionary<CharacterMaster, TeamIndex>();
         private readonly Dictionary<TeamIndex, uint> originalTeamLevels = new Dictionary<TeamIndex, uint>();
-        // each team's glow, in the order of the teams: hot, icy and both
-        private static readonly BuffDef[][] TeamGlows =
-        {
-            new[] { DLC2Content.Buffs.boostedFireEffect },
-            new[] { DLC2Content.Buffs.boostedFrostEffect },
-            new[] { DLC2Content.Buffs.boostedFireEffect, DLC2Content.Buffs.boostedFrostEffect },
-        };
-        private readonly BuffTracker buffs = new BuffTracker();
-        private readonly Dictionary<CharacterBody, BuffDef[]> glowing = new Dictionary<CharacterBody, BuffDef[]>();
 
         // The events about monsters alone do nothing while they are gone. Of the others, these change how players hurt
         // each other or come back, or are hidden from each other: Hot Potato's bomb would go round the players,
@@ -119,7 +110,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "The monsters are removed, and the directors and the run timer stop. Up to 3 players, each fights alone; from 4 players on, they fight in two teams. A player fights with their drones and other allies, all glowing in their team's color, and revives when they die; each kill scores a point for them and their team. Their items deal other players 30% of their damage, their skills and equipment all of it, which weakens the more health a player recently lost to them, so that over time they never lose 20% of their health per second, and never 50% at once; healing and barrier gain weaken the same way, and stuns, freezes and roots only slow them by 80%. Items that break and drones that are destroyed during the event are restored afterwards. The winner, or each player of the winning team, gets a random green item; in a draw, each of the winners gets a random white item. Afterwards everyone is fully healed and the monsters spawn again.";
+            return "The monsters are removed, and the directors and the run timer stop. Up to 3 players, each fights alone; from 4 players on, they fight in two teams. A player fights with their drones and other allies, and revives when they die. Each player sees the players they fight marked with the soul brand of Caustic Pheromones, which does nothing else; each kill scores a point for them and their team. Their items deal other players 30% of their damage, their skills and equipment all of it, which weakens the more health a player recently lost to them, so that over time they never lose 20% of their health per second, and never 50% at once; healing and barrier gain weaken the same way, and stuns, freezes and roots only slow them by 80%. Items that break and drones that are destroyed during the event are restored afterwards. The winner, or each player of the winning team, gets a random green item; in a draw, each of the winners gets a random white item. Afterwards everyone is fully healed and the monsters spawn again.";
         }
         public override string GetPopupDescription()
         {
@@ -234,36 +225,6 @@ namespace RandomEvents
             if (body != null && body.teamComponent.teamIndex != team)
             {
                 body.teamComponent.teamIndex = team;
-            }
-            if (body != null && !glowing.ContainsKey(body))
-            {
-                // the buffs sync, and every player's game draws the glow from them
-                var glows = TeamGlows[System.Array.IndexOf(Teams, team) % TeamGlows.Length];
-                foreach (var glow in glows)
-                {
-                    buffs.Add(body, glow);
-                }
-                glowing[body] = glows;
-            }
-        }
-
-        // CHEF's boosted skills take the glow off him when he uses them
-        private void KeepGlowing()
-        {
-            foreach (var body in glowing.Keys.ToList())
-            {
-                if (body == null)
-                {
-                    glowing.Remove(body);
-                    continue;
-                }
-                foreach (var glow in glowing[body])
-                {
-                    if (!body.HasBuff(glow))
-                    {
-                        body.AddBuff(glow);
-                    }
-                }
             }
         }
 
@@ -825,7 +786,16 @@ namespace RandomEvents
                 {
                     AssignTeam(body.master);
                 }
+                OpponentMarks.Refresh();
             }
+        }
+
+        // Players are marked for the players of the other teams
+        private bool IsOpponent(CharacterMaster viewer, CharacterBody body)
+        {
+            var player = GetPlayer(body.master);
+            return player != null && player == body.master && player != viewer && playerTeams.TryGetValue(viewer, out var viewerTeam)
+                && playerTeams.TryGetValue(player, out var team) && team != viewerTeam;
         }
 
         private static bool IsMonster(CharacterBody body)
@@ -855,7 +825,6 @@ namespace RandomEvents
             {
                 return;
             }
-            KeepGlowing();
             // its own clock, since the run timer the events go by stands still
             timeLeft -= Time.fixedDeltaTime;
             if (timeLeft <= 0f)
@@ -963,6 +932,7 @@ namespace RandomEvents
                 Remove(body);
             }
             AssignTeams();
+            OpponentMarks.Show(IsOpponent);
             // every player joins in, also those who died before
             foreach (var pc in PlayerCharacterMasterController.instances)
             {
@@ -975,11 +945,10 @@ namespace RandomEvents
 
         public override void Stop()
         {
+            OpponentMarks.Hide();
             RestoreBrokenItems();
             RestoreTeams();
             RestoreLostDrones();
-            buffs.RemoveAll();
-            glowing.Clear();
             HealAll();
             modeChosen = false;
             scores.Clear();

@@ -17,6 +17,7 @@ namespace RandomEvents
     [BepInDependency("com.funkfrog_sipondo.sharesuite", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(R2API.R2API.PluginGUID)]
     [BepInDependency(R2API.LanguageAPI.PluginGUID)]
+    [BepInDependency(PerClientSync.PerClientSyncPlugin.PluginGUID)]
     [BepInPlugin(PluginGUID, PluginName, PluginVersion)]
     [NetworkCompatibility(CompatibilityLevel.NoNeedForSync, VersionStrictness.DifferentModVersionsAreOk)]
     public class RandomEvents : BaseUnityPlugin
@@ -57,6 +58,7 @@ namespace RandomEvents
                 Slowdown.Hook();
                 MonsterPool.Hook();
                 ScaledMonsterAi.Hook();
+                OpponentMarks.Hook();
 
                 ModConfig.Init();
                 InitAndHookEvent(new EventBehemoths());
