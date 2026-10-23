@@ -63,7 +63,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | SupplyDrop | Supplies inbound | Drops a random Captain beacon next to each player, which stays for the rest of the stage. |  |
 | SurvivorSwap | Walk in another's shoes | Players swap survivors and items with each other until the event ends. Alone, you become a random survivor with 40 armor. | Events "MonsterTransform" and "InventoryRoulette" inactive and currently not a boss wave. |
 | SwarmQueen | Nobody comes alone | Every monster that spawns brings 3 Beetles along, or 3 Lesser Wisps if it flies. |  |
-| TagTeam | Tag, you're it | Only one player deals damage, 1.5 times as much for each player. Every 15 seconds another player is tagged in. | At least two players are alive and event "HotPotato" inactive. |
+| TagTeam | Tag, you're it | Only one player deals damage, 1.5 times as much for each player, and so do their drones and other allies; nothing else on the players' side does. Every 15 seconds another player is tagged in. | At least two players are alive and event "HotPotato" inactive. |
 | TheAlpha | The pack has a leader | A random monster becomes a big alpha with ten times its health. While it lives, all other monsters are in a frenzy. It drops an item when killed. |  |
 | Thieves | Watch your pockets | Monsters that hit a player steal one of their items and use it, up to one every half second. Kill the thief to get them back. |  |
 | TimeWarp | Time slows for your foes | Slows all monsters to about a third of their speed. |  |

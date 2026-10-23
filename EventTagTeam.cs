@@ -36,7 +36,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Only one player deals damage, 1.5 times as much for each player. Every 15 seconds another player is tagged in.";
+            return "Only one player deals damage, 1.5 times as much for each player, and so do their drones and other allies; nothing else on the players' side does. Every 15 seconds another player is tagged in.";
         }
         public override string GetConditionDescription()
         {
@@ -56,31 +56,39 @@ namespace RandomEvents
             RoR2Application.onFixedUpdate += RoR2Application_onFixedUpdate;
         }
 
-        // the tagged player's minions deal the extra damage too, other players' minions none
+        // Of everything on the players' side, only the tagged player and what belongs to them deal damage, the extra
+        // damage too: their drones, turrets and other allies. Other players, theirs, and allies of no one deal none.
         private void HealthComponent_TakeDamage(On.RoR2.HealthComponent.orig_TakeDamage orig, HealthComponent self, DamageInfo damageInfo)
         {
             if (ModConfig.Enabled.Value && NetworkServer.active && IsActive() && damageInfo != null && damageInfo.attacker != null && self.body != null
-                && damageInfo.attacker.TryGetComponent(out CharacterBody attackerBody) && attackerBody.teamComponent.teamIndex != self.body.teamComponent.teamIndex)
+                && TeamComponent.GetObjectTeam(damageInfo.attacker) == TeamIndex.Player && self.body.teamComponent.teamIndex != TeamIndex.Player)
             {
-                var master = attackerBody.master;
-                if (master != null && master.minionOwnership.ownerMaster != null)
+                if (BelongsToTagged(damageInfo.attacker))
                 {
-                    master = master.minionOwnership.ownerMaster;
+                    damageInfo.damage *= Mathf.Max(0f, DamageMultiplierPerPlayer.Value) * GetPlayerCount();
                 }
-                if (master != null && master.playerCharacterMasterController != null)
+                else
                 {
-                    if (tagged != null && master == tagged.master)
-                    {
-                        damageInfo.damage *= Mathf.Max(0f, DamageMultiplierPerPlayer.Value) * GetPlayerCount();
-                    }
-                    else
-                    {
-                        // rejected hits set off no items either
-                        damageInfo.rejected = true;
-                    }
+                    // rejected hits set off no items either
+                    damageInfo.rejected = true;
                 }
             }
             orig(self, damageInfo);
+        }
+
+        // the tagged player, or a minion of theirs, also one a minion of theirs summoned
+        private bool BelongsToTagged(GameObject attacker)
+        {
+            var master = tagged != null && attacker.TryGetComponent(out CharacterBody body) ? body.master : null;
+            for (int depth = 0; master != null && depth < 10; depth++)
+            {
+                if (master == tagged.master)
+                {
+                    return true;
+                }
+                master = master.minionOwnership != null ? master.minionOwnership.ownerMaster : null;
+            }
+            return false;
         }
 
         private static int GetPlayerCount()
