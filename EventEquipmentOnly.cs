@@ -4,6 +4,7 @@ using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using RoR2;
 using RoR2.Items;
+using RoR2.Projectile;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -22,8 +23,6 @@ namespace RandomEvents
     public class EventEquipmentOnly : AbstractEvent
     {
         private EquipmentDef commonEquipment;
-        // a Molotov's fire stays on the ground, useless against mostly flying monsters
-        private static bool molotovUseful = true;
         public override bool LoadCondition()
         {
             return true;
@@ -52,7 +51,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Disables all skills, but gives all players a random equipment with a short cooldown.";
+            return "Disables all skills, but gives all players a random equipment with a short cooldown. Molotovs burst in the air next to flying monsters, dealing 800% damage to all monsters within 6 m.";
         }
         public override string GetConditionDescription()
         {
@@ -65,11 +64,83 @@ namespace RandomEvents
 
         public override void Preload()
         {
+            FireEffects.Preload();
         }
 
         public override void Hook()
         {
             CharacterBody.onBodyStartGlobal += CharacterBody_onBodyStartGlobal;
+            On.RoR2.Projectile.ProjectileController.Start += ProjectileController_Start;
+        }
+
+        // The players' Molotovs, the thrown 6-Pack and its single cocktails, burst in the air next to flying monsters,
+        // which their fire on the ground can't reach. The host moves the projectiles, so it alone decides.
+        private void ProjectileController_Start(On.RoR2.Projectile.ProjectileController.orig_Start orig, ProjectileController self)
+        {
+            orig(self);
+            if (NetworkServer.active && IsActive() && (self.name.StartsWith("MolotovClusterProjectile") || self.name.StartsWith("MolotovSingleProjectile"))
+                && self.owner != null && self.owner.GetComponent<EquipmentOnlyComponent>() != null)
+            {
+                self.gameObject.AddComponent<MolotovAirburst>();
+            }
+        }
+
+        public class MolotovAirburst : MonoBehaviour
+        {
+            private const float Radius = 6f;
+            private const float DamageCoefficient = 8f;
+            private ProjectileController controller;
+
+            private void Awake()
+            {
+                controller = GetComponent<ProjectileController>();
+            }
+
+            private void FixedUpdate()
+            {
+                var owner = controller != null && controller.owner != null ? controller.owner.GetComponent<CharacterBody>() : null;
+                if (!NetworkServer.active || owner == null)
+                {
+                    return;
+                }
+                var position = transform.position;
+                foreach (var body in CharacterBody.readOnlyInstancesList)
+                {
+                    if (body != null && body.isFlying && body.mainHurtBox != null && body.healthComponent != null && body.healthComponent.alive
+                        && body.teamComponent.teamIndex != owner.teamComponent.teamIndex && body.teamComponent.teamIndex != TeamIndex.Neutral
+                        && (ClosestPoint(body.mainHurtBox.collider, position) - position).sqrMagnitude <= Radius * Radius)
+                    {
+                        Burst(owner, position);
+                        return;
+                    }
+                }
+            }
+
+            // where the blast reaches the monster, which a non-convex mesh can't tell exactly
+            private static Vector3 ClosestPoint(Collider collider, Vector3 position)
+            {
+                return collider is MeshCollider mesh && !mesh.convex ? collider.bounds.ClosestPoint(position) : collider.ClosestPoint(position);
+            }
+
+            // instead of its fire on the ground, or splitting into single cocktails
+            private void Burst(CharacterBody owner, Vector3 position)
+            {
+                FireEffects.SpawnEffect(FireEffects.Ignition, position, Radius);
+                new BlastAttack
+                {
+                    attacker = owner.gameObject,
+                    inflictor = gameObject,
+                    teamIndex = owner.teamComponent.teamIndex,
+                    baseDamage = owner.damage * DamageCoefficient,
+                    crit = TryGetComponent(out ProjectileDamage projectileDamage) ? projectileDamage.crit : owner.RollCrit(),
+                    radius = Radius,
+                    falloffModel = BlastAttack.FalloffModel.None,
+                    position = position,
+                    procCoefficient = 1f,
+                    attackerFiltering = AttackerFiltering.NeverHitSelf,
+                }.Fire();
+                Destroy(gameObject);
+            }
         }
 
         public override bool SuppressesHereticTransformation => true;
@@ -90,14 +161,6 @@ namespace RandomEvents
             }
         }
 
-        // whether flying monsters make up most of the spawn pool's weight
-        private static bool MostlyFlyingMonsters()
-        {
-            var choices = MonsterPool.GetChoices().Where(choice => choice.value != null && choice.value.spawnCard != null).ToList();
-            var flying = choices.Where(choice => choice.value.spawnCard.nodeGraphType == RoR2.Navigation.MapNodeGroup.GraphType.Air).Sum(choice => choice.weight);
-            return flying > choices.Sum(choice => choice.weight) / 2f;
-        }
-
         public override void Prepare()
         {
 
@@ -105,10 +168,9 @@ namespace RandomEvents
 
         public override void Start(List<AbstractEvent> activeOtherEvents)
         {
-            molotovUseful = !MostlyFlyingMonsters() && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("DroneUprising", StringComparison.InvariantCultureIgnoreCase));
             WeightedSelection<EquipmentDef> weightedSelection = new WeightedSelection<EquipmentDef>();
             weightedSelection.AddChoice(RoR2Content.Equipment.BFG, 3f);
-            weightedSelection.AddChoice(DLC1Content.Equipment.Molotov, molotovUseful ? 2f : 0f);
+            weightedSelection.AddChoice(DLC1Content.Equipment.Molotov, 2f);
             weightedSelection.AddChoice(RoR2Content.Equipment.CommandMissile, 1f);
             weightedSelection.AddChoice(RoR2Content.Equipment.Lightning, 1f);
             weightedSelection.AddChoice(RoR2Content.Equipment.Saw, 1f);
@@ -166,7 +228,7 @@ namespace RandomEvents
                     {
                         WeightedSelection<EquipmentDef> weightedSelection = new WeightedSelection<EquipmentDef>();
                         weightedSelection.AddChoice(RoR2Content.Equipment.BFG, 1.5f);
-                        weightedSelection.AddChoice(DLC1Content.Equipment.Molotov, molotovUseful ? 1f : 0f);
+                        weightedSelection.AddChoice(DLC1Content.Equipment.Molotov, 1f);
                         weightedSelection.AddChoice(RoR2Content.Equipment.CommandMissile, 1f);
                         weightedSelection.AddChoice(RoR2Content.Equipment.Lightning, 1f);
                         weightedSelection.AddChoice(RoR2Content.Equipment.Saw, 1f);
