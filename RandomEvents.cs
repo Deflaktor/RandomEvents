@@ -71,7 +71,6 @@ namespace RandomEvents
                 InitAndHookEvent(new EventDeathmatch());
                 InitAndHookEvent(new EventDroneEscort());
                 InitAndHookEvent(new EventDroneUprising());
-                InitAndHookEvent(new EventEgocentrism());
                 InitAndHookEvent(new EventEliteSurge());
                 InitAndHookEvent(new EventEquipmentOnly());
                 InitAndHookEvent(new EventExperimentalEquipment());
