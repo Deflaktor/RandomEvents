@@ -154,7 +154,8 @@ namespace RandomEvents
             foreach (var ev in eventCandidates)
             {
                 // a weighted selection can't pick from weights of 0
-                if (!activeEvents.Contains(ev) && ev.IsEnabled() && ev.GetWeight() > 0f && ev.Condition(activeEvents))
+                if (!activeEvents.Contains(ev) && ev.IsEnabled() && ev.GetWeight() > 0f && ev.Condition(activeEvents)
+                    && activeEvents.All(other => ev.IsCompatibleWith(other) && other.IsCompatibleWith(ev)))
                 {
                     weightedSelection.AddChoice(ev, ev.GetWeight());
                 }
@@ -358,6 +359,17 @@ namespace RandomEvents
                 StopAllActiveEvents();
             }
             orig(self);
+        }
+
+        // for an event that keeps its own time, e.g. one that stops the run timer the events go by
+        public void EndActiveEvents()
+        {
+            if (m_activeEvents.Count > 0)
+            {
+                m_announcementGiven = false;
+                ChatHelper.AnnounceEventConclusion();
+                StopAllActiveEvents();
+            }
         }
 
         private void StopAllActiveEvents()

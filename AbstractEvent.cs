@@ -13,6 +13,14 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace RandomEvents
 {
+    [Flags]
+    public enum EventTags
+    {
+        None = 0,
+        // about the monsters alone, e.g. which spawn or what they do
+        Monsters = 1,
+    }
+
     public abstract class AbstractEvent
     {
         public ConfigEntry<bool> Enabled;
@@ -21,6 +29,13 @@ namespace RandomEvents
         public int Id;
         // see HereticTransformation
         public virtual bool SuppressesHereticTransformation => false;
+        // what the event is about, which other events can rule out
+        public virtual EventTags Tags => EventTags.None;
+        // whether the event can happen together with the other one; the events check each other
+        public virtual bool IsCompatibleWith(AbstractEvent other)
+        {
+            return true;
+        }
         protected virtual float DefaultWeight => 1f;
         public abstract string GetEventConfigName();
         public abstract string GetAnnouncement();
