@@ -10,6 +10,7 @@ namespace RandomEvents
 {
     public class EventMitosis : AbstractEvent
     {
+        public override EventTags Tags => EventTags.Monsters;
         // a monster and the weaker relative it splits into
         private static readonly (string strong, string weak)[] Pairs =
         {

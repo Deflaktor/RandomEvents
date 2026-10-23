@@ -9,6 +9,7 @@ namespace RandomEvents
 {
     public class EventChestMimics : AbstractEvent
     {
+        public override EventTags Tags => EventTags.Monsters;
         private ConfigEntry<float> MimicChance;
 
         public override bool LoadCondition()

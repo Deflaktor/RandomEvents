@@ -19,6 +19,7 @@ namespace RandomEvents
 {
     public class EventSmallArena : AbstractEvent
     {
+        public override EventTags Tags => EventTags.Monsters;
 
         public override bool LoadCondition()
         {

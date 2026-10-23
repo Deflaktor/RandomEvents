@@ -8,6 +8,7 @@ namespace RandomEvents
 {
     public class EventEgocentrism : AbstractEvent
     {
+        public override EventTags Tags => EventTags.Monsters;
         private ConfigEntry<float> DamageTakenMultiplier;
 
         public override bool LoadCondition()

@@ -10,6 +10,7 @@ namespace RandomEvents
 {
     public class EventRitualHelmets : AbstractEvent
     {
+        public override EventTags Tags => EventTags.Monsters;
         private ConfigEntry<float> DamageTakenMultiplier;
         private ConfigEntry<bool> ForceSprint;
         private const float ChargeInterval = 0.25f;

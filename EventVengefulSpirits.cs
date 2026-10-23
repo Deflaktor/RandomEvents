@@ -8,6 +8,7 @@ namespace RandomEvents
 {
     public class EventVengefulSpirits : AbstractEvent
     {
+        public override EventTags Tags => EventTags.Monsters;
         // the monsters given a Vengeful Spirit, whose spirit or Dormant Spirit is taken back when the event ends
         private readonly List<CharacterMaster> spirited = new List<CharacterMaster>();
         private ConfigEntry<float> SpawnRate;

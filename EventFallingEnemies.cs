@@ -14,6 +14,7 @@ namespace RandomEvents
 {
     public class EventFallingEnemies : AbstractEvent
     {
+        public override EventTags Tags => EventTags.Monsters;
         public override bool LoadCondition()
         {
             return true;

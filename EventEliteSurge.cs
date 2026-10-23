@@ -9,6 +9,7 @@ namespace RandomEvents
 {
     public class EventEliteSurge : AbstractEvent
     {
+        public override EventTags Tags => EventTags.Monsters;
         private ConfigEntry<float> SpawnRate;
         private ConfigEntry<float> EliteChance;
         private ConfigEntry<float>[] GainedEliteWeights;

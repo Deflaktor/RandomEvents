@@ -13,6 +13,7 @@ namespace RandomEvents
 {
     public class EventBlightedCorpses : AbstractEvent
     {
+        public override EventTags Tags => EventTags.Monsters;
         private const float TickInterval = 1f;
         private const float BlightDuration = 5f;
         private ConfigEntry<float> Radius;

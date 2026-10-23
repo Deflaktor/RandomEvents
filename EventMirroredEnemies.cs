@@ -14,6 +14,7 @@ namespace RandomEvents
 {
     public class EventMirroredEnemies : AbstractEvent
     {
+        public override EventTags Tags => EventTags.Monsters;
         private ConfigEntry<float> MirrorChance;
         private ConfigEntry<float> HealthLossPerHit;
         private ConfigEntry<float> HealMultiplier;

@@ -8,6 +8,7 @@ namespace RandomEvents
 {
     public class EventUmbraAmbush : AbstractEvent
     {
+        public override EventTags Tags => EventTags.Monsters;
         // Items that suit each survivor. A hunter gets a kit with half as many items of each tier as the player it
         // hunts has (setting Item Multiplier), picked from its survivor's list, or from the default list if that has
         // none of the tier, or else from all safe items of the tier. Only safe items go into the kit, see the setting

@@ -14,6 +14,7 @@ namespace RandomEvents
 {
     public class EventZombies : AbstractEvent
     {
+        public override EventTags Tags => EventTags.Monsters;
         public ConfigEntry<float> ZombieProbability;
         private bool oneZombieCreated = false;
         public override bool LoadCondition()

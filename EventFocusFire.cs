@@ -8,6 +8,7 @@ namespace RandomEvents
 {
     public class EventFocusFire : AbstractEvent
     {
+        public override EventTags Tags => EventTags.Monsters;
         private ConfigEntry<float> HealthMultiplier;
         private ConfigEntry<float> DamageTakenMultiplierPerStack;
         private ConfigEntry<float> DamagePerStack;

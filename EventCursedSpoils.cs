@@ -10,6 +10,7 @@ namespace RandomEvents
 {
     public class EventCursedSpoils : AbstractEvent
     {
+        public override EventTags Tags => EventTags.Monsters;
         // events that give players items to play with, which Hex of Loss would disable
         private static readonly HashSet<string> ItemSetEvents = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase)
         {

@@ -10,6 +10,7 @@ namespace RandomEvents
 {
     public class EventHunted : AbstractEvent
     {
+        public override EventTags Tags => EventTags.Monsters;
         private const float RetargetInterval = 0.5f;
         private CharacterBody hunted;
         private float retargetTimer;

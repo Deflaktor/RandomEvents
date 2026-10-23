@@ -13,6 +13,7 @@ namespace RandomEvents
 {
     public class EventDroneUprising : AbstractEvent
     {
+        public override EventTags Tags => EventTags.Monsters;
         private ConfigEntry<float> DamageMultiplier;
         private ConfigEntry<float> MoveSpeedMultiplier;
         private ConfigEntry<float> HealthMultiplier;

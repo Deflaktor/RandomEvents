@@ -10,6 +10,7 @@ namespace RandomEvents
 {
     public class EventSwarmQueen : AbstractEvent
     {
+        public override EventTags Tags => EventTags.Monsters;
         private const float SpreadRadius = 3f;
         private ConfigEntry<int> SwarmSize;
         private AsyncOperationHandle<CharacterSpawnCard> Beetle;

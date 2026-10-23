@@ -17,6 +17,7 @@ namespace RandomEvents
 {
     public class EventExplodingCorpses : AbstractEvent
     {
+        public override EventTags Tags => EventTags.Monsters;
         private AsyncOperationHandle<GameObject> FusionCellExplosion;
         private AsyncOperationHandle<GameObject> VFXScorchlingBreachExplosion;
         // bodies the event gave the buff to; others can have it from Predatory Instincts

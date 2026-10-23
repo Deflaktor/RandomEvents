@@ -9,6 +9,7 @@ namespace RandomEvents
 {
     public class EventStrongEnemies : AbstractEvent
     {
+        public override EventTags Tags => EventTags.Monsters;
         private const float WaveCreditsMultiplier = 2f;
         // the Simulacrum wave the event changed; its extra credits also buy more elites
         private InfiniteTowerWaveController changedWave;

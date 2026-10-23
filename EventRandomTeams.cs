@@ -13,6 +13,7 @@ namespace RandomEvents
 {
     public class EventRandomTeams : AbstractEvent
     {
+        public override EventTags Tags => EventTags.Monsters;
         Dictionary<GameObject, TeamIndex> originalTeam = new Dictionary<GameObject, TeamIndex>();
 
         public override bool LoadCondition()

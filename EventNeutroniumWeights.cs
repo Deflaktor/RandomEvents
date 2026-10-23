@@ -9,6 +9,7 @@ namespace RandomEvents
 {
     public class EventNeutroniumWeights : AbstractEvent
     {
+        public override EventTags Tags => EventTags.Monsters;
         // the monsters given a weight, so they don't get another one after it was sent away
         private readonly HashSet<CharacterMaster> weighted = new HashSet<CharacterMaster>();
         // the weights the event gave or moved as temporary stacks, taken back when the event ends

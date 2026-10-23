@@ -9,6 +9,7 @@ namespace RandomEvents
 {
     public class EventGiantBalloons : AbstractEvent
     {
+        public override EventTags Tags => EventTags.Monsters;
         private const float UpdateInterval = 0.25f;
         private ConfigEntry<float> SpawnRate;
         private ConfigEntry<float> HealthMultiplier;

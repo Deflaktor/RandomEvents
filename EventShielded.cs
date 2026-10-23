@@ -11,6 +11,7 @@ namespace RandomEvents
 {
     public class EventShielded : AbstractEvent
     {
+        public override EventTags Tags => EventTags.Monsters;
         private ConfigEntry<float> ShieldedShare;
         private ConfigEntry<float> HealthFraction;
         private ConfigEntry<float> ShieldedDamageTaken;

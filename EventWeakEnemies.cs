@@ -9,6 +9,7 @@ namespace RandomEvents
 {
     public class EventWeakEnemies : AbstractEvent
     {
+        public override EventTags Tags => EventTags.Monsters;
         // the director multiplies an elite tier's cost by the bias when it picks one, so a high bias makes elites too
         // expensive
         private const float NoElitesBias = 1000f;

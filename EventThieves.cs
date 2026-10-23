@@ -9,6 +9,7 @@ namespace RandomEvents
 {
     public class EventThieves : AbstractEvent
     {
+        public override EventTags Tags => EventTags.Monsters;
         private ConfigEntry<float> StealCooldown;
         // what each monster stole from whom
         private readonly Dictionary<CharacterMaster, List<(CharacterMaster victim, ItemIndex itemIndex)>> loot = new Dictionary<CharacterMaster, List<(CharacterMaster victim, ItemIndex itemIndex)>>();

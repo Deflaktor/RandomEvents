@@ -7,6 +7,7 @@ namespace RandomEvents
 {
     public class EventTimeWarp : AbstractEvent
     {
+        public override EventTags Tags => EventTags.Monsters;
         // Slow reductions add up: Chronobauble's Slow60 alone leaves 1 / 1.6 = 62.5% speed, all three 1 / 2.9 = 34.5%.
         // Slow60 also shows Chronobauble's clock effect.
         private static readonly BuffDef[] slows = { RoR2Content.Buffs.Slow60, RoR2Content.Buffs.Slow80, RoR2Content.Buffs.Slow50 };

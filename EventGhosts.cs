@@ -13,6 +13,7 @@ namespace RandomEvents
 {
     public class EventGhosts : AbstractEvent
     {
+        public override EventTags Tags => EventTags.Monsters;
         private ConfigEntry<float> GhostProbability;
 
         public override bool LoadCondition()

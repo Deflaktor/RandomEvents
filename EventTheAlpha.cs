@@ -11,6 +11,7 @@ namespace RandomEvents
 {
     public class EventTheAlpha : AbstractEvent
     {
+        public override EventTags Tags => EventTags.Monsters;
         private const float UpdateInterval = 0.5f;
         private AsyncOperationHandle<GameObject> BossCombatSquad;
         private readonly BuffTracker buffs = new BuffTracker();

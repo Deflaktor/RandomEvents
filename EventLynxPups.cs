@@ -13,6 +13,7 @@ namespace RandomEvents
 {
     public class EventLynxPups : AbstractEvent
     {
+        public override EventTags Tags => EventTags.Monsters;
         private ConfigEntry<float> PupShare;
         private AsyncOperationHandle<GameObject> MiniLynxMaster;
         private CharacterSpawnCard spawnCard;
