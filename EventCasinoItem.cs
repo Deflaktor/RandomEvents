@@ -57,7 +57,7 @@ namespace RandomEvents
 
         private void CharacterBody_onBodyStartGlobal(CharacterBody body)
         {
-            if (ModConfig.Enabled.Value && NetworkServer.active && IsActive() && body.teamComponent.teamIndex == TeamIndex.Player && body.isPlayerControlled)
+            if (ModConfig.Enabled.Value && NetworkServer.active && IsActive() && body.isPlayerControlled)
             {
                 body.gameObject.EnsureComponent<CasinoItemComponent>();
             }
@@ -70,7 +70,8 @@ namespace RandomEvents
 
         public override void Start(List<AbstractEvent> activeOtherEvents)
         {
-            ReadOnlyCollection<TeamComponent> teamMembers = TeamComponent.GetTeamMembers(TeamIndex.Player);
+            // the players, on whichever team, e.g. their own in Deathmatch
+            var teamMembers = CharacterBody.readOnlyInstancesList.Where(body => body != null && body.isPlayerControlled).Select(body => body.teamComponent).ToList();
             foreach (var teamMember in teamMembers)
             {
                 if (teamMember.body != null && teamMember.body.isPlayerControlled)

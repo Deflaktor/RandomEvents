@@ -80,7 +80,7 @@ namespace RandomEvents
             {
                 return;
             }
-            var count = body.isPlayerControlled ? PlayerBehemoths.Value : body.teamComponent.teamIndex != TeamIndex.Player ? MonsterBehemoths.Value : 0;
+            var count = body.isPlayerControlled ? PlayerBehemoths.Value : !Helper.IsPlayersSide(body) ? MonsterBehemoths.Value : 0;
             if (count <= 0)
             {
                 return;
@@ -106,7 +106,7 @@ namespace RandomEvents
         private void HealthComponent_TakeDamage(On.RoR2.HealthComponent.orig_TakeDamage orig, HealthComponent self, DamageInfo damageInfo)
         {
             if (NetworkServer.active && IsActive() && damageInfo != null && damageInfo.attacker != null && damageInfo.attacker.TryGetComponent(out CharacterBody attackerBody)
-                && !attackerBody.isPlayerControlled && attackerBody.teamComponent.teamIndex != TeamIndex.Player && attackerBody.teamComponent.teamIndex != TeamIndex.Neutral)
+                && !Helper.IsPlayersSide(attackerBody) && attackerBody.teamComponent.teamIndex != TeamIndex.Neutral)
             {
                 damageInfo.damage *= Mathf.Max(0f, MonsterDamageMultiplier.Value);
             }
@@ -118,7 +118,7 @@ namespace RandomEvents
         private void DelayBlast_Detonate(On.RoR2.DelayBlast.orig_Detonate orig, DelayBlast self)
         {
             if (NetworkServer.active && IsActive() && self.attacker != null && self.attacker.TryGetComponent(out CharacterBody attackerBody)
-                && attackerBody.teamComponent.teamIndex != TeamIndex.Player)
+                && !Helper.IsPlayersSide(attackerBody))
             {
                 var flame = HealthComponent.AssetReferences.explodeOnDeathVoidExplosionPrefab;
                 var wisp = GlobalEventManager.CommonAssets.explodeOnDeathPrefab;

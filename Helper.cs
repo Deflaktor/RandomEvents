@@ -266,6 +266,26 @@ namespace RandomEvents
         }
 
         // the bodies of connected players who are alive
+        // A player, or on the players' side: an ally of their team, or what a player owns, e.g. a drone, also one it
+        // summoned and also on another team, as in Deathmatch, where each player has their own
+        public static bool IsPlayersSide(CharacterBody body)
+        {
+            if (body.isPlayerControlled || body.teamComponent.teamIndex == TeamIndex.Player)
+            {
+                return true;
+            }
+            var master = body.master;
+            for (int depth = 0; master != null && depth < 10; depth++)
+            {
+                if (master.playerCharacterMasterController != null)
+                {
+                    return true;
+                }
+                master = master.minionOwnership != null ? master.minionOwnership.ownerMaster : null;
+            }
+            return false;
+        }
+
         // The damage of the environment, like the void fog's, which the events' damage reductions leave alone
         public static DamageTypeCombo HazardDamageType => new DamageTypeCombo(DamageType.BypassArmor | DamageType.BypassBlock, DamageTypeExtended.DamageField, DamageSource.Hazard);
 
@@ -296,9 +316,12 @@ namespace RandomEvents
             public List<TeamComponent> playersNotInRadius;
         }
 
+        // the players of the team, or of any team with TeamIndex.None, e.g. in Deathmatch
         public static PlayersInRadiusResult GetPlayersInRadius(HoldoutZoneController.HoldoutZoneShape holdoutZoneShape, Vector3 origin, float radius, TeamIndex teamIndex)
         {
-            ReadOnlyCollection<TeamComponent> teamMembers = TeamComponent.GetTeamMembers(teamIndex);
+            IReadOnlyList<TeamComponent> teamMembers = teamIndex == TeamIndex.None
+                ? CharacterBody.readOnlyInstancesList.Where(body => body != null && body.teamComponent != null).Select(body => body.teamComponent).ToList()
+                : (IReadOnlyList<TeamComponent>)TeamComponent.GetTeamMembers(teamIndex);
             List<TeamComponent> teamMembersInRadius = new List<TeamComponent>();
             List<TeamComponent> teamMembersNotInRadius = new List<TeamComponent>();
             for (int i = 0; i < teamMembers.Count; i++)

@@ -180,7 +180,7 @@ namespace RandomEvents
                 orig(self, body);
                 return;
             }
-            if (body.teamComponent.teamIndex != TeamIndex.Player)
+            if (!Helper.IsPlayersSide(body))
             {
                 GiveToMonster(self, body);
                 return;

@@ -182,7 +182,7 @@ namespace RandomEvents
                 {
                     EffectManager.SpawnEffect(pulseEffect, new EffectData { origin = transform.position }, transmit: true);
                 }
-                var result = Helper.GetPlayersInRadius(HoldoutZoneShape.Sphere, transform.position, radius, TeamIndex.Player);
+                var result = Helper.GetPlayersInRadius(HoldoutZoneShape.Sphere, transform.position, radius, TeamIndex.None);
                 foreach (var player in result.playersInRadius)
                 {
                     var inventory = TemporaryInventory.Find(player.gameObject, inventories);

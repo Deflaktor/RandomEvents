@@ -99,7 +99,7 @@ namespace RandomEvents
             foreach (var body in CharacterBody.readOnlyInstancesList)
             {
                 var motor = body != null ? body.characterMotor : null;
-                if (motor == null || body.isPlayerControlled || body.teamComponent.teamIndex == TeamIndex.Player || !motor.hasEffectiveAuthority
+                if (motor == null || Helper.IsPlayersSide(body) || !motor.hasEffectiveAuthority
                     || !body.healthComponent.alive)
                 {
                     continue;
@@ -185,8 +185,8 @@ namespace RandomEvents
         // a Feather for a jump in mid-air, as the monsters only jump the normal way
         private void GiveFeathers(CharacterBody body)
         {
-            if (body == null || body.isPlayerControlled || body.inventory == null || body.characterMotor == null || MonsterFeathers.Value <= 0
-                || body.teamComponent.teamIndex == TeamIndex.Player || body.teamComponent.teamIndex == TeamIndex.Neutral)
+            if (body == null || body.inventory == null || body.characterMotor == null || MonsterFeathers.Value <= 0
+                || Helper.IsPlayersSide(body) || body.teamComponent.teamIndex == TeamIndex.Neutral)
             {
                 return;
             }
@@ -204,7 +204,7 @@ namespace RandomEvents
             orig(self);
             var body = self.body;
             if (!NetworkServer.active || !IsActive() || Run.instance == null || body == null || self.bodyInputBank == null || body.characterMotor == null
-                || body.teamComponent.teamIndex == TeamIndex.Player || body.teamComponent.teamIndex == TeamIndex.Neutral)
+                || Helper.IsPlayersSide(body) || body.teamComponent.teamIndex == TeamIndex.Neutral)
             {
                 return;
             }

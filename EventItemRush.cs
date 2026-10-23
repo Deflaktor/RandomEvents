@@ -137,8 +137,8 @@ namespace RandomEvents
             {
                 return;
             }
-            var monsters = CharacterBody.readOnlyInstancesList.Where(body => body != null && !body.isPlayerControlled && body.healthComponent.alive
-                && body.teamComponent.teamIndex != TeamIndex.Player && body.teamComponent.teamIndex != TeamIndex.Neutral).ToList();
+            var monsters = CharacterBody.readOnlyInstancesList.Where(body => body != null && body.healthComponent.alive
+                && !Helper.IsPlayersSide(body) && body.teamComponent.teamIndex != TeamIndex.Neutral).ToList();
             if (monsters.Count == 0)
             {
                 return;
