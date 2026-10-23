@@ -52,6 +52,8 @@ namespace RandomEvents
         // the players' drones that were destroyed: whose they were, what they were and where
         private readonly List<LostDrone> lostDrones = new List<LostDrone>();
         private readonly HashSet<CharacterBody> lostDroneBodies = new HashSet<CharacterBody>();
+        // who placed each Warbanner, which nothing else tells; also those from before the event
+        private readonly Dictionary<TeamFilter, CharacterMaster> bannerOwners = new Dictionary<TeamFilter, CharacterMaster>();
 
         private class LostDrone
         {
@@ -159,6 +161,107 @@ namespace RandomEvents
             On.RoR2.Inventory.ItemTransformation.TryTransform += ItemTransformation_TryTransform;
             On.RoR2.Artifacts.SacrificeArtifactManager.OnServerCharacterDeath += SacrificeArtifactManager_OnServerCharacterDeath;
             On.EntityStates.Drone.DeathState.OnImpactServer += DeathState_OnImpactServer;
+            On.RoR2.SetStateOnHurt.OnTakeDamageServer += SetStateOnHurt_OnTakeDamageServer;
+            On.RoR2.Items.WardOnLevelManager.OnCharacterLevelUp += WardOnLevelManager_OnCharacterLevelUp;
+        }
+
+        // Survivors can't be stunned or shocked at all, so a stun or shock hitting a player, e.g. the Captain's shocking
+        // beacon's, slows them like the others
+        private void SetStateOnHurt_OnTakeDamageServer(On.RoR2.SetStateOnHurt.orig_OnTakeDamageServer orig, SetStateOnHurt self, DamageReport damageReport)
+        {
+            orig(self, damageReport);
+            var damageInfo = damageReport.damageInfo;
+            if (!Pausing || self.canBeStunned || damageInfo.procCoefficient < Mathf.Epsilon || !self.TryGetComponent(out CharacterBody body) || !body.isPlayerControlled)
+            {
+                return;
+            }
+            if ((ulong)(damageInfo.damageType & DamageType.Shock5s) != 0L)
+            {
+                body.AddTimedBuff(RoR2Content.Buffs.Slow80, 5f * damageInfo.procCoefficient);
+            }
+            else if ((ulong)(damageInfo.damageType & DamageType.Stun1s) != 0L)
+            {
+                body.AddTimedBuff(RoR2Content.Buffs.Slow80, damageInfo.procCoefficient);
+            }
+        }
+
+        // The game places a Warbanner where the character that leveled up stands
+        private void WardOnLevelManager_OnCharacterLevelUp(On.RoR2.Items.WardOnLevelManager.orig_OnCharacterLevelUp orig, CharacterBody characterBody)
+        {
+            orig(characterBody);
+            if (!NetworkServer.active || characterBody == null || characterBody.master == null)
+            {
+                return;
+            }
+            foreach (var ward in Object.FindObjectsOfType<BuffWard>())
+            {
+                if (ward.buffDef == RoR2Content.Buffs.Warbanner && ward.transform.position == characterBody.transform.position
+                    && ward.TryGetComponent(out TeamFilter teamFilter) && !bannerOwners.ContainsKey(teamFilter))
+                {
+                    bannerOwners[teamFilter] = characterBody.master;
+                }
+            }
+        }
+
+        // What players leave in the world fights for their team too, e.g. the Captain's beacons, the Engineer's mines and
+        // Warbanners, so it follows its owner's team when the event starts and ends
+        private void UpdateOwnedTeams()
+        {
+            foreach (var destroyed in bannerOwners.Keys.Where(teamFilter => !teamFilter).ToList())
+            {
+                bannerOwners.Remove(destroyed);
+            }
+            foreach (var teamFilter in Object.FindObjectsOfType<TeamFilter>())
+            {
+                var owner = GetOwnerMaster(teamFilter);
+                if (owner == null || GetPlayer(owner) == null)
+                {
+                    continue;
+                }
+                SetTeam(teamFilter, owner.teamIndex);
+                // e.g. Forgive Me Please's doll, which has a team of its own as well
+                if (teamFilter.TryGetComponent(out TeamComponent teamComponent) && (!teamFilter.TryGetComponent(out CharacterBody body) || body.master == null)
+                    && teamComponent.teamIndex != owner.teamIndex)
+                {
+                    teamComponent.teamIndex = owner.teamIndex;
+                }
+                // the healing beacon's zone is an object of its own
+                if (teamFilter.TryGetComponent(out EntityStateMachine stateMachine) && stateMachine.state is EntityStates.CaptainSupplyDrop.HealZoneMainState healZone
+                    && healZone.healZoneInstance && healZone.healZoneInstance.TryGetComponent(out TeamFilter zoneTeamFilter))
+                {
+                    SetTeam(zoneTeamFilter, owner.teamIndex);
+                }
+            }
+        }
+
+        private static void SetTeam(TeamFilter teamFilter, TeamIndex team)
+        {
+            if (teamFilter.teamIndex != team)
+            {
+                teamFilter.teamIndex = team;
+            }
+        }
+
+        private CharacterMaster GetOwnerMaster(TeamFilter teamFilter)
+        {
+            var gameObject = teamFilter.gameObject;
+            if (gameObject.TryGetComponent(out Deployable deployable) && deployable.ownerMaster != null)
+            {
+                return deployable.ownerMaster;
+            }
+            if (bannerOwners.TryGetValue(teamFilter, out var bannerOwner))
+            {
+                return bannerOwner;
+            }
+            if (gameObject.TryGetComponent(out NetworkedBodyAttachment attachment) && attachment.attachedBody != null)
+            {
+                return attachment.attachedBody.master;
+            }
+            var ownerObject = gameObject.TryGetComponent(out GenericOwnership ownership) ? ownership.ownerObject
+                : gameObject.TryGetComponent(out RoR2.Projectile.ProjectileController projectile) ? projectile.owner : null;
+            // otherwise e.g. a ward on a character
+            var body = ownerObject != null ? ownerObject.GetComponent<CharacterBody>() : gameObject.GetComponentInParent<CharacterBody>();
+            return body != null ? body.master : null;
         }
 
         // the players and their allies, now enemies, would drop items for each other
@@ -932,6 +1035,7 @@ namespace RandomEvents
                 Remove(body);
             }
             AssignTeams();
+            UpdateOwnedTeams();
             OpponentMarks.Show(IsOpponent);
             // every player joins in, also those who died before
             foreach (var pc in PlayerCharacterMasterController.instances)
@@ -948,6 +1052,7 @@ namespace RandomEvents
             OpponentMarks.Hide();
             RestoreBrokenItems();
             RestoreTeams();
+            UpdateOwnedTeams();
             RestoreLostDrones();
             HealAll();
             modeChosen = false;
