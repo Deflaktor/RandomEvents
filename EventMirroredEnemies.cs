@@ -203,8 +203,10 @@ namespace RandomEvents
                 {
                     return;
                 }
-                // the shine of a Kinetic Dampener's shield marks them, which shows while they have shield, and their health
-                // decays like a ghost's
+                // the Lunar Chimera's shell, the shine of invulnerable Solus Wing parts and that of a Kinetic Dampener's
+                // shield, which shows while they have shield, mark them, and their health decays like a ghost's
+                body.AddBuff(RoR2Content.Buffs.LunarShell);
+                body.AddBuff(DLC3Content.Buffs.SolusWingInvulnerability);
                 EventLoot.GetInventory(this, body).GiveTemporaryItem(DLC3Content.Items.ShieldBooster.itemIndex);
                 body.RecalculateStats();
                 body.healthComponent.RechargeShieldFull();
@@ -218,7 +220,8 @@ namespace RandomEvents
         private void HealthComponent_TakeDamage(On.RoR2.HealthComponent.orig_TakeDamage orig, HealthComponent self, DamageInfo damageInfo)
         {
             // Only players can hurt them, so that their shield never breaks into the Kinetic Dampener's stunning pulse: the
-            // void fog speeds up their decay instead, and anything else, e.g. a fall or another monster, does nothing
+            // void fog speeds up their decay instead, and anything else, e.g. a fall or another monster, does nothing. It
+            // doesn't reach the game at all, whose Lunar Chimera's shell would turn it into 1 damage to the shield.
             if (NetworkServer.active && IsActive() && damageInfo != null && self.body != null && mirrored.Contains(self.body))
             {
                 if ((damageInfo.damageType.damageTypeExtended & DamageTypeExtended.DamageField) != 0)
@@ -228,7 +231,7 @@ namespace RandomEvents
                 var hitter = damageInfo.attacker != null ? damageInfo.attacker.GetComponent<CharacterBody>() : null;
                 if (hitter == null || hitter.teamComponent.teamIndex != TeamIndex.Player)
                 {
-                    damageInfo.damage = 0f;
+                    return;
                 }
             }
             if (!NetworkServer.active || !IsActive() || damageInfo == null || damageInfo.rejected || damageInfo.damage <= 0f || damageInfo.attacker == null)
@@ -367,9 +370,17 @@ namespace RandomEvents
             lastShatter.Clear();
             lastFogDecay.Clear();
             EventLoot.Clear(this);
-            // the Kinetic Dampener's shield goes with it, set directly so that it doesn't break into its pulse
+            // their marks go, and the Kinetic Dampener's shield with them, set directly so that it doesn't break into its pulse
             foreach (var body in mirrored)
             {
+                if (body != null && body.HasBuff(RoR2Content.Buffs.LunarShell))
+                {
+                    body.RemoveBuff(RoR2Content.Buffs.LunarShell);
+                }
+                if (body != null && body.HasBuff(DLC3Content.Buffs.SolusWingInvulnerability))
+                {
+                    body.RemoveBuff(DLC3Content.Buffs.SolusWingInvulnerability);
+                }
                 if (body != null && body.healthComponent != null)
                 {
                     body.RecalculateStats();
