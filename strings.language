@@ -46,6 +46,14 @@
         "EVENT_HOT_POTATO_COUNTDOWN": "{0}...",
         "EVENT_HOT_POTATO_EXPLODED": "The bomb exploded on {0}!",
         "EVENT_TAG_TEAM_TAGGED": "{0} is tagged in! Only they deal damage for the next {1} seconds.",
+        "EVENT_DEATHMATCH_KILL": "{0} killed {1}! Kills: {2}",
+        "EVENT_DEATHMATCH_WINNER": "{0} wins the deathmatch with {1} kills and gets {2}!",
+        "EVENT_DEATHMATCH_DRAW": "A draw between {0}, with {1} kills each! Rewards: {2}",
+        "EVENT_DEATHMATCH_NO_WINNER": "Nobody scored a kill, so there is no winner.",
+        "EVENT_DEATHMATCH_ITEMS_RESTORED": "The items that broke during the deathmatch are restored.",
+        "EVENT_DEATHMATCH_TEAM_KILL": "{0} killed {1}! Their team's kills: {2}",
+        "EVENT_DEATHMATCH_TEAM_WINNER": "{0} win the team deathmatch with {1} kills! Rewards: {2}",
+        "EVENT_DEATHMATCH_TEAM_DRAW": "A draw between the teams, with {0} kills each! Rewards: {1}",
         "EVENT_RED_LIGHT": "<color=#ed4c40>Red light!</color> Don't move!",
         "EVENT_GREEN_LIGHT": "<color=#7ed957>Green light!</color> Move!",
         "EVENT_RED_LIGHT_CAUGHT": "{0} moved during red light!",
@@ -117,7 +125,9 @@
         "ANNOUNCE_EVENT_EXPERIMENTAL_EQUIPMENT": "Experimental: {0}",
         "ANNOUNCE_EVENT_SLIPPERY": "The ground is slippery",
         "ANNOUNCE_EVENT_SHIELDED": "Shields up",
-        "ANNOUNCE_EVENT_BLIGHTED_CORPSES": "The dead linger"
+        "ANNOUNCE_EVENT_BLIGHTED_CORPSES": "The dead linger",
+        "ANNOUNCE_EVENT_DEATHMATCH": "Deathmatch",
+        "ANNOUNCE_EVENT_TEAM_DEATHMATCH": "Team deathmatch"
         
     }
 }

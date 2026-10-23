@@ -66,6 +66,7 @@ namespace RandomEvents
                 InitAndHookEvent(new EventCasinoItem());
                 InitAndHookEvent(new EventChestMimics());
                 InitAndHookEvent(new EventCursedSpoils());
+                InitAndHookEvent(new EventDeathmatch());
                 InitAndHookEvent(new EventDroneEscort());
                 InitAndHookEvent(new EventDroneUprising());
                 InitAndHookEvent(new EventEgocentrism());
