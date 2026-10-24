@@ -92,7 +92,8 @@ namespace RandomEvents
             // of the swallowed health, what each monster in the blast loses, all of it at the center and half at the edge
             private const float DamageShare = 0.3f;
             public CharacterBody owner;
-            // the user's team, spared even once its body is gone, e.g. after dying
+            // the user's team, spared even once its body is gone, e.g. after dying; it follows theirs while they live, e.g.
+            // into Deathmatch's teams
             public TeamIndex team;
             public Vector3 center;
             private readonly List<CharacterBody> swallowed = new List<CharacterBody>();
@@ -110,6 +111,10 @@ namespace RandomEvents
                 if (!NetworkServer.active)
                 {
                     return;
+                }
+                if (owner != null)
+                {
+                    team = owner.teamComponent.teamIndex;
                 }
                 // the spot, crackling again and again
                 spotTimer -= Time.fixedDeltaTime;

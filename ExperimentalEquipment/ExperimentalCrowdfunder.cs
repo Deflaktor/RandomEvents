@@ -83,7 +83,7 @@ namespace RandomEvents
             var attackerBody = damageInfo.attacker != null ? damageInfo.attacker.GetComponent<CharacterBody>() : null;
             if (damageInfo.rejected || victim == null || damageInfo.inflictor == null || !IsExperimental(attackerBody)
                 || !damageInfo.inflictor.TryGetComponent(out EntityStateMachine stateMachine) || !(stateMachine.state is EntityStates.GoldGat.BaseGoldGatState)
-                || !victim.TryGetComponent(out CharacterBody body) || body.teamComponent.teamIndex == TeamIndex.Player)
+                || !victim.TryGetComponent(out CharacterBody body) || body.teamComponent.teamIndex == attackerBody.teamComponent.teamIndex)
             {
                 return;
             }
@@ -187,7 +187,8 @@ namespace RandomEvents
         // out of the map, it dies instead of being brought back; its last attacker gets the kill
         private bool MapZone_CharacterEligibleForTeleport(On.RoR2.MapZone.orig_CharacterEligibleForTeleport orig, MapZone self, CharacterBody characterBody)
         {
-            if (IsActive() && characterBody != null && hitBodies.Contains(characterBody) && characterBody.teamComponent.teamIndex != TeamIndex.Player)
+            // players are brought back as usual, e.g. those launched in Deathmatch
+            if (IsActive() && characterBody != null && hitBodies.Contains(characterBody) && !characterBody.isPlayerControlled)
             {
                 return false;
             }
