@@ -52,6 +52,8 @@ namespace RandomEvents
         {
             public CharacterBody attacker;
             private CharacterBody body;
+            // the master's, which outlives the body, e.g. into a revive
+            private Inventory inventory;
             private int startPercent;
             private int added;
             private float time;
@@ -62,6 +64,7 @@ namespace RandomEvents
             private void Start()
             {
                 body = GetComponent<CharacterBody>();
+                inventory = body.inventory;
                 startPercent = 100 + body.inventory.GetItemCountEffective(DLC4Content.Items.BoostCharacterScale) - body.inventory.GetItemCountEffective(DLC4Content.Items.ReduceCharacterScale);
                 added = Mathf.RoundToInt(startPercent * (InflateFactor - 1f));
                 body.inventory.GiveItemPermanent(DLC4Content.Items.BoostCharacterScale, added);
@@ -128,6 +131,17 @@ namespace RandomEvents
                     body.healthComponent.Suicide(attacker != null ? attacker.gameObject : null);
                 }
                 Destroy(this);
+            }
+
+            // whatever ends the inflation, e.g. the explosion or the body going away, the size items go, so that a revived
+            // monster or player comes back at its own size
+            private void OnDestroy()
+            {
+                if (inventory != null && added > 0)
+                {
+                    inventory.RemoveItemPermanent(DLC4Content.Items.BoostCharacterScale, added);
+                }
+                added = 0;
             }
         }
     }
