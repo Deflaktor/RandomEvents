@@ -112,7 +112,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "The monsters are removed, and the directors and the run timer stop. Up to 3 players, each fights alone; from 4 players on, they fight in two teams. A player fights with their drones and other allies, and revives when they die. Each player sees the players they fight marked with the soul brand of Caustic Pheromones, which does nothing else; each kill scores a point for them and their team. Their items deal other players 30% of their damage, their skills and equipment all of it, which weakens the more health a player recently lost to them, so that over time they never lose 20% of their health per second, and never 50% at once; healing and barrier gain weaken the same way, and stuns, freezes and roots only slow them by 80%. Items that break and drones that are destroyed during the event are restored afterwards. The winner, or each player of the winning team, gets a random green item; in a draw, each of the winners gets a random white item. Afterwards everyone is fully healed and the monsters spawn again.";
+            return "The monsters are removed, and the directors and the run timer stop. Up to 3 players, each fights alone; from 4 players on, they fight in two teams. A player fights with their drones and other allies, and revives when they die. Each player sees the players they fight marked with the soul brand of Caustic Pheromones, which does nothing else; each kill scores a point for them and their team. Their items deal other players 30% of their damage, their skills and equipment all of it, which weakens the more health a player recently lost to them, so that over time they never lose 20% of their base health per second, and never 50% at once; healing and barrier gain weaken the same way, and stuns, freezes and roots only slow them by 80%. Items that break and drones that are destroyed during the event are restored afterwards. The winner, or each player of the winning team, gets a random green item; in a draw, each of the winners gets a random white item. Afterwards everyone is fully healed and the monsters spawn again.";
         }
         public override string GetPopupDescription()
         {
@@ -124,8 +124,8 @@ namespace RandomEvents
         }
         protected override void AddConfig(ConfigFile config)
         {
-            HealthLossLimit = config.Bind(GetEventConfigName(), "Health Loss Limit Per Second", 0.2f, "The share of their health per second that the damage players take from other players approaches, the more slowly the closer it gets, but never reaches.");
-            HealthLossBurstLimit = config.Bind(GetEventConfigName(), "Health Loss Burst Limit", 0.5f, "The share of their health that what players recently lost to other players approaches, the more slowly the closer it gets, but never reaches. It drains by the limit per second, so a big hit on a player who wasn't hurt for a while takes up to this much, while steady damage stays below the limit per second.");
+            HealthLossLimit = config.Bind(GetEventConfigName(), "Health Loss Limit Per Second", 0.2f, "The share of their base health, from their survivor and level without items, per second that the damage players take from other players approaches, the more slowly the closer it gets, but never reaches.");
+            HealthLossBurstLimit = config.Bind(GetEventConfigName(), "Health Loss Burst Limit", 0.5f, "The share of their base health that what players recently lost to other players approaches, the more slowly the closer it gets, but never reaches. It drains by the limit per second, so a big hit on a player who wasn't hurt for a while takes up to this much, while steady damage stays below the limit per second.");
             HealingLimit = config.Bind(GetEventConfigName(), "Healing Limit Per Second", 0.2f, "The share of their health per second that the players' healing, regeneration included, approaches, the more slowly the closer it gets, but never reaches.");
             BarrierLimit = config.Bind(GetEventConfigName(), "Barrier Limit Per Second", 0.2f, "The share of their health per second that the barrier players gain approaches, the more slowly the closer it gets, but never reaches.");
             ItemDamageMultiplier = config.Bind(GetEventConfigName(), "Item Damage Multiplier", 0.3f, "The share of their items' damage, e.g. procs and damage over time, players deal each other, before it weakens. Skills and equipment deal all of theirs.");
@@ -575,8 +575,8 @@ namespace RandomEvents
             }
             float now = Time.fixedTime;
             float limit = Mathf.Max(0.001f, HealthLossLimit.Value);
-            float fullHealth = self.fullCombinedHealth;
-            if (fullHealth <= 0f)
+            float baseHealth = BaseHealth(victim);
+            if (baseHealth <= 0f)
             {
                 orig(self, damageInfo);
                 return;
@@ -594,7 +594,7 @@ namespace RandomEvents
             {
                 hits.Remove(self);
             }
-            healthLost[victim] = (now, lost + Mathf.Max(0f, before - self.combinedHealth) / fullHealth);
+            healthLost[victim] = (now, lost + Mathf.Max(0f, before - self.combinedHealth) / baseHealth);
         }
 
         // The game multiplies the hit's damage on its way, e.g. for a critical strike, a weak point or Death Mark, so it
@@ -605,39 +605,50 @@ namespace RandomEvents
         {
             var c = new ILCursor(il);
             // Other mods change much of the code before the armor, e.g. SneedHooks, RiskyFixes and WolfoFixes, so it is found
-            // by the armor step and the check whether the hit bypasses it
+            // by the armor step and the check whether the hit bypasses it: the last branch before the armor past all of it,
+            // however a mod words its condition
             if (!c.TryGotoNext(x => x.MatchCallOrCallvirt<CharacterBody>("get_armor")))
             {
                 LogNotFound(il, "the armor");
                 return;
             }
-            if (!c.TryGotoPrev(MoveType.Before, x => x.MatchLdloc(out _), x => x.MatchBrtrue(out _)))
+            int armor = c.Index;
+            int bypassCheck = -1;
+            for (int i = armor - 1; i >= 0 && bypassCheck < 0; i--)
+            {
+                if ((il.Instrs[i].MatchBrtrue(out var target) || il.Instrs[i].MatchBrfalse(out target)) && target.Target != null && il.Instrs.IndexOf(target.Target) > armor)
+                {
+                    bypassCheck = i;
+                }
+            }
+            if (bypassCheck < 0)
             {
                 LogNotFound(il, "the check for bypassing armor");
                 return;
             }
-            int bypassCheck = c.Index;
-            // the damage, which the game reads from the hit first; otherwise the last number stored before the check
+            // the damage: the armor step keeps at least 1 of it with Mathf.Max, reading and storing the damage around it,
+            // which other mods' copies of the damage don't
             int damage = -1;
-            var first = new ILCursor(il);
-            if (!first.TryGotoNext(x => x.MatchLdfld<DamageInfo>(nameof(DamageInfo.damage)), x => x.MatchStloc(out damage)) || first.Index > bypassCheck
-                || !IsFloat(il, damage))
+            for (int i = bypassCheck; i < il.Instrs.Count - 1 && damage < 0; i++)
             {
-                damage = -1;
-                for (int i = bypassCheck - 1; i >= 0 && damage < 0; i--)
+                if (il.Instrs[i].MatchCall(typeof(Mathf), nameof(Mathf.Max)) && il.Instrs[i + 1].MatchStloc(out int local) && IsFloat(il, local))
                 {
-                    if (il.Instrs[i].MatchStloc(out int local) && IsFloat(il, local))
+                    for (int j = Mathf.Max(bypassCheck, i - 6); j < i; j++)
                     {
-                        damage = local;
+                        if (il.Instrs[j].MatchLdloc(out int loaded) && loaded == local)
+                        {
+                            damage = local;
+                        }
                     }
                 }
             }
             if (damage < 0)
             {
-                LogNotFound(il, "the damage before the armor");
+                LogNotFound(il, "the damage after the armor");
                 return;
             }
-            c.MoveAfterLabels();
+            // right before the branch, its condition already worked out
+            c.Goto(bypassCheck, MoveType.Before);
             c.Emit(OpCodes.Ldarg_0);
             c.Emit(OpCodes.Ldloc, damage);
             c.EmitDelegate<System.Func<HealthComponent, float, float>>(WeakenHit);
@@ -667,11 +678,18 @@ namespace RandomEvents
             float limit = Mathf.Max(0.001f, HealthLossLimit.Value);
             float burst = Mathf.Max(limit, HealthLossBurstLimit.Value);
             float multiplier = hit.isItemDamage ? Mathf.Max(0f, ItemDamageMultiplier.Value) : 1f;
-            float fullHealth = self.fullCombinedHealth;
+            float baseHealth = BaseHealth(self.body);
             // Each bit of damage counts for less the closer the loss is to the burst limit: a hit of the share r takes away
             // (burst - lost) * (1 - e^(-r / burst)), a little less than r for small hits, never all that is left.
-            float share = Mathf.Max(0f, damage) * multiplier / fullHealth;
-            return Mathf.Max(0f, burst - hit.lost) * (1f - Mathf.Exp(-share / burst)) * fullHealth;
+            float share = Mathf.Max(0f, damage) * multiplier / baseHealth;
+            return Mathf.Max(0f, burst - hit.lost) * (1f - Mathf.Exp(-share / burst)) * baseHealth;
+        }
+
+        // The health a player has from their survivor and level, without items, which the limits go by, so that items for
+        // health don't raise how much a player can lose to the others
+        private static float BaseHealth(CharacterBody body)
+        {
+            return body.baseMaxHealth + body.levelMaxHealth * Mathf.Max(0f, body.level - 1f);
         }
 
         // Skills and equipment name themselves as the damage's source; items don't. Damage over time comes without a
