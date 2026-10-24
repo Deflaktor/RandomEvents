@@ -254,13 +254,17 @@ namespace RandomEvents
         // The mushroom cloud, players within the first blast's reach losing a share of their health, all of it at the center
         // and a quarter of it at the edge, and the explosion's pulses for the monsters. The attacker gets the kills of monsters;
         // players with no share to lose are spared.
-        public static MiniNuke Nuke(Vector3 groundZero, float radius, float playerShare, GameObject attacker)
+        public static MiniNuke Nuke(Vector3 groundZero, float radius, float playerShare, GameObject attacker, DamageSource damageSource = DamageSource.NoneSpecified)
         {
             var nuke = new GameObject("RandomEventsMiniNuke").AddComponent<MiniNuke>();
             nuke.groundZero = groundZero;
             nuke.radius = radius;
             nuke.attacker = attacker;
             nuke.playerShare = playerShare;
+            nuke.damageSource = damageSource;
+            // the attacker's team, e.g. their own in Deathmatch; the players' without an attacker
+            var team = attacker != null ? TeamComponent.GetObjectTeam(attacker) : TeamIndex.None;
+            nuke.team = team != TeamIndex.None ? team : TeamIndex.Player;
             var reach = Mathf.Max(radius, MiniNuke.ShockwaveRadius);
             foreach (var body in CharacterBody.readOnlyInstancesList.ToList())
             {
@@ -275,8 +279,8 @@ namespace RandomEvents
                     continue;
                 }
                 var falloff = 1f - 0.75f * distance / reach;
-                // the monsters are hit by the explosion's pulses
-                if (body.teamComponent.teamIndex != TeamIndex.Player || playerShare <= 0f)
+                // the others are hit by the explosion's pulses
+                if (body.teamComponent.teamIndex != nuke.team || playerShare <= 0f)
                 {
                     continue;
                 }
@@ -364,6 +368,10 @@ namespace RandomEvents
             public float radius;
             public GameObject attacker;
             public float playerShare;
+            // the side that takes only the players' share, the attacker's
+            public TeamIndex team = TeamIndex.Player;
+            // what the attacker used, e.g. equipment, which Deathmatch weakens less than items
+            public DamageSource damageSource;
             // instead of the attacker's damage, if set
             public float? baseDamageOverride;
             private float age;
@@ -466,7 +474,7 @@ namespace RandomEvents
                     var mass = body.characterMotor != null ? body.characterMotor.mass : body.rigidbody != null ? body.rigidbody.mass : 100f;
                     // as fast for every monster, for its weight: very fast with the shockwave, a shove with the others
                     var speed = shockwave ? 60f : weak ? 10f * WeakPulseShare : 10f;
-                    var isPlayerTeam = body.teamComponent.teamIndex == TeamIndex.Player;
+                    var isPlayerTeam = body.teamComponent.teamIndex == team;
                     body.healthComponent.TakeDamage(new DamageInfo
                     {
                         damage = baseDamage * ExplosionDamage * share * falloff * (isPlayerTeam ? FriendlyFireShare : 1f),
@@ -474,7 +482,7 @@ namespace RandomEvents
                         inflictor = gameObject,
                         position = body.corePosition,
                         force = (direction + Vector3.up * 0.4f).normalized * speed * falloff * Mathf.Min(mass, 1000f),
-                        damageType = DamageType.BypassArmor | DamageType.BypassBlock,
+                        damageType = new DamageTypeCombo(DamageType.BypassArmor | DamageType.BypassBlock, DamageTypeExtended.Generic, damageSource),
                         procCoefficient = 0f,
                         damageColorIndex = DamageColorIndex.Item
                     });
@@ -491,7 +499,7 @@ namespace RandomEvents
                     {
                         continue;
                     }
-                    var isPlayerTeam = body.teamComponent.teamIndex == TeamIndex.Player;
+                    var isPlayerTeam = body.teamComponent.teamIndex == team;
                     var damage = isPlayerTeam ? body.healthComponent.fullCombinedHealth * playerShare * CoreSharePerSecond * CoreTickInterval
                         : baseDamage * CoreBurnDamage * CoreTickInterval / FireDuration;
                     if (damage <= 0f)
@@ -504,7 +512,7 @@ namespace RandomEvents
                         attacker = isPlayerTeam ? null : attacker,
                         inflictor = gameObject,
                         position = body.corePosition,
-                        damageType = DamageType.BypassArmor | DamageType.BypassBlock,
+                        damageType = new DamageTypeCombo(DamageType.BypassArmor | DamageType.BypassBlock, DamageTypeExtended.Generic, damageSource),
                         procCoefficient = 0f,
                         damageColorIndex = DamageColorIndex.Item
                     });
