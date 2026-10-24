@@ -40,7 +40,8 @@ namespace RandomEvents
         private ConfigEntry<float> HealingLimit;
         private ConfigEntry<float> BarrierLimit;
         private ConfigEntry<float> ItemDamageMultiplier;
-        private ConfigEntry<float> OneShotDamagePercentage;
+        private ConfigEntry<float> BigHitDamagePercentage;
+        private ConfigEntry<float> BigHitBurstLimit;
         private ConfigEntry<float> ItemHealthShare;
         private readonly Dictionary<CharacterMaster, int> scores = new Dictionary<CharacterMaster, int>();
         private readonly Dictionary<CharacterMaster, (CharacterMaster attacker, float time)> lastHits = new Dictionary<CharacterMaster, (CharacterMaster attacker, float time)>();
@@ -52,7 +53,7 @@ namespace RandomEvents
         private readonly Dictionary<HealthComponent, (float time, float healed)> healthHealed = new Dictionary<HealthComponent, (float time, float healed)>();
         private readonly Dictionary<HealthComponent, (float time, float gained)> barrierGained = new Dictionary<HealthComponent, (float time, float gained)>();
         // the hits between players being dealt, with what the victim recently lost
-        private readonly Dictionary<HealthComponent, (float lost, float itemLost, bool isItemDamage, bool oneShot)> hits = new Dictionary<HealthComponent, (float lost, float itemLost, bool isItemDamage, bool oneShot)>();
+        private readonly Dictionary<HealthComponent, (float lost, float itemLost, bool isItemDamage, float burst)> hits = new Dictionary<HealthComponent, (float lost, float itemLost, bool isItemDamage, float burst)>();
         // the players' items that broke, how many, and how many broken ones they became
         private readonly List<(Inventory inventory, ItemIndex item, int count, ItemIndex broken, int brokenCount)> brokenItems = new List<(Inventory inventory, ItemIndex item, int count, ItemIndex broken, int brokenCount)>();
         // the players' drones that were destroyed: whose they were, what they were and where
@@ -138,7 +139,8 @@ namespace RandomEvents
             BarrierLimit = config.Bind(GetEventConfigName(), "Barrier Limit Per Second", 0.2f, "The share of their health per second that the barrier players gain approaches, the more slowly the closer it gets, but never reaches.");
             ItemDamageMultiplier = config.Bind(GetEventConfigName(), "Item Damage Multiplier", 0.3f, "The share of their items' damage, e.g. procs and damage over time, players deal each other, before it weakens. Skills and equipment deal all of theirs.");
             ItemHealthShare = config.Bind(GetEventConfigName(), "Item Health Share", 0.5f, "How much of the health and shield players have from items counts toward the health the limits on health loss go by, on top of their health from their survivor and level. 0 = none, 1 = all.");
-            OneShotDamagePercentage = config.Bind(GetEventConfigName(), "One-Shot Damage Percentage", 3500f, "A hit of a skill or equipment with at least this much of the attacker's damage, e.g. the Railgunner's supercharged shot at 4000% or the mini nuke, doesn't weaken and can kill at once. Crits and other multipliers don't count toward it. 0 = off.");
+            BigHitDamagePercentage = config.Bind(GetEventConfigName(), "Big Hit Damage Percentage", 4000f, "A hit of a skill or equipment with at least this much of the attacker's damage, e.g. the Railgunner's supercharged shot or the mini nuke, goes by the Big Hit Burst Limit instead of the Health Loss Burst Limit. From a quarter of it on, the burst limit rises toward that evenly. Crits and other multipliers don't count toward it. 0 = off.");
+            BigHitBurstLimit = config.Bind(GetEventConfigName(), "Big Hit Burst Limit", 1f, "The Health Loss Burst Limit for big hits, e.g. 1 = a big hit on a player who wasn't hurt for a while leaves them very little, but never kills them at once.");
         }
         public override void Preload()
         {
@@ -598,7 +600,7 @@ namespace RandomEvents
             lastHits[victim.master] = (attacker, now);
             float before = self.combinedHealth;
             bool isItemDamage = IsItemDamage(damageInfo);
-            hits[self] = (lost, itemLost, isItemDamage, !isItemDamage && IsOneShot(damageInfo));
+            hits[self] = (lost, itemLost, isItemDamage, isItemDamage ? HealthLossBurstLimit.Value : BurstLimit(damageInfo));
             try
             {
                 orig(self, damageInfo);
@@ -689,12 +691,12 @@ namespace RandomEvents
 
         private float WeakenHit(HealthComponent self, float damage)
         {
-            if (!hits.TryGetValue(self, out var hit) || hit.oneShot)
+            if (!hits.TryGetValue(self, out var hit))
             {
                 return damage;
             }
             float limit = Mathf.Max(0.001f, HealthLossLimit.Value);
-            float burst = Mathf.Max(limit, HealthLossBurstLimit.Value);
+            float burst = Mathf.Max(limit, hit.burst);
             float multiplier = hit.isItemDamage ? Mathf.Max(0f, ItemDamageMultiplier.Value) : 1f;
             float limitHealth = LimitHealth(self.body);
             float share = Mathf.Max(0f, damage) * multiplier / limitHealth;
@@ -713,13 +715,20 @@ namespace RandomEvents
             return Mathf.Max(0f, limit - lost) * (1f - Mathf.Exp(-share / limit));
         }
 
-        // Measured against the attacker's damage, the hit is the attack's percentage, which items and levels don't raise; crits
-        // and the like come later
-        private bool IsOneShot(DamageInfo damageInfo)
+        // A skill's or equipment's hit takes more at once the bigger it is. Measured against the attacker's damage, the hit is
+        // the attack's percentage, which items and levels don't raise; crits and the like come later
+        private float BurstLimit(DamageInfo damageInfo)
         {
-            float threshold = OneShotDamagePercentage.Value / 100f;
+            float burst = HealthLossBurstLimit.Value;
+            float threshold = BigHitDamagePercentage.Value / 100f;
             var attacker = damageInfo.attacker != null ? damageInfo.attacker.GetComponent<CharacterBody>() : null;
-            return threshold > 0f && attacker != null && attacker.damage > 0f && damageInfo.damage >= attacker.damage * threshold;
+            if (threshold <= 0f || attacker == null || attacker.damage <= 0f)
+            {
+                return burst;
+            }
+            // evenly from a quarter of the big hit's percentage to all of it
+            float bigness = Mathf.InverseLerp(threshold * 0.25f, threshold, damageInfo.damage / attacker.damage);
+            return Mathf.Lerp(burst, Mathf.Max(burst, BigHitBurstLimit.Value), bigness);
         }
 
         // The health the limits go by: the health a player has from their survivor and level, and the share of what items add
