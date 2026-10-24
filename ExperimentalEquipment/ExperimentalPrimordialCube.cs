@@ -295,7 +295,7 @@ namespace RandomEvents
                             crit = owner != null && owner.RollCrit(),
                             position = body.corePosition,
                             force = direction * speed * falloff * Mathf.Min(mass, 1000f),
-                            damageType = DamageType.BypassArmor,
+                            damageType = new DamageTypeCombo(DamageType.BypassArmor, DamageTypeExtended.Generic, DamageSource.Equipment),
                             procCoefficient = 0f,
                             damageColorIndex = DamageColorIndex.Item
                         });

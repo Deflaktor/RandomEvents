@@ -258,6 +258,7 @@ namespace RandomEvents
                     damageColorIndex = DamageColorIndex.Item
                 };
                 orb.damageType.damageTypeExtended = DamageTypeExtended.Electrical;
+                orb.damageType.damageSource = DamageSource.Equipment;
                 orb.procChainMask.AddProc(ProcType.ChainLightning);
                 var hurtBox = orb.PickNextTarget(transform.position);
                 if (hurtBox != null)
@@ -291,6 +292,7 @@ namespace RandomEvents
                     teamIndex = owner.teamComponent.teamIndex
                 };
                 blastAttack.damageType.damageTypeExtended = DamageTypeExtended.Electrical;
+                blastAttack.damageType.damageSource = DamageSource.Equipment;
                 blastAttack.Fire();
             }
 
@@ -309,7 +311,7 @@ namespace RandomEvents
                     attacker = owner.gameObject,
                     damageColorIndex = DamageColorIndex.Item,
                     damageValue = owner.damage * StrikeDamage,
-                    damageType = DamageTypeExtended.Electrical,
+                    damageType = new DamageTypeCombo(DamageType.Generic, DamageTypeExtended.Electrical, DamageSource.Equipment),
                     isCrit = owner.RollCrit(),
                     procChainMask = procChainMask,
                     procCoefficient = 1f,

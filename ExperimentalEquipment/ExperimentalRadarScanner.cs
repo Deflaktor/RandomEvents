@@ -115,7 +115,7 @@ namespace RandomEvents
                         position = body.corePosition,
                         force = (direction * 60f + Vector3.up * 30f) * Mathf.Min(mass, 1000f),
                         // stunned for 5 seconds, like by the Captain's Tazer
-                        damageType = DamageType.Shock5s,
+                        damageType = new DamageTypeCombo(DamageType.Shock5s, DamageTypeExtended.Generic, DamageSource.Equipment),
                         procCoefficient = 1f,
                         damageColorIndex = DamageColorIndex.Item
                     });

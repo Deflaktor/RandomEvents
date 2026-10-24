@@ -112,6 +112,7 @@ namespace RandomEvents
                         falloffModel = BlastAttack.FalloffModel.SweetSpot,
                         attacker = attacker.gameObject,
                         baseDamage = attacker.damage * 10f,
+                        damageType = new DamageTypeCombo(DamageType.Generic, DamageTypeExtended.Generic, DamageSource.Equipment),
                         baseForce = 3000f,
                         attackerFiltering = AttackerFiltering.NeverHitSelf,
                         crit = attacker.RollCrit(),

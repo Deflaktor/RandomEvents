@@ -117,7 +117,7 @@ namespace RandomEvents
                 if (age >= DollFuse)
                 {
                     var groundZero = Physics.Raycast(position, Vector3.down, out var floor, 50f, LayerIndex.world.mask, QueryTriggerInteraction.Ignore) ? floor.point : position;
-                    EventHotPotato.Nuke(groundZero, DollNukeRadius, 0f, owner != null ? owner.gameObject : null);
+                    EventHotPotato.Nuke(groundZero, DollNukeRadius, 0f, owner != null ? owner.gameObject : null, DamageSource.Equipment);
                     Destroy(gameObject);
                 }
             }

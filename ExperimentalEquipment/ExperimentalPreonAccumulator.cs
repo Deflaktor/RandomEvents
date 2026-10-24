@@ -89,6 +89,7 @@ namespace RandomEvents
             {
                 projectileDamage.damage = body.damage;
                 projectileDamage.crit = crit;
+                projectileDamage.damageType.damageSource = DamageSource.Equipment;
             }
             NetworkServer.Spawn(orb);
         }
@@ -172,6 +173,7 @@ namespace RandomEvents
             if (bomb.TryGetComponent(out ProjectileDamage projectileDamage))
             {
                 projectileDamage.damage = owner.damage * ImplosionDamage;
+                projectileDamage.damageType.damageSource = DamageSource.Equipment;
                 projectileDamage.crit = owner.RollCrit();
                 projectileDamage.damageColorIndex = DamageColorIndex.Item;
             }
@@ -222,6 +224,7 @@ namespace RandomEvents
             if (bomb.TryGetComponent(out ProjectileDamage projectileDamage))
             {
                 projectileDamage.damage = owner.damage * BombDamage;
+                projectileDamage.damageType.damageSource = DamageSource.Equipment;
                 projectileDamage.crit = owner.RollCrit();
                 projectileDamage.damageColorIndex = DamageColorIndex.Item;
             }

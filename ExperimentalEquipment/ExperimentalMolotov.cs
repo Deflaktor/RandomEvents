@@ -180,6 +180,7 @@ namespace RandomEvents
                             attacker = owner.gameObject,
                             inflictor = gameObject,
                             damage = owner.damage * BlastDamage * falloff,
+                            damageType = new DamageTypeCombo(DamageType.Generic, DamageTypeExtended.Generic, DamageSource.Equipment),
                             force = direction * BlastSpeed * falloff * Mathf.Min(mass, 1000f),
                             crit = owner.RollCrit(),
                             position = body.corePosition,

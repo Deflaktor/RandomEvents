@@ -49,6 +49,7 @@ namespace RandomEvents
                 if (saw.TryGetComponent(out ProjectileDamage projectileDamage))
                 {
                     projectileDamage.damage = body.damage;
+                    projectileDamage.damageType.damageSource = DamageSource.Equipment;
                     projectileDamage.crit = body.RollCrit();
                     projectileDamage.damageColorIndex = DamageColorIndex.Item;
                 }
