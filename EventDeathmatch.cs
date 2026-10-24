@@ -35,6 +35,8 @@ namespace RandomEvents
         private const float ImmobilizeSlowDuration = 2f;
         private ConfigEntry<float> HealthLossLimit;
         private ConfigEntry<float> HealthLossBurstLimit;
+        private ConfigEntry<float> ItemHealthLossLimit;
+        private ConfigEntry<float> ItemHealthLossBurstLimit;
         private ConfigEntry<float> HealingLimit;
         private ConfigEntry<float> BarrierLimit;
         private ConfigEntry<float> ItemDamageMultiplier;
@@ -44,11 +46,13 @@ namespace RandomEvents
         private readonly Dictionary<CharacterMaster, (CharacterMaster attacker, float time)> lastHits = new Dictionary<CharacterMaster, (CharacterMaster attacker, float time)>();
         // the share of their health each player recently lost to other players, which drains at the limit's rate
         private readonly Dictionary<CharacterBody, (float time, float lost)> healthLost = new Dictionary<CharacterBody, (float time, float lost)>();
+        // and the share they recently lost to the other players' items, all of them together
+        private readonly Dictionary<CharacterBody, (float time, float lost)> itemHealthLost = new Dictionary<CharacterBody, (float time, float lost)>();
         // and the share they recently healed, and gained as barrier
         private readonly Dictionary<HealthComponent, (float time, float healed)> healthHealed = new Dictionary<HealthComponent, (float time, float healed)>();
         private readonly Dictionary<HealthComponent, (float time, float gained)> barrierGained = new Dictionary<HealthComponent, (float time, float gained)>();
         // the hits between players being dealt, with what the victim recently lost
-        private readonly Dictionary<HealthComponent, (float lost, bool isItemDamage, bool oneShot)> hits = new Dictionary<HealthComponent, (float lost, bool isItemDamage, bool oneShot)>();
+        private readonly Dictionary<HealthComponent, (float lost, float itemLost, bool isItemDamage, bool oneShot)> hits = new Dictionary<HealthComponent, (float lost, float itemLost, bool isItemDamage, bool oneShot)>();
         // the players' items that broke, how many, and how many broken ones they became
         private readonly List<(Inventory inventory, ItemIndex item, int count, ItemIndex broken, int brokenCount)> brokenItems = new List<(Inventory inventory, ItemIndex item, int count, ItemIndex broken, int brokenCount)>();
         // the players' drones that were destroyed: whose they were, what they were and where
@@ -114,7 +118,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "The monsters are removed, and the directors and the run timer stop. Up to 3 players, each fights alone; from 4 players on, they fight in two teams. A player fights with their drones and other allies, and revives when they die. Each player sees the players they fight marked with the soul brand of Caustic Pheromones, which does nothing else; each kill scores a point for them and their team. Their items deal other players 30% of their damage, their skills and equipment all of it, which weakens the more health a player recently lost to them, so that over time they never lose 20% of their health per second, and never 50% at once, with health from items counting for half, except from a hit of a skill or equipment with at least 3500% damage, e.g. the Railgunner's supercharged shot or the mini nuke, which can kill at once; healing and barrier gain weaken the same way, and stuns, freezes and roots only slow them by 80%. Items that break and drones that are destroyed during the event are restored afterwards. The winner, or each player of the winning team, gets a random green item; in a draw, each of the winners gets a random white item. Afterwards everyone is fully healed and the monsters spawn again.";
+            return "The monsters are removed, and the directors and the run timer stop. Up to 3 players, each fights alone; from 4 players on, they fight in two teams. A player fights with their drones and other allies, and revives when they die. Each player sees the players they fight marked with the soul brand of Caustic Pheromones, which does nothing else; each kill scores a point for them and their team. Their items deal other players 30% of their damage, together never 10% of a player's health per second and never 25% at once, their skills and equipment all of it, which weakens the more health a player recently lost to them, so that over time they never lose 20% of their health per second, and never 50% at once, with health from items counting for half, except from a hit of a skill or equipment with at least 3500% damage, e.g. the Railgunner's supercharged shot or the mini nuke, which can kill at once; healing and barrier gain weaken the same way, and stuns, freezes and roots only slow them by 80%. Items that break and drones that are destroyed during the event are restored afterwards. The winner, or each player of the winning team, gets a random green item; in a draw, each of the winners gets a random white item. Afterwards everyone is fully healed and the monsters spawn again.";
         }
         public override string GetPopupDescription()
         {
@@ -128,6 +132,8 @@ namespace RandomEvents
         {
             HealthLossLimit = config.Bind(GetEventConfigName(), "Health Loss Limit Per Second", 0.2f, "The share of their health per second, their health from their survivor and level plus the Item Health Share of what items add, that the damage players take from other players approaches, the more slowly the closer it gets, but never reaches.");
             HealthLossBurstLimit = config.Bind(GetEventConfigName(), "Health Loss Burst Limit", 0.5f, "The share of their health, counted the same way, that what players recently lost to other players approaches, the more slowly the closer it gets, but never reaches. It drains by the limit per second, so a big hit on a player who wasn't hurt for a while takes up to this much, while steady damage stays below the limit per second.");
+            ItemHealthLossLimit = config.Bind(GetEventConfigName(), "Item Health Loss Limit Per Second", 0.1f, "The share of their health per second, counted the same way, that the damage players take from other players' items, all of them together, approaches, the more slowly the closer it gets, but never reaches. It comes on top of the other limits.");
+            ItemHealthLossBurstLimit = config.Bind(GetEventConfigName(), "Item Health Loss Burst Limit", 0.25f, "The share of their health, counted the same way, that what players recently lost to other players' items, all of them together, approaches, the more slowly the closer it gets, but never reaches. It drains by the item limit per second.");
             HealingLimit = config.Bind(GetEventConfigName(), "Healing Limit Per Second", 0.2f, "The share of their health per second that the players' healing, regeneration included, approaches, the more slowly the closer it gets, but never reaches.");
             BarrierLimit = config.Bind(GetEventConfigName(), "Barrier Limit Per Second", 0.2f, "The share of their health per second that the barrier players gain approaches, the more slowly the closer it gets, but never reaches.");
             ItemDamageMultiplier = config.Bind(GetEventConfigName(), "Item Damage Multiplier", 0.3f, "The share of their items' damage, e.g. procs and damage over time, players deal each other, before it weakens. Skills and equipment deal all of theirs.");
@@ -587,10 +593,12 @@ namespace RandomEvents
             }
             // what they lost drains at the limit per second
             float lost = healthLost.TryGetValue(victim, out var recent) ? Mathf.Max(0f, recent.lost - limit * (now - recent.time)) : 0f;
+            float itemLimit = Mathf.Max(0.001f, ItemHealthLossLimit.Value);
+            float itemLost = itemHealthLost.TryGetValue(victim, out var recentItems) ? Mathf.Max(0f, recentItems.lost - itemLimit * (now - recentItems.time)) : 0f;
             lastHits[victim.master] = (attacker, now);
             float before = self.combinedHealth;
             bool isItemDamage = IsItemDamage(damageInfo);
-            hits[self] = (lost, isItemDamage, !isItemDamage && IsOneShot(damageInfo));
+            hits[self] = (lost, itemLost, isItemDamage, !isItemDamage && IsOneShot(damageInfo));
             try
             {
                 orig(self, damageInfo);
@@ -599,7 +607,12 @@ namespace RandomEvents
             {
                 hits.Remove(self);
             }
-            healthLost[victim] = (now, lost + Mathf.Max(0f, before - self.combinedHealth) / limitHealth);
+            float share = Mathf.Max(0f, before - self.combinedHealth) / limitHealth;
+            healthLost[victim] = (now, lost + share);
+            if (isItemDamage)
+            {
+                itemHealthLost[victim] = (now, itemLost + share);
+            }
         }
 
         // The game multiplies the hit's damage on its way, e.g. for a critical strike, a weak point or Death Mark, so it
@@ -684,10 +697,20 @@ namespace RandomEvents
             float burst = Mathf.Max(limit, HealthLossBurstLimit.Value);
             float multiplier = hit.isItemDamage ? Mathf.Max(0f, ItemDamageMultiplier.Value) : 1f;
             float limitHealth = LimitHealth(self.body);
-            // Each bit of damage counts for less the closer the loss is to the burst limit: a hit of the share r takes away
-            // (burst - lost) * (1 - e^(-r / burst)), a little less than r for small hits, never all that is left.
             float share = Mathf.Max(0f, damage) * multiplier / limitHealth;
-            return Mathf.Max(0f, burst - hit.lost) * (1f - Mathf.Exp(-share / burst)) * limitHealth;
+            // all items' damage together, before the limit for everything
+            if (hit.isItemDamage)
+            {
+                share = Weaken(share, Mathf.Max(Mathf.Max(0.001f, ItemHealthLossLimit.Value), ItemHealthLossBurstLimit.Value), hit.itemLost);
+            }
+            return Weaken(share, burst, hit.lost) * limitHealth;
+        }
+
+        // Each bit of damage counts for less the closer the loss is to the limit: a hit of the share r takes away
+        // (limit - lost) * (1 - e^(-r / limit)), a little less than r for small hits, never all that is left.
+        private static float Weaken(float share, float limit, float lost)
+        {
+            return Mathf.Max(0f, limit - lost) * (1f - Mathf.Exp(-share / limit));
         }
 
         // Measured against the attacker's damage, the hit is the attack's percentage, which items and levels don't raise; crits
@@ -1052,6 +1075,7 @@ namespace RandomEvents
             scores.Clear();
             lastHits.Clear();
             healthLost.Clear();
+            itemHealthLost.Clear();
             healthHealed.Clear();
             barrierGained.Clear();
             brokenItems.Clear();
@@ -1092,6 +1116,7 @@ namespace RandomEvents
             scores.Clear();
             lastHits.Clear();
             healthLost.Clear();
+            itemHealthLost.Clear();
             healthHealed.Clear();
             barrierGained.Clear();
         }
