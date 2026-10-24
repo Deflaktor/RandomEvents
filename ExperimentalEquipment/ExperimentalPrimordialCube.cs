@@ -99,6 +99,8 @@ namespace RandomEvents
             private readonly List<CharacterBody> swallowed = new List<CharacterBody>();
             // the swallowed that have shrunk away and now grow back unseen
             private readonly HashSet<CharacterBody> hidden = new HashSet<CharacterBody>();
+            // the swallowed players, whose own games move them, held by buffs those games obey
+            private readonly HashSet<CharacterBody> heldPlayers = new HashSet<CharacterBody>();
             // the shrink items each was given, and its size before
             private readonly Dictionary<CharacterBody, (int stacks, float size)> shrinks = new Dictionary<CharacterBody, (int stacks, float size)>();
             private bool spotRing;
@@ -212,6 +214,13 @@ namespace RandomEvents
                 shrinks[body] = (stacks, size);
                 body.inventory.GiveItemPermanent(DLC4Content.Items.ReduceCharacterScale, stacks);
                 body.AddBuff(RoR2Content.Buffs.Immune);
+                // a player's own game moves them, so only buffs stop them there: rooted, weightless and without skills
+                if (body.isPlayerControlled && heldPlayers.Add(body))
+                {
+                    body.AddBuff(RoR2Content.Buffs.Entangle);
+                    body.AddBuff(DLC3Content.Buffs.NoGravity);
+                    body.AddBuff(DLC2Content.Buffs.DisableAllSkills);
+                }
                 if (body.master.TryGetComponent(out BaseAI ai))
                 {
                     ai.enabled = false;
@@ -239,12 +248,16 @@ namespace RandomEvents
                 body.inventory.RemoveItemPermanent(DLC4Content.Items.ReduceCharacterScale, shrinks[body].stacks);
             }
 
-            // its AI is off, so nothing presses its buttons any more
-            private static void Hold(CharacterBody body)
+            // its AI is off, so nothing presses its buttons any more; a player who still got away, e.g. by jumping, is brought back
+            private void Hold(CharacterBody body)
             {
                 if (body == null || body.inputBank == null)
                 {
                     return;
+                }
+                if (heldPlayers.Contains(body) && (body.corePosition - center).sqrMagnitude > 4f)
+                {
+                    TeleportHelper.TeleportBody(body, center);
                 }
                 body.inputBank.moveVector = Vector3.zero;
                 body.inputBank.skill1.PushState(false);
@@ -326,6 +339,12 @@ namespace RandomEvents
                 if (body.HasBuff(RoR2Content.Buffs.Immune))
                 {
                     body.RemoveBuff(RoR2Content.Buffs.Immune);
+                }
+                if (heldPlayers.Remove(body))
+                {
+                    body.RemoveBuff(RoR2Content.Buffs.Entangle);
+                    body.RemoveBuff(DLC3Content.Buffs.NoGravity);
+                    body.RemoveBuff(DLC2Content.Buffs.DisableAllSkills);
                 }
                 if (body.characterMotor != null)
                 {
