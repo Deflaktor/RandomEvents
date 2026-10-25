@@ -3,12 +3,20 @@ using RoR2;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
+using UnityEngine.Networking;
 
 namespace RandomEvents
 {
     public class EventInventoryRoulette : AbstractEvent
     {
         private readonly ItemSwap itemSwap = new ItemSwap();
+        private readonly BuffTracker buffs = new BuffTracker();
+        // the armor of each buff stack
+        private const int ArmorPerBuff = 20;
+        private ConfigEntry<int> Armor;
+        // the players who got another's items, who have armor to make up for the unfamiliar items
+        private readonly HashSet<CharacterMaster> armored = new HashSet<CharacterMaster>();
 
         public override bool LoadCondition()
         {
@@ -31,11 +39,11 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Every player gets the items of another player until the event ends.";
+            return "Every player gets the items of another player and 60 armor until the event ends.";
         }
         public override string GetPopupDescription()
         {
-            return "You get another player's items for a while.";
+            return "You get another player's items and 60 armor for a while.";
         }
         public override string GetConditionDescription()
         {
@@ -43,15 +51,36 @@ namespace RandomEvents
         }
         protected override void AddConfig(ConfigFile config)
         {
+            Armor = config.Bind(GetEventConfigName(), "Armor", 60, "The armor each player gets on top of their own until the event ends, in steps of 20.");
         }
         public override void Preload()
         {
         }
         public override void Hook()
         {
+            CharacterBody.onBodyStartGlobal += CharacterBody_onBodyStartGlobal;
         }
 
         public override bool SuppressesHereticTransformation => true;
+
+        // also the bodies after a revive during the event, e.g. by Dio's Best Friend
+        private void CharacterBody_onBodyStartGlobal(CharacterBody body)
+        {
+            if (NetworkServer.active && IsActive() && body.master != null && armored.Contains(body.master))
+            {
+                AddArmor(body);
+            }
+        }
+
+        // with the Minor Armor buff, which shows on the player's buff bar
+        private void AddArmor(CharacterBody body)
+        {
+            int stacks = Mathf.Max(0, Mathf.RoundToInt(Armor.Value / (float)ArmorPerBuff));
+            for (int i = 0; i < stacks; i++)
+            {
+                buffs.Add(body, DLC4Content.Buffs.MinorArmorBuff);
+            }
+        }
 
         public override void Prepare()
         {
@@ -71,12 +100,16 @@ namespace RandomEvents
             for (int i = 0; i < bodies.Count; i++)
             {
                 ChatHelper.SendEventMessage("EVENT_INVENTORY_ROULETTE_LENT", ChatHelper.GetColoredPlayerName(bodies[i]), ChatHelper.GetColoredPlayerName(bodies[(i + 1) % bodies.Count]));
+                armored.Add(bodies[i].master);
+                AddArmor(bodies[i]);
             }
         }
 
         public override void Stop()
         {
             itemSwap.Return();
+            buffs.RemoveAll();
+            armored.Clear();
         }
     }
 }
