@@ -91,12 +91,13 @@ namespace RandomEvents
             }
         }
 
+        // not Mitosis' splits, which would make up for the fewer monsters
         private void Inflate(CharacterBody body)
         {
             var master = body != null ? body.master : null;
             if (master == null || master.inventory == null || master.isBoss || body.healthComponent == null
                 || body.teamComponent.teamIndex == TeamIndex.Player || body.teamComponent.teamIndex == TeamIndex.Neutral
-                || balloons.Exists(balloon => balloon.master == master))
+                || master.GetComponent<EventMitosis.MitosisSplit>() != null || balloons.Exists(balloon => balloon.master == master))
             {
                 return;
             }
