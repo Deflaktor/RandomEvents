@@ -27,11 +27,14 @@ namespace RandomEvents
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            // Artifact of Enigma would swap the equipment on every use, and Equipment Only gives its own
+            // Artifact of Enigma would swap the equipment on every use, EquipmentOnly and FuelArray give their own, and
+            // SkillsOnly takes it away
             var enigmaArtifactActive = RunArtifactManager.enabledArtifactsEnumerable.Any(e => e == RoR2Content.Artifacts.Enigma)
                 || activeOtherEvents.Any(e => e is EventRandomArtifact randomArtifact && randomArtifact.TurnsOn(RoR2Content.Artifacts.Enigma));
             return !enigmaArtifactActive && !Helper.IsSimulacrumBossWaveNext()
-                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("EquipmentOnly", StringComparison.InvariantCultureIgnoreCase));
+                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("EquipmentOnly", StringComparison.InvariantCultureIgnoreCase)
+                || e.GetEventConfigName().Equals("FuelArray", StringComparison.InvariantCultureIgnoreCase)
+                || e.GetEventConfigName().Equals("SkillsOnly", StringComparison.InvariantCultureIgnoreCase));
         }
         protected override float DefaultWeight => 2f;
 
@@ -54,7 +57,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Not a Simulacrum boss wave, event \"EquipmentOnly\" inactive and Artifact of Enigma inactive.";
+            return "Not a Simulacrum boss wave, events \"EquipmentOnly\", \"FuelArray\" and \"SkillsOnly\" inactive and Artifact of Enigma inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {

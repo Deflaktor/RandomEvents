@@ -27,8 +27,10 @@ namespace RandomEvents
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            var equipmentOnlyOrMonsterTransformActive = activeOtherEvents.Any(e => e.GetEventConfigName().Equals("EquipmentOnly", StringComparison.InvariantCultureIgnoreCase) ||
-                                                                                   e.GetEventConfigName().Equals("MonsterTransform", StringComparison.InvariantCultureIgnoreCase));
+            // ExperimentalEquipment's equipment would be taken away
+            var incompatibleEventActive = activeOtherEvents.Any(e => e.GetEventConfigName().Equals("EquipmentOnly", StringComparison.InvariantCultureIgnoreCase) ||
+                                                                     e.GetEventConfigName().Equals("ExperimentalEquipment", StringComparison.InvariantCultureIgnoreCase) ||
+                                                                     e.GetEventConfigName().Equals("MonsterTransform", StringComparison.InvariantCultureIgnoreCase));
             // none of the characters must have the Bandolier item, as it breaks the concept of this event
             var hasBandolier = false;
             foreach (PlayerCharacterMasterController pc in PlayerCharacterMasterController.instances)
@@ -43,7 +45,7 @@ namespace RandomEvents
                 }
             }
 
-            return !equipmentOnlyOrMonsterTransformActive && !hasBandolier;
+            return !incompatibleEventActive && !hasBandolier;
         }
         public override string GetEventConfigName()
         {
@@ -63,7 +65,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Events \"EquipmentOnly\", \"MonsterTransform\" inactive and none of the players have a Bandolier.";
+            return "Events \"EquipmentOnly\", \"ExperimentalEquipment\" and \"MonsterTransform\" inactive and none of the players have a Bandolier.";
         }
         protected override void AddConfig(ConfigFile config)
         {
