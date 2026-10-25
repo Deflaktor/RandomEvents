@@ -82,7 +82,12 @@ namespace RandomEvents
                 var safeWardController = infiniteTowerRun.safeWardController;
                 if(safeWardController != null)
                 {
+                    // within the safe zone, which SmallArena halves, maybe only after this
                     var distance = safeWardController.holdoutZoneController.baseRadius;
+                    if (activeOtherEvents.Any(e => e.GetEventConfigName().Equals("SmallArena", StringComparison.InvariantCultureIgnoreCase)))
+                    {
+                        distance *= 0.5f;
+                    }
                     int itemZoneCount = 4;
                     // each zone is marked by a Lunar Bud that shows the zone's item, which every player sees; it can't be bought
                     Helper.ApproximatePlacement(LunarShopTerminal.WaitForCompletion(), safeWardController.gameObject.transform.position, 0f, distance, itemZoneCount, setup: bud =>
