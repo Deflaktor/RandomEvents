@@ -131,6 +131,11 @@ namespace RandomEvents
             {
                 teamFilter.teamIndex = TeamIndex.Monster;
             }
+            // the floor itself, which Defensive Microbots don't shoot down; they only do on the host
+            if (fire.TryGetComponent(out RoR2.Projectile.ProjectileController projectileController))
+            {
+                projectileController.cannotBeDeleted = true;
+            }
             // whatever the players' survivors, items or levels
             var commando = BodyCatalog.FindBodyPrefab("CommandoBody")?.GetComponent<CharacterBody>();
             if (fire.TryGetComponent(out RoR2.Projectile.ProjectileDamage projectileDamage) && commando != null)
