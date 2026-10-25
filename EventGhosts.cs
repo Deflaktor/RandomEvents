@@ -66,10 +66,17 @@ namespace RandomEvents
 
         private void CharacterBody_onBodyStartGlobal(CharacterBody body)
         {
-            if (ModConfig.Enabled.Value && NetworkServer.active && IsActive() && body.teamComponent.teamIndex != TeamIndex.Player && !body.isBoss && body.master?.gameObject.GetComponent<EventZombies.ZombieComponent>() == null && body.master?.gameObject.GetComponent<EventMitosis.MitosisSplit>() == null && Run.instance.runRNG.nextNormalizedFloat < GhostProbability.Value)
+            if (ModConfig.Enabled.Value && NetworkServer.active && IsActive() && CanHaunt(body) && Run.instance.runRNG.nextNormalizedFloat < GhostProbability.Value)
             {
                 body.gameObject.EnsureComponent<GhostComponent>();
             }
+        }
+
+        // not Zombies' infected, Mitosis' splits or mirrored monsters, whose health decays in its own way
+        private static bool CanHaunt(CharacterBody body)
+        {
+            return body.teamComponent.teamIndex != TeamIndex.Player && !body.isBoss && body.master?.gameObject.GetComponent<EventZombies.ZombieComponent>() == null
+                && body.master?.gameObject.GetComponent<EventMitosis.MitosisSplit>() == null && !EventMirroredEnemies.IsMirrored(body);
         }
 
         public override void Prepare()
@@ -81,7 +88,7 @@ namespace RandomEvents
         {
             foreach (var body in CharacterBody.instancesList)
             {
-                if (body != null && body.teamComponent.teamIndex != TeamIndex.Player && !body.isBoss && body.master?.gameObject.GetComponent<EventZombies.ZombieComponent>() == null && body.master?.gameObject.GetComponent<EventMitosis.MitosisSplit>() == null && Run.instance.runRNG.nextNormalizedFloat < GhostProbability.Value)
+                if (body != null && CanHaunt(body) && Run.instance.runRNG.nextNormalizedFloat < GhostProbability.Value)
                 {
                     body.gameObject.EnsureComponent<GhostComponent>();
                 }

@@ -21,7 +21,7 @@ namespace RandomEvents
         private ConfigEntry<float> ReflectedDamageCap;
         private ConfigEntry<float> ReflectedDamageMinimum;
         private ConfigEntry<int> DecayTime;
-        private readonly HashSet<CharacterBody> mirrored = new HashSet<CharacterBody>();
+        private static readonly HashSet<CharacterBody> mirrored = new HashSet<CharacterBody>();
         // the monsters that spawned others for themselves, e.g. a Xi Construct its Alpha Constructs, which are mirrored
         // only along with them; kept also outside the event, for the ones already there when it starts
         private readonly Dictionary<CharacterMaster, CharacterBody> summoners = new Dictionary<CharacterMaster, CharacterBody>();
@@ -186,11 +186,19 @@ namespace RandomEvents
             return body != null && body.master != null && summoners.ContainsKey(body.master);
         }
 
-        // a summoned monster is mirrored exactly when its summoner is, the others by chance
+        // e.g. so that they don't become ghosts as well
+        public static bool IsMirrored(CharacterBody body)
+        {
+            return mirrored.Contains(body);
+        }
+
+        // A summoned monster is mirrored exactly when its summoner is, the others by chance. Ghosts and zombies that came
+        // back are left alone: their Health Decay would add up with a mirrored monster's, and more of it decays slower.
         private void TryMirror(CharacterBody body)
         {
             if (body == null || body.healthComponent == null || body.teamComponent.teamIndex == TeamIndex.Player || body.teamComponent.teamIndex == TeamIndex.Neutral
-                || mirrored.Contains(body))
+                || mirrored.Contains(body) || body.GetComponent<EventGhosts.GhostComponent>() != null
+                || (body.master != null && body.master.TryGetComponent(out EventZombies.ZombieComponent zombie) && zombie.revived))
             {
                 return;
             }
