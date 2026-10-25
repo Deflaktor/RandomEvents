@@ -35,7 +35,9 @@ namespace RandomEvents
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
             // they pick from the stage's own monsters, which this event replaces
-            return !Helper.IsSimulacrumBossWaveNext() && GetDroneCandidates().Count > 0 && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("Mitosis", StringComparison.InvariantCultureIgnoreCase)
+            return !Helper.IsSimulacrumBossWaveNext() && GetDroneCandidates().Count > 0 && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("WeakEnemies", StringComparison.InvariantCultureIgnoreCase)
+                || e.GetEventConfigName().Equals("StrongEnemies", StringComparison.InvariantCultureIgnoreCase)
+                || e.GetEventConfigName().Equals("Mitosis", StringComparison.InvariantCultureIgnoreCase)
                 || e.GetEventConfigName().Equals("RitualHelmets", StringComparison.InvariantCultureIgnoreCase)
                 || e.GetEventConfigName().Equals("FallingEnemies", StringComparison.InvariantCultureIgnoreCase)
                 || e.GetEventConfigName().Equals("Bouncy", StringComparison.InvariantCultureIgnoreCase)
@@ -61,7 +63,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Not a Simulacrum boss wave, and events \"Mitosis\", \"RitualHelmets\", \"FallingEnemies\", \"Bouncy\", \"LynxPups\", \"BlightedCorpses\" and \"BulletHell\" inactive.";
+            return "Not a Simulacrum boss wave, and events \"WeakEnemies\", \"StrongEnemies\", \"Mitosis\", \"RitualHelmets\", \"FallingEnemies\", \"Bouncy\", \"LynxPups\", \"BlightedCorpses\" and \"BulletHell\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {

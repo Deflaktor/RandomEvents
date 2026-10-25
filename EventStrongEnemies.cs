@@ -20,8 +20,10 @@ namespace RandomEvents
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
+            // DroneUprising replaces the stage's monsters, which this event picks from
             return !Helper.IsSimulacrumBossWaveNext() && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("WeakEnemies", StringComparison.InvariantCultureIgnoreCase)
                 || e.GetEventConfigName().Equals("Mitosis", StringComparison.InvariantCultureIgnoreCase)
+                || e.GetEventConfigName().Equals("DroneUprising", StringComparison.InvariantCultureIgnoreCase)
                 || e.GetEventConfigName().Equals("LynxPups", StringComparison.InvariantCultureIgnoreCase)
                 || e.GetEventConfigName().Equals("BlightedCorpses", StringComparison.InvariantCultureIgnoreCase)
                 || e.GetEventConfigName().Equals("BulletHell", StringComparison.InvariantCultureIgnoreCase));
@@ -40,7 +42,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Not a Simulacrum boss wave, and events \"WeakEnemies\", \"Mitosis\", \"LynxPups\", \"BlightedCorpses\" and \"BulletHell\" inactive.";
+            return "Not a Simulacrum boss wave, and events \"WeakEnemies\", \"Mitosis\", \"DroneUprising\", \"LynxPups\", \"BlightedCorpses\" and \"BulletHell\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {

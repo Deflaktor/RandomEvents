@@ -32,8 +32,10 @@ namespace RandomEvents
                     return false;
                 }
             }
+            // DroneUprising replaces the stage's monsters, which this event picks from
             return !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("StrongEnemies", StringComparison.InvariantCultureIgnoreCase)
                 || e.GetEventConfigName().Equals("Mitosis", StringComparison.InvariantCultureIgnoreCase)
+                || e.GetEventConfigName().Equals("DroneUprising", StringComparison.InvariantCultureIgnoreCase)
                 || e.GetEventConfigName().Equals("LynxPups", StringComparison.InvariantCultureIgnoreCase)
                 || e.GetEventConfigName().Equals("BlightedCorpses", StringComparison.InvariantCultureIgnoreCase)
                 || e.GetEventConfigName().Equals("BulletHell", StringComparison.InvariantCultureIgnoreCase));
@@ -52,7 +54,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Events \"StrongEnemies\", \"Mitosis\", \"LynxPups\", \"BlightedCorpses\" and \"BulletHell\" inactive.";
+            return "Events \"StrongEnemies\", \"Mitosis\", \"DroneUprising\", \"LynxPups\", \"BlightedCorpses\" and \"BulletHell\" inactive.";
         }
 
         protected override void AddConfig(ConfigFile config)
