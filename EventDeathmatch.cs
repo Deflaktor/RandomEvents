@@ -25,10 +25,15 @@ namespace RandomEvents
     // too, and barrier gain weaken the same way, so that nobody outheals the others' damage. On top of that, players deal
     // each other only a share of their items' damage. So that nobody is stunned to death, stuns, freezes, shocks and roots
     // only slow players by 80% for as long. Items that break, e.g. a Delicate Watch, and the players' drones that are
-    // destroyed are restored afterwards.
+    // destroyed are restored afterwards, and what the fight left behind, e.g. a burn or a Warped Echo's delayed damage,
+    // doesn't hurt anyone anymore.
     public class EventDeathmatch : AbstractEvent
     {
         private const float ReviveDelay = 3f;
+        // how long after the event what the fight left behind can't hurt anyone, e.g. a Warped Echo's delayed damage or
+        // a lightning orb still on its way
+        private const float LeftoverTime = 10f;
+        private float leftoverEnd = float.NegativeInfinity;
         // a death without a killer, e.g. a fall after a knock back, counts for the last player who hit within this time
         private const float KillCreditTime = 5f;
         // how long an immobilize, which has no duration of its own, slows instead
@@ -119,7 +124,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "The monsters are removed, and the directors and the run timer stop. Up to 3 players, each fights alone; from 4 players on, they fight in two teams. A player fights with their drones and other allies, and revives when they die. Each player sees the players they fight marked with the soul brand of Caustic Pheromones, which does nothing else; each kill scores a point for them and their team. Their items deal other players 30% of their damage, together never 10% of a player's health per second and never 25% at once, their skills and equipment all of it, which weakens the more health a player recently lost to them, so that over time they never lose 20% of their health per second, and never 50% at once, with health from items counting for half, except from a hit of a skill or equipment with at least 3500% damage, e.g. the Railgunner's supercharged shot or the mini nuke, which can kill at once; healing and barrier gain weaken the same way, and stuns, freezes and roots only slow them by 80%. Items that break and drones that are destroyed during the event are restored afterwards. The winner, or each player of the winning team, gets a random green item; in a draw, each of the winners gets a random white item. Afterwards everyone is fully healed and the monsters spawn again.";
+            return "The monsters are removed, and the directors and the run timer stop. Up to 3 players, each fights alone; from 4 players on, they fight in two teams. A player fights with their drones and other allies, and revives when they die. Each player sees the players they fight marked with the soul brand of Caustic Pheromones, which does nothing else; each kill scores a point for them and their team. Their items deal other players 30% of their damage, together never 10% of a player's health per second and never 25% at once, their skills and equipment all of it, which weakens the more health a player recently lost to them, so that over time they never lose 20% of their health per second, and never 50% at once, with health from items counting for half, except from a hit of a skill or equipment with at least 3500% damage, e.g. the Railgunner's supercharged shot or the mini nuke, which can kill at once; healing and barrier gain weaken the same way, and stuns, freezes and roots only slow them by 80%. Items that break and drones that are destroyed during the event are restored afterwards. The winner, or each player of the winning team, gets a random green item; in a draw, each of the winners gets a random white item. Afterwards everyone is fully healed and safe from what the fight left behind, e.g. burns or a Warped Echo's delayed damage, and the monsters spawn again.";
         }
         public override string GetPopupDescription()
         {
@@ -569,6 +574,16 @@ namespace RandomEvents
         private void HealthComponent_TakeDamage(On.RoR2.HealthComponent.orig_TakeDamage orig, HealthComponent self, DamageInfo damageInfo)
         {
             var victim = self.body;
+            // what the fight left behind, see LeftoverTime
+            if (!Pausing && NetworkServer.active && Time.fixedTime < leftoverEnd && damageInfo != null && victim != null)
+            {
+                var hitter = GetPlayer(damageInfo.attacker);
+                var target = GetPlayer(victim.master);
+                if (hitter != null && target != null && hitter != target)
+                {
+                    damageInfo.rejected = true;
+                }
+            }
             var attacker = Pausing && damageInfo != null && victim != null && victim.isPlayerControlled ? GetPlayer(damageInfo.attacker) : null;
             if (attacker == null)
             {
@@ -792,6 +807,19 @@ namespace RandomEvents
             {
                 body.healthComponent.Networkhealth = body.healthComponent.fullHealth;
                 body.healthComponent.RechargeShieldFull();
+            }
+        }
+
+        // Like Blast Shower, the players and their allies lose their debuffs, damage over time and stuns, which only the
+        // other players can have given them, as there were no monsters
+        private void CleanseAll()
+        {
+            foreach (var body in CharacterBody.readOnlyInstancesList.ToList())
+            {
+                if (body != null && GetPlayer(body.master) != null)
+                {
+                    Util.CleanseBody(body, removeDebuffs: true, removeBuffs: false, removeCooldownBuffs: false, removeDots: true, removeStun: true, removeNearbyProjectiles: false);
+                }
             }
         }
 
@@ -1121,7 +1149,9 @@ namespace RandomEvents
             RestoreTeams();
             UpdateOwnedTeams();
             RestoreLostDrones();
+            CleanseAll();
             HealAll();
+            leftoverEnd = Time.fixedTime + LeftoverTime;
             modeChosen = false;
             scores.Clear();
             lastHits.Clear();
