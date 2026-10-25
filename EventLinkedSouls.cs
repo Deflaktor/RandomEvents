@@ -217,8 +217,8 @@ namespace RandomEvents
 
         private void HealthComponent_TakeDamage(On.RoR2.HealthComponent.orig_TakeDamage orig, HealthComponent self, DamageInfo damageInfo)
         {
-            // the environment's damage, e.g. the void fog, hits each player in full
-            if (Sharing || !NetworkServer.active || damageInfo == null || damageInfo.damage <= 0f || !ModConfig.Enabled.Value || !IsActive() || Helper.IsHazard(damageInfo))
+            // the environment's damage, e.g. the void fog, hits each player in full, and HotPotato's bomb its carrier
+            if (Sharing || EventHotPotato.KillingCarrier || !NetworkServer.active || damageInfo == null || damageInfo.damage <= 0f || !ModConfig.Enabled.Value || !IsActive() || Helper.IsHazard(damageInfo))
             {
                 orig(self, damageInfo);
                 return;

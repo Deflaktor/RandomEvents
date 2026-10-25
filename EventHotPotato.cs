@@ -37,6 +37,8 @@ namespace RandomEvents
         private float passTimer;
         private float tickTimer;
         private bool detonated;
+        // while the bomb takes all of its carrier's health, which LinkedSouls doesn't split
+        public static bool KillingCarrier { get; private set; }
 
         public override bool LoadCondition()
         {
@@ -239,15 +241,23 @@ namespace RandomEvents
             // the one holding it when it goes off loses all of its health, not just its share
             if (victim.isPlayerControlled && victim.healthComponent != null && victim.healthComponent.alive)
             {
-                victim.healthComponent.TakeDamage(new DamageInfo
+                KillingCarrier = true;
+                try
                 {
-                    damage = victim.healthComponent.fullCombinedHealth,
-                    attacker = null,
-                    position = victim.corePosition,
-                    damageType = DamageType.BypassArmor | DamageType.BypassBlock | DamageType.BypassOneShotProtection,
-                    procCoefficient = 0f,
-                    damageColorIndex = DamageColorIndex.Item
-                });
+                    victim.healthComponent.TakeDamage(new DamageInfo
+                    {
+                        damage = victim.healthComponent.fullCombinedHealth,
+                        attacker = null,
+                        position = victim.corePosition,
+                        damageType = DamageType.BypassArmor | DamageType.BypassBlock | DamageType.BypassOneShotProtection,
+                        procCoefficient = 0f,
+                        damageColorIndex = DamageColorIndex.Item
+                    });
+                }
+                finally
+                {
+                    KillingCarrier = false;
+                }
             }
         }
 
