@@ -1,6 +1,8 @@
 using BepInEx.Configuration;
 using RoR2;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
@@ -24,7 +26,12 @@ namespace RandomEvents
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            return true;
+            // DroneUprising, BulletHell and StrongEnemies leave out monsters like the swarm's, and GiantBalloons would
+            // inflate all of them
+            return !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("DroneUprising", StringComparison.InvariantCultureIgnoreCase)
+                || e.GetEventConfigName().Equals("BulletHell", StringComparison.InvariantCultureIgnoreCase)
+                || e.GetEventConfigName().Equals("StrongEnemies", StringComparison.InvariantCultureIgnoreCase)
+                || e.GetEventConfigName().Equals("GiantBalloons", StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
         {
@@ -44,7 +51,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "";
+            return "Events \"DroneUprising\", \"BulletHell\", \"StrongEnemies\" and \"GiantBalloons\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {

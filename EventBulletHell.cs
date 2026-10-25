@@ -21,9 +21,10 @@ namespace RandomEvents
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
             // only monsters whose primary fires projectiles spawn, so most of the stage's should; the faster attacks would
-            // undo UmbraAmbush's hunters' slowdown
+            // undo UmbraAmbush's hunters' slowdown, and SwarmQueen brings Beetles along, which fire none
             return MonsterTraits.WeightShare(MonsterPool.GetChoices(), MonsterTraits.PrimaryFiresProjectiles) > 0.5f && !MonsterPool.OtherChangingEventActive(this, activeOtherEvents)
-                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("UmbraAmbush", StringComparison.InvariantCultureIgnoreCase));
+                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("UmbraAmbush", StringComparison.InvariantCultureIgnoreCase)
+                || e.GetEventConfigName().Equals("SwarmQueen", StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
         {
@@ -43,7 +44,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Most of the stage's monsters' primary attacks fire projectiles, and events \"WeakEnemies\", \"StrongEnemies\", \"Mitosis\", \"DroneUprising\", \"FallingEnemies\", \"RitualHelmets\", \"Bouncy\", \"LynxPups\", \"BlightedCorpses\" and \"UmbraAmbush\" inactive.";
+            return "Most of the stage's monsters' primary attacks fire projectiles, and events \"WeakEnemies\", \"StrongEnemies\", \"Mitosis\", \"DroneUprising\", \"FallingEnemies\", \"RitualHelmets\", \"Bouncy\", \"LynxPups\", \"BlightedCorpses\", \"UmbraAmbush\" and \"SwarmQueen\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {

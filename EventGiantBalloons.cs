@@ -1,7 +1,9 @@
 ﻿using BepInEx.Configuration;
 using HG;
 using RoR2;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -22,8 +24,10 @@ namespace RandomEvents
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            // the item that makes them big comes with that expansion
-            return DLC4Content.DLC4 != null && Run.instance != null && Run.instance.IsExpansionEnabled(DLC4Content.DLC4);
+            // the item that makes them big comes with that expansion; SwarmQueen's swarms, inflated too, would make up for
+            // the fewer monsters
+            return DLC4Content.DLC4 != null && Run.instance != null && Run.instance.IsExpansionEnabled(DLC4Content.DLC4)
+                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("SwarmQueen", StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
         {
@@ -43,7 +47,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Hallowed Concepts is enabled.";
+            return "Hallowed Concepts is enabled, and event \"SwarmQueen\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {

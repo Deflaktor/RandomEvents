@@ -34,7 +34,8 @@ namespace RandomEvents
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            // they pick from the stage's own monsters, which this event replaces
+            // they pick from the stage's own monsters, which this event replaces, and SwarmQueen would bring Beetles and
+            // Lesser Wisps along
             return !Helper.IsSimulacrumBossWaveNext() && GetDroneCandidates().Count > 0 && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("WeakEnemies", StringComparison.InvariantCultureIgnoreCase)
                 || e.GetEventConfigName().Equals("StrongEnemies", StringComparison.InvariantCultureIgnoreCase)
                 || e.GetEventConfigName().Equals("Mitosis", StringComparison.InvariantCultureIgnoreCase)
@@ -43,7 +44,8 @@ namespace RandomEvents
                 || e.GetEventConfigName().Equals("Bouncy", StringComparison.InvariantCultureIgnoreCase)
                 || e.GetEventConfigName().Equals("LynxPups", StringComparison.InvariantCultureIgnoreCase)
                 || e.GetEventConfigName().Equals("BlightedCorpses", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("BulletHell", StringComparison.InvariantCultureIgnoreCase));
+                || e.GetEventConfigName().Equals("BulletHell", StringComparison.InvariantCultureIgnoreCase)
+                || e.GetEventConfigName().Equals("SwarmQueen", StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
         {
@@ -63,7 +65,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Not a Simulacrum boss wave, and events \"WeakEnemies\", \"StrongEnemies\", \"Mitosis\", \"RitualHelmets\", \"FallingEnemies\", \"Bouncy\", \"LynxPups\", \"BlightedCorpses\" and \"BulletHell\" inactive.";
+            return "Not a Simulacrum boss wave, and events \"WeakEnemies\", \"StrongEnemies\", \"Mitosis\", \"RitualHelmets\", \"FallingEnemies\", \"Bouncy\", \"LynxPups\", \"BlightedCorpses\", \"BulletHell\" and \"SwarmQueen\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {
