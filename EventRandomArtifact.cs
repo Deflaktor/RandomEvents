@@ -42,6 +42,13 @@ namespace RandomEvents
             {
                 artifactCandidates.Remove(RoR2Content.Artifacts.Enigma);
             }
+            // Artifact of Kin and Artifact of Dissonance rebuild the stage's monster pool when turned on or off, which drops
+            // the changes of the events that change which monsters spawn
+            if (otherEvents.Any(MonsterPool.IsChangingEvent))
+            {
+                artifactCandidates.Remove(RoR2Content.Artifacts.SingleMonsterType);
+                artifactCandidates.Remove(RoR2Content.Artifacts.MixEnemy);
+            }
             artifactCandidates.Remove(RoR2Content.Artifacts.TeamDeath);
             artifactCandidates.Remove(RoR2Content.Artifacts.ShadowClone);
             artifactCandidates.Remove(RoR2Content.Artifacts.Sacrifice);
@@ -110,6 +117,12 @@ namespace RandomEvents
         public bool TurnsOn(ArtifactDef artifactDef)
         {
             return artifacts.Contains(artifactDef);
+        }
+
+        // nor is such an event picked after this one turns on one of them
+        public override bool IsCompatibleWith(AbstractEvent other)
+        {
+            return !MonsterPool.IsChangingEvent(other) || !(TurnsOn(RoR2Content.Artifacts.SingleMonsterType) || TurnsOn(RoR2Content.Artifacts.MixEnemy));
         }
 
         public override void Start(List<AbstractEvent> activeOtherEvents)

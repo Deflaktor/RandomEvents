@@ -55,10 +55,16 @@ namespace RandomEvents
             }
         }
 
+        // whether it's one of the events that change which monsters spawn
+        public static bool IsChangingEvent(AbstractEvent e)
+        {
+            return ChangingEvents.Any(name => e.GetEventConfigName().Equals(name, StringComparison.InvariantCultureIgnoreCase));
+        }
+
         // whether one of the other events that change which monsters spawn is going on
         public static bool OtherChangingEventActive(AbstractEvent self, List<AbstractEvent> activeOtherEvents)
         {
-            return activeOtherEvents.Any(e => e != self && ChangingEvents.Any(name => e.GetEventConfigName().Equals(name, StringComparison.InvariantCultureIgnoreCase)));
+            return activeOtherEvents.Any(e => e != self && IsChangingEvent(e));
         }
 
         // the cards of the stage's monster pool, without the selection's spare capacity
