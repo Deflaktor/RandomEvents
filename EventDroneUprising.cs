@@ -17,6 +17,7 @@ namespace RandomEvents
         private ConfigEntry<float> DamageMultiplier;
         private ConfigEntry<float> MoveSpeedMultiplier;
         private ConfigEntry<float> HealthMultiplier;
+        private ConfigEntry<float> MaxBulletDamage;
         // the drones and turrets that items, equipment and survivors bring, which the drone catalog lacks
         private static readonly string[] SummonedBodies =
         {
@@ -27,6 +28,8 @@ namespace RandomEvents
         // a spawn card for each drone's master, made once
         private readonly Dictionary<GameObject, CharacterSpawnCard> spawnCards = new Dictionary<GameObject, CharacterSpawnCard>();
         private readonly HashSet<BodyIndex> droneBodies = new HashSet<BodyIndex>();
+        // whether a hostile drone's bullets are hitting right now, which they do while firing
+        private bool firingBullets;
 
         public override bool LoadCondition()
         {
@@ -57,7 +60,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Hostile drones spawn instead of monsters, also those of items and survivors. They have a quarter of their health, deal half their normal damage, move at half speed and leave no wreck.";
+            return "Hostile drones spawn instead of monsters, also those of items and survivors. They have a quarter of their health, deal half their normal damage, move at half speed and leave no wreck. A hit of their bullets, which can't be dodged, takes at most 5% of a player's health.";
         }
         public override string GetPopupDescription()
         {
@@ -72,6 +75,7 @@ namespace RandomEvents
             DamageMultiplier = config.Bind(GetEventConfigName(), "Damage Multiplier", 0.5f, "The damage the hostile drones deal, relative to normal.");
             MoveSpeedMultiplier = config.Bind(GetEventConfigName(), "Move Speed Multiplier", 0.5f, "The hostile drones' movement speed, relative to normal.");
             HealthMultiplier = config.Bind(GetEventConfigName(), "Health Multiplier", 0.25f, "The hostile drones' health, relative to normal. They take more damage instead, so their health bars stay full-sized.");
+            MaxBulletDamage = config.Bind(GetEventConfigName(), "Max Bullet Damage", 0.05f, "The most a hit of the hostile drones' bullets, which can't be dodged, takes of a player's health, relative to their full health.");
         }
         public override void Preload()
         {
@@ -81,6 +85,7 @@ namespace RandomEvents
             CharacterBody.onBodyStartGlobal += CharacterBody_onBodyStartGlobal;
             On.EntityStates.Drone.DeathState.OnImpactServer += DeathState_OnImpactServer;
             On.RoR2.HealthComponent.TakeDamage += HealthComponent_TakeDamage;
+            On.RoR2.BulletAttack.Fire_FireArgs += BulletAttack_Fire_FireArgs;
         }
 
         // All drones of the run's expansions with their cost: those of the drone catalog, also those not found on
@@ -149,7 +154,30 @@ namespace RandomEvents
             {
                 damageInfo.damage /= Mathf.Clamp(HealthMultiplier.Value, 0.01f, 1f);
             }
+            if (NetworkServer.active && firingBullets && damageInfo != null && self.body != null && self.body.isPlayerControlled)
+            {
+                // before the crit doubles it
+                var attackerBody = damageInfo.attacker != null ? damageInfo.attacker.GetComponent<CharacterBody>() : null;
+                var maxDamage = self.fullCombinedHealth * Mathf.Max(0f, MaxBulletDamage.Value) / (damageInfo.crit ? Mathf.Max(1f, attackerBody != null ? attackerBody.critMultiplier : 2f) : 1f);
+                damageInfo.damage = Mathf.Min(damageInfo.damage, maxDamage);
+            }
             orig(self, damageInfo);
+        }
+
+        // Their bullets hit right away, so the players can't dodge them, and the Mega Drone's minigun or a Gunner
+        // Turret at a high level would shred them. The bullets deal their damage while being fired.
+        private void BulletAttack_Fire_FireArgs(On.RoR2.BulletAttack.orig_Fire_FireArgs orig, BulletAttack self, BulletAttack.FireArgs args)
+        {
+            var wasFiring = firingBullets;
+            firingBullets = wasFiring || (NetworkServer.active && self.owner != null && self.owner.GetComponent<HostileDrone>() != null);
+            try
+            {
+                orig(self, args);
+            }
+            finally
+            {
+                firingBullets = wasFiring;
+            }
         }
 
         // weaker, so a swarm of them stays fair
