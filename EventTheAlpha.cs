@@ -163,6 +163,8 @@ namespace RandomEvents
 
         private void AlphaFallen()
         {
+            // a zombie that comes back from it would keep them
+            RemoveBoosts();
             buffs.RemoveAll();
             if (squad != null)
             {
@@ -172,6 +174,16 @@ namespace RandomEvents
             alpha = null;
             alphaFallen = true;
             ChatHelper.SendEventMessage("EVENT_THE_ALPHA_FALLEN");
+        }
+
+        // the alpha's extra health and size
+        private void RemoveBoosts()
+        {
+            if (alpha != null && alpha.inventory != null)
+            {
+                alpha.inventory.RemoveItemPermanent(RoR2Content.Items.BoostHp, addedBoostHp);
+                alpha.inventory.RemoveItemPermanent(DLC4Content.Items.BoostCharacterScale, addedScale);
+            }
         }
 
         public override void Prepare()
@@ -188,11 +200,7 @@ namespace RandomEvents
         public override void Stop()
         {
             buffs.RemoveAll();
-            if (alpha != null && alpha.inventory != null)
-            {
-                alpha.inventory.RemoveItemPermanent(RoR2Content.Items.BoostHp, addedBoostHp);
-                alpha.inventory.RemoveItemPermanent(DLC4Content.Items.BoostCharacterScale, addedScale);
-            }
+            RemoveBoosts();
             // destroying the squad also removes the health bar and the alpha's boss status
             if (squad != null)
             {
