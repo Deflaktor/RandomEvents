@@ -22,10 +22,13 @@ namespace RandomEvents
         {
             return true;
         }
+        // not while the teleporter or a Simulacrum boss wave has a boss to fight
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
+            var teleporter = TeleporterInteraction.instance;
             // SurvivorSwap swaps the items as well, and UnitedWeStand's shared items would add up with the lent ones
-            return Helper.GetLivingPlayerBodies().Count >= 2
+            return Helper.GetLivingPlayerBodies().Count >= 2 && !Helper.IsSimulacrumBossWaveNext()
+                && (teleporter == null || !(teleporter.isIdleToCharging || teleporter.isCharging))
                 && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("SurvivorSwap", StringComparison.InvariantCultureIgnoreCase)
                 || e.GetEventConfigName().Equals("UnitedWeStand", StringComparison.InvariantCultureIgnoreCase));
         }
@@ -47,7 +50,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "At least two players are alive and events \"SurvivorSwap\" and \"UnitedWeStand\" inactive.";
+            return "At least two players are alive, not during the teleporter event or a Simulacrum boss wave, and events \"SurvivorSwap\" and \"UnitedWeStand\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {

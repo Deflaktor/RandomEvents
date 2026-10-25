@@ -22,15 +22,13 @@ namespace RandomEvents
         {
             return true;
         }
+        // not while the teleporter or a Simulacrum boss wave has a boss to fight
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            if (Run.instance is InfiniteTowerRun infiniteTowerRun)
+            var teleporter = TeleporterInteraction.instance;
+            if (Helper.IsSimulacrumBossWaveNext() || (teleporter != null && (teleporter.isIdleToCharging || teleporter.isCharging)))
             {
-                // not for boss waves
-                if ((infiniteTowerRun.waveIndex + 1) % 5 == 0)
-                {
-                    return false;
-                }
+                return false;
             }
             // they change the players' bodies or items as well, and UnitedWeStand's shared items would add up with the lent ones
             if (activeOtherEvents.Any(e => e.GetEventConfigName().Equals("MonsterTransform", StringComparison.InvariantCultureIgnoreCase)
@@ -60,7 +58,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Events \"MonsterTransform\", \"InventoryRoulette\" and \"UnitedWeStand\" inactive and currently not a boss wave.";
+            return "Not during the teleporter event or a Simulacrum boss wave, and events \"MonsterTransform\", \"InventoryRoulette\" and \"UnitedWeStand\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {
