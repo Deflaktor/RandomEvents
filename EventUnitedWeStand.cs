@@ -1,5 +1,6 @@
 ﻿using BepInEx.Configuration;
 using RoR2;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -21,7 +22,10 @@ namespace RandomEvents
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            return Helper.GetLivingPlayerBodies().Count >= 2;
+            // the items that InventoryRoulette and SurvivorSwap lend would add up with the shared ones
+            return Helper.GetLivingPlayerBodies().Count >= 2
+                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("InventoryRoulette", StringComparison.InvariantCultureIgnoreCase)
+                || e.GetEventConfigName().Equals("SurvivorSwap", StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
         {
@@ -37,7 +41,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "At least two players are alive.";
+            return "At least two players are alive and events \"InventoryRoulette\" and \"SurvivorSwap\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {

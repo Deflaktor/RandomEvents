@@ -16,9 +16,10 @@ namespace RandomEvents
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            // SurvivorSwap swaps the items as well
+            // SurvivorSwap swaps the items as well, and UnitedWeStand's shared items would add up with the lent ones
             return Helper.GetLivingPlayerBodies().Count >= 2
-                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("SurvivorSwap", StringComparison.InvariantCultureIgnoreCase));
+                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("SurvivorSwap", StringComparison.InvariantCultureIgnoreCase)
+                || e.GetEventConfigName().Equals("UnitedWeStand", StringComparison.InvariantCultureIgnoreCase));
         }
         public override string GetEventConfigName()
         {
@@ -38,7 +39,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "At least two players are alive and event \"SurvivorSwap\" inactive.";
+            return "At least two players are alive and events \"SurvivorSwap\" and \"UnitedWeStand\" inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {

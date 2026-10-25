@@ -32,9 +32,10 @@ namespace RandomEvents
                     return false;
                 }
             }
-            // they change the players' bodies or items as well
+            // they change the players' bodies or items as well, and UnitedWeStand's shared items would add up with the lent ones
             if (activeOtherEvents.Any(e => e.GetEventConfigName().Equals("MonsterTransform", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("InventoryRoulette", StringComparison.InvariantCultureIgnoreCase)))
+                || e.GetEventConfigName().Equals("InventoryRoulette", StringComparison.InvariantCultureIgnoreCase)
+                || e.GetEventConfigName().Equals("UnitedWeStand", StringComparison.InvariantCultureIgnoreCase)))
             {
                 return false;
             }
@@ -59,7 +60,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Events \"MonsterTransform\" and \"InventoryRoulette\" inactive and currently not a boss wave.";
+            return "Events \"MonsterTransform\", \"InventoryRoulette\" and \"UnitedWeStand\" inactive and currently not a boss wave.";
         }
         protected override void AddConfig(ConfigFile config)
         {

@@ -37,7 +37,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | HuggingTime | Hugging time | Knockback sends whoever is hit flying to the attacker, and hits without knockback pull them 3 m closer, each with a tether between them. Damage over time is unaffected. | Events "Bouncy" and "RedLightGreenLight" inactive. |
 | Hunted | The hunt is on | All monsters chase one random player. | At least two players are alive and event "StealthMission" inactive. |
 | IndirectDamage | Let the items do the work | Players' hits deal no damage, but their item effects and damage over time still do. All players get 10 common and 5 uncommon items with on-hit effects. | At least one common or uncommon item with an on-hit effect is available, and event "CursedSpoils" inactive. |
-| InventoryRoulette | Spin the inventory roulette | Every player gets the items of another player until the event ends. | At least two players are alive and event "SurvivorSwap" inactive. |
+| InventoryRoulette | Spin the inventory roulette | Every player gets the items of another player until the event ends. | At least two players are alive and events "SurvivorSwap" and "UnitedWeStand" inactive. |
 | ItemKits | Item kit: Glass Cannon | Gives all players a random item kit until the event ends, e.g. Glass Cannon. | At least one kit has items, and event "CursedSpoils" inactive. |
 | ItemRush | Grab them before they do | Items appear around the players, in Simulacrum inside the safe zone, until the event ends. Monsters nearby take them too, and take those left lying. | At least one item is not in the setting Unsafe Items. |
 | ItemZone | Zone fuels your arsenal | Item zones appear that give players standing in them temporary items. | Simulacrum mode only |
@@ -62,14 +62,14 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | StealthMission | Vanish from their sight | Players are cloaked, and monsters only fire at where they last saw them. Attacking reveals them for 2 seconds. | Event "Hunted" inactive. |
 | StrongEnemies | Fear the few | Only strong enemies spawn. | Not a Simulacrum boss wave, and events "WeakEnemies", "Mitosis", "LynxPups", "BlightedCorpses" and "BulletHell" inactive. |
 | SupplyDrop | Supplies inbound | Drops a random Captain beacon next to each player, which stays for the rest of the stage. |  |
-| SurvivorSwap | Walk in another's shoes | Players swap survivors and items with each other until the event ends. Alone, you become a random survivor with 40 armor. | Events "MonsterTransform" and "InventoryRoulette" inactive and currently not a boss wave. |
+| SurvivorSwap | Walk in another's shoes | Players swap survivors and items with each other until the event ends. Alone, you become a random survivor with 40 armor. | Events "MonsterTransform", "InventoryRoulette" and "UnitedWeStand" inactive and currently not a boss wave. |
 | SwarmQueen | Nobody comes alone | Every monster that spawns brings 3 Beetles along, or 3 Lesser Wisps if it flies. |  |
 | TagTeam | Tag, you're it | Only one player deals damage, as much as all players together, e.g. 4 times as much with 4 players, and so do their drones and other allies; nothing else on the players' side does. Every 15 seconds another player is tagged in. | At least two players are alive and event "HotPotato" inactive. |
 | TheAlpha | The pack has a leader | A random monster becomes a big alpha with ten times its health. While it lives, all other monsters are in a frenzy. It drops an item when killed. |  |
 | Thieves | Watch your pockets | Monsters that hit a player steal one of their items and use it, up to one every half second. Kill the thief to get them back. |  |
 | TimeWarp | Time slows for your foes | Slows all monsters to about a third of their speed. |  |
 | UmbraAmbush | Umbras emerge from the shadows | Each player is hunted by a tough enemy survivor with items, which attacks and moves slowly. | Event "BulletHell" inactive. |
-| UnitedWeStand | United we stand | Players close to each other share all their items. | At least two players are alive. |
+| UnitedWeStand | United we stand | Players close to each other share all their items. | At least two players are alive and events "InventoryRoulette" and "SurvivorSwap" inactive. |
 | Vampires | A thirst for blood | Players heal by a fifth of the damage they deal, but lose health while monsters are near. | Event "FuelArray" inactive. |
 | VengefulSpirits | Spirits stand guard | All monsters get a Vengeful Spirit, but half as many spawn. | Hallowed Concepts is enabled, and not a Simulacrum boss wave. |
 | WeakEnemies | Horde of the many | Only weak enemies spawn. | Events "StrongEnemies", "Mitosis", "LynxPups", "BlightedCorpses" and "BulletHell" inactive. |
