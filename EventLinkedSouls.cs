@@ -12,7 +12,8 @@ namespace RandomEvents
     public class EventLinkedSouls : AbstractEvent
     {
         // the shares of a hit are damage too, which must not be split again
-        private bool sharing = false;
+        // while a player's damage is passed on to the others, as hits that keep its attacker
+        public static bool Sharing { get; private set; }
         private ConfigEntry<float> DamageTakenMultiplier;
         // Shared Suffering's tethers link the players, along the shortest tree that connects them all, rebuilt as they
         // move. A new tree replaces the current one only if it is this much shorter, so that links don't flicker
@@ -217,7 +218,7 @@ namespace RandomEvents
         private void HealthComponent_TakeDamage(On.RoR2.HealthComponent.orig_TakeDamage orig, HealthComponent self, DamageInfo damageInfo)
         {
             // the environment's damage, e.g. the void fog, hits each player in full
-            if (sharing || !NetworkServer.active || damageInfo == null || damageInfo.damage <= 0f || !ModConfig.Enabled.Value || !IsActive() || Helper.IsHazard(damageInfo))
+            if (Sharing || !NetworkServer.active || damageInfo == null || damageInfo.damage <= 0f || !ModConfig.Enabled.Value || !IsActive() || Helper.IsHazard(damageInfo))
             {
                 orig(self, damageInfo);
                 return;
@@ -242,7 +243,7 @@ namespace RandomEvents
             float share = damageInfo.damage / (others.Count + 1);
             damageInfo.damage = share;
             orig(self, damageInfo);
-            sharing = true;
+            Sharing = true;
             try
             {
                 foreach (var other in others)
@@ -266,7 +267,7 @@ namespace RandomEvents
             }
             finally
             {
-                sharing = false;
+                Sharing = false;
             }
         }
 

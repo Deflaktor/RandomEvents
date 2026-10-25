@@ -34,6 +34,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | GiantBalloons | Balloon animals | Fewer monsters spawn, but they are inflated to giant size with ten times their health. They shrink as they lose health. | Hallowed Concepts is enabled. |
 | Haste | The world accelerates | All beings become faster. |  |
 | HotPotato | Hot potato | A player carries a bomb, which goes to any player or monster they touch. Near the end of the event it explodes like a mini nuke. | Not during the teleporter event or a Simulacrum boss wave, and event "TagTeam" inactive. |
+| HuggingTime | Hugging time | Knockback sends whoever is hit flying to the attacker, and hits without knockback pull them 3 m closer, each with a tether between them. Damage over time is unaffected. | Events "Bouncy" and "RedLightGreenLight" inactive. |
 | Hunted | The hunt is on | All monsters chase one random player. | At least two players are alive and event "StealthMission" inactive. |
 | IndirectDamage | Let the items do the work | Players' hits deal no damage, but their item effects and damage over time still do. All players get 10 common and 5 uncommon items with on-hit effects. | At least one common or uncommon item with an on-hit effect is available, and event "CursedSpoils" inactive. |
 | InventoryRoulette | Spin the inventory roulette | Every player gets the items of another player until the event ends. | At least two players are alive and event "SurvivorSwap" inactive. |
