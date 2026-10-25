@@ -30,7 +30,8 @@ namespace RandomEvents
         }
 
         // What one fruit gives, taken back when it wears off on its own. All of it is in the inventory or buffs, which every
-        // player's game sees and works out the stats from. With the nth fruit lasting:
+        // player's game sees and works out the stats from. The items are temporary stacks, which can't be scrapped and
+        // which a copy of the inventory, e.g. an Engineer's turret's, doesn't take along. With the nth fruit lasting:
         // damage 200%, 400%, 800%, ...; health 200%, 400%, 600%, ...; movement speed 150%, 200%, 250%, ...;
         // armor +40, +80, +120, ...; size 150%, 200%, 250%, ...; 2.5% of the health regenerated per second and a Hunter's
         // Harpoon for each.
@@ -54,6 +55,8 @@ namespace RandomEvents
             public float timeLeft;
             public int nth;
             private CharacterBody body;
+            // the master's, which outlives the body
+            private Inventory inventory;
             private int damageStacks;
             private int healthStacks;
             private float healTimer = HealDelay;
@@ -63,11 +66,11 @@ namespace RandomEvents
                 body = GetComponent<CharacterBody>();
                 damageStacks = DamageStacks << Mathf.Min(nth - 1, 20);
                 healthStacks = nth == 1 ? FirstHealthStacks : HealthStacks;
-                var inventory = body.inventory;
-                inventory.GiveItemPermanent(RoR2Content.Items.BoostDamage, damageStacks);
-                inventory.GiveItemPermanent(RoR2Content.Items.BoostHp, healthStacks);
-                inventory.GiveItemPermanent(DLC4Content.Items.BoostCharacterScale, SizeStacks);
-                inventory.GiveItemPermanent(DLC1Content.Items.MoveSpeedOnKill, Harpoons);
+                inventory = body.inventory;
+                inventory.GiveItemChanneled(RoR2Content.Items.BoostDamage.itemIndex, damageStacks);
+                inventory.GiveItemChanneled(RoR2Content.Items.BoostHp.itemIndex, healthStacks);
+                inventory.GiveItemChanneled(DLC4Content.Items.BoostCharacterScale.itemIndex, SizeStacks);
+                inventory.GiveItemChanneled(DLC1Content.Items.MoveSpeedOnKill.itemIndex, Harpoons);
                 AddBuff(DLC1Content.Buffs.KillMoveSpeed, SpeedStacks);
                 AddBuff(DLC4Content.Buffs.MinorArmorBuff, ArmorStacks);
                 AddBuff(DLC3Content.Buffs.HealNovaRegen, RegenStacks);
@@ -112,16 +115,16 @@ namespace RandomEvents
 
             private void OnDestroy()
             {
+                if (inventory != null)
+                {
+                    inventory.RemoveItemChanneled(RoR2Content.Items.BoostDamage.itemIndex, damageStacks);
+                    inventory.RemoveItemChanneled(RoR2Content.Items.BoostHp.itemIndex, healthStacks);
+                    inventory.RemoveItemChanneled(DLC4Content.Items.BoostCharacterScale.itemIndex, SizeStacks);
+                    inventory.RemoveItemChanneled(DLC1Content.Items.MoveSpeedOnKill.itemIndex, Harpoons);
+                }
                 if (body == null)
                 {
                     return;
-                }
-                if (body.inventory != null)
-                {
-                    body.inventory.RemoveItemPermanent(RoR2Content.Items.BoostDamage, damageStacks);
-                    body.inventory.RemoveItemPermanent(RoR2Content.Items.BoostHp, healthStacks);
-                    body.inventory.RemoveItemPermanent(DLC4Content.Items.BoostCharacterScale, SizeStacks);
-                    body.inventory.RemoveItemPermanent(DLC1Content.Items.MoveSpeedOnKill, Harpoons);
                 }
                 RemoveBuff(DLC1Content.Buffs.KillMoveSpeed, SpeedStacks);
                 RemoveBuff(DLC4Content.Buffs.MinorArmorBuff, ArmorStacks);
