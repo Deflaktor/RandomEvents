@@ -44,7 +44,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Three quarters of the monsters are shielded, with 300 more armor, and take only 5% of the damage. The others have a quarter of their health, and when one dies, the nearest shielded monster loses its shield.";
+            return "Three quarters of the monsters are shielded, with 300 more armor, and take only 5% of the damage. The others have a quarter of their health, and when one dies, the nearest shielded monster loses its shield. SwarmQueen's Beetles and Lesser Wisps are never shielded.";
         }
         public override string GetPopupDescription()
         {
@@ -108,9 +108,11 @@ namespace RandomEvents
             RoR2.Audio.EntitySoundManager.EmitSoundServer(blockSound.index, body.gameObject);
         }
 
+        // never SwarmQueen's swarms, with which each monster would bring more shielded ones along; unshielded, they
+        // break the shields of those they came with
         private void Assign(CharacterBody body)
         {
-            if (RoR2Application.rng.nextNormalizedFloat < ShieldedShare.Value)
+            if (body.master.GetComponent<EventSwarmQueen.SwarmMember>() == null && RoR2Application.rng.nextNormalizedFloat < ShieldedShare.Value)
             {
                 Shield(body);
             }
