@@ -67,13 +67,15 @@ namespace RandomEvents
             CharacterBody.onBodyStartGlobal += CharacterBody_onBodyStartGlobal;
         }
 
-        // not for bosses, minions or the swarm itself
+        // not for bosses, minions or the swarm itself, nor for Mitosis' splits or zombies that come back, which would bring
+        // ever more swarms
         private void CharacterBody_onBodyStartGlobal(CharacterBody body)
         {
             var master = body.master;
             if (!ModConfig.Enabled.Value || !NetworkServer.active || !IsActive() || master == null || body.isBoss || master.isBoss
                 || body.teamComponent.teamIndex == TeamIndex.Player || body.teamComponent.teamIndex == TeamIndex.Neutral
-                || master.minionOwnership.ownerMaster != null || swarm.Remove(master))
+                || master.minionOwnership.ownerMaster != null || swarm.Remove(master) || master.GetComponent<EventMitosis.MitosisSplit>() != null
+                || (master.TryGetComponent(out EventZombies.ZombieComponent zombie) && zombie.revived))
             {
                 return;
             }
