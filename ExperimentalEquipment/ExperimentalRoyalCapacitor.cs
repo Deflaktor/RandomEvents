@@ -11,6 +11,7 @@ namespace RandomEvents
         private const float InflateTime = 2f;
         private const float InflateFactor = 3f;
         private static AsyncOperationHandle<GameObject> Breach;
+        private static AsyncOperationHandle<GameObject> Burst;
         private static AsyncOperationHandle<GameObject> Tick;
         private static AsyncOperationHandle<GameObject> Strike;
 
@@ -24,6 +25,9 @@ namespace RandomEvents
         {
             // the explosion of ExplodingCorpses' monsters
             Breach = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC2/Scorchling/VFXScorchlingBreachExplosion.prefab");
+            // the Scorch Worm's death explosion, which looks alike and, unlike the breach explosion, has a sound: that of
+            // the worm breaking out of the ground
+            Burst = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC2/Scorchling/VFXScorchlingDeathExplosion.prefab");
             Tick = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/OmniExplosionVFXQuick.prefab");
             // Luminous Shot's lightning strike, with its sound
             Strike = Addressables.LoadAssetAsync<GameObject>("RoR2/DLC2/Items/IncreasePrimaryDamage/IncreasePrimaryDamageImpact.prefab");
@@ -101,11 +105,13 @@ namespace RandomEvents
                 var scale = (startPercent + added) / 100f;
                 var position = Vector3.Lerp(body.corePosition, body.footPosition, 0.5f);
                 var radius = Mathf.Max(10f, Mathf.Sqrt(Mathf.Min(body.baseMaxHealth, 5000f)) * 0.7f) * scale / InflateFactor * 1.5f;
-                EffectManager.SpawnEffect(Breach.WaitForCompletion(), new EffectData
+                var effectData = new EffectData
                 {
                     origin = position,
                     scale = radius * 0.75f
-                }, transmit: true);
+                };
+                EffectManager.SpawnEffect(Breach.WaitForCompletion(), effectData, transmit: true);
+                EffectManager.SpawnEffect(Burst.WaitForCompletion(), effectData, transmit: true);
                 if (attacker != null)
                 {
                     new BlastAttack
