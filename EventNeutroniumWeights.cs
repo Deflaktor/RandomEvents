@@ -9,8 +9,7 @@ namespace RandomEvents
 {
     public class EventNeutroniumWeights : AbstractEvent
     {
-        public override EventTags Tags => EventTags.Monsters;
-        // the monsters given a weight, so they don't get another one after it was sent away
+        // the characters given a weight, so they don't get another one after it was sent away
         private readonly HashSet<CharacterMaster> weighted = new HashSet<CharacterMaster>();
         // the weights the event gave or moved as temporary stacks, taken back when the event ends
         private readonly Dictionary<Inventory, int> changes = new Dictionary<Inventory, int>();
@@ -38,7 +37,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "All monsters get a Neutronium Weight until the event ends.";
+            return "Every player, ally and monster gets a Neutronium Weight until the event ends.";
         }
         public override string GetConditionDescription()
         {
@@ -120,7 +119,7 @@ namespace RandomEvents
             changes[inventory] = changes.GetValueOrDefault(inventory) + count;
         }
 
-        // monsters spawning during the event get one too
+        // characters spawning during the event get one too
         private void CharacterBody_onBodyStartGlobal(CharacterBody body)
         {
             if (NetworkServer.active && IsActive())
@@ -132,8 +131,7 @@ namespace RandomEvents
         private void GiveWeight(CharacterBody body)
         {
             var master = body != null ? body.master : null;
-            if (master == null || master.inventory == null || !weighted.Add(master)
-                || body.teamComponent.teamIndex == TeamIndex.Player || body.teamComponent.teamIndex == TeamIndex.Neutral)
+            if (master == null || master.inventory == null || !weighted.Add(master) || body.teamComponent.teamIndex == TeamIndex.Neutral)
             {
                 return;
             }

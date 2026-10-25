@@ -47,7 +47,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | MirroredEnemies | Mirror, mirror | Some monsters are mirrored: their health decays, their hits heal players and hurt themselves, and players' direct hits on them hurt the players instead, by the same share of health, at least 5% and up to 20% per second. | Event "Shielded" inactive. |
 | Mitosis | Divide and multiply | Only monsters with a weaker relative spawn, and they split into several of them when they die. | Not a Simulacrum boss wave, the stage's monsters include such a pair, and events "StrongEnemies", "WeakEnemies", "DroneUprising", "LynxPups", "BlightedCorpses" and "BulletHell" inactive. |
 | MonsterTransform | Players embrace their monstrous forms | Players transform into monsters. | Events "SkillsOnly" and "SurvivorSwap" inactive and currently not a boss wave. |
-| NeutroniumWeights | A heavy burden | All monsters get a Neutronium Weight until the event ends. | Alloyed Collective is enabled. |
+| NeutroniumWeights | A heavy burden | Every player, ally and monster gets a Neutronium Weight until the event ends. | Alloyed Collective is enabled. |
 | Ossification | Every kill shields both sides | All players get 3 Hexes of Ossification, so their kills give nearby monsters barrier, but also enough Topaz Brooches for each kill to fill their own barrier. | Hallowed Concepts is enabled, and events "Ghosts" and "CursedSpoils" inactive. |
 | RandomArtifact |  | Turns on up to three random artifacts until the event ends. | There is at least one artifact which can be enabled and is not blacklisted. |
 | RandomTeams | Enemies turn against each other | Makes some enemies fight each other as well as the players. |  |
