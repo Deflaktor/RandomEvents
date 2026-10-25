@@ -806,8 +806,9 @@ namespace RandomEvents
             {
                 return;
             }
-            // the Operator's companion drones keep their master when downed and are repaired by the game
-            if (master.GetComponent<DroneRepairMaster>())
+            // the Operator's companion drones keep their master when downed and are repaired by the game, and DroneEscort
+            // only lends its drones for its own duration
+            if (master.GetComponent<DroneRepairMaster>() || master.GetComponent<EventDroneEscort.EscortDrone>())
             {
                 return;
             }
