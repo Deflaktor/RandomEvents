@@ -17,8 +17,6 @@ namespace RandomEvents
         private ConfigEntry<int> SwarmSize;
         private AsyncOperationHandle<CharacterSpawnCard> Beetle;
         private AsyncOperationHandle<CharacterSpawnCard> LesserWisp;
-        // the swarms' own monsters, which bring no swarm along
-        private readonly HashSet<CharacterMaster> swarm = new HashSet<CharacterMaster>();
 
         public override bool LoadCondition()
         {
@@ -74,7 +72,7 @@ namespace RandomEvents
             var master = body.master;
             if (!ModConfig.Enabled.Value || !NetworkServer.active || !IsActive() || master == null || body.isBoss || master.isBoss
                 || body.teamComponent.teamIndex == TeamIndex.Player || body.teamComponent.teamIndex == TeamIndex.Neutral
-                || master.minionOwnership.ownerMaster != null || swarm.Remove(master) || master.GetComponent<EventMitosis.MitosisSplit>() != null
+                || master.minionOwnership.ownerMaster != null || master.GetComponent<SwarmMember>() != null || master.GetComponent<EventMitosis.MitosisSplit>() != null
                 || (master.TryGetComponent(out EventZombies.ZombieComponent zombie) && zombie.revived))
             {
                 return;
@@ -88,7 +86,7 @@ namespace RandomEvents
                 var member = Helper.SpawnMonster(spawnCard, center + offset);
                 if (member != null)
                 {
-                    swarm.Add(member);
+                    member.gameObject.AddComponent<SwarmMember>();
                 }
             }
         }
@@ -99,12 +97,15 @@ namespace RandomEvents
 
         public override void Start(List<AbstractEvent> activeOtherEvents)
         {
-            swarm.Clear();
         }
 
         public override void Stop()
         {
-            swarm.Clear();
+        }
+
+        // marks the swarms' own monsters, which bring no swarm along, e.g. so Shielded doesn't shield them
+        public class SwarmMember : MonoBehaviour
+        {
         }
     }
 }
