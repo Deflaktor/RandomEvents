@@ -9,30 +9,11 @@ namespace RandomEvents
     public class EventUmbraAmbush : AbstractEvent
     {
         public override EventTags Tags => EventTags.Monsters;
-        // Items that suit each survivor. A hunter gets a kit with half as many items of each tier as the player it
-        // hunts has (setting Item Multiplier), picked from its survivor's list, or from the default list if that has
-        // none of the tier, or else from all safe items of the tier. Only safe items go into the kit, see the setting
-        // Unsafe Items.
-        private static readonly Dictionary<string, string> DefaultSurvivorItems = new Dictionary<string, string>
-        {
-            { "Default", "CritGlasses, Hoof, Bear, Crowbar, BossDamageBonus, StickyBomb, ArmorPlate, FlatHealth, Tooth, ChainLightning, Missile, Seed, Infusion, IceRing, FireRing, SprintArmor, ExplodeOnDeath, Behemoth, ShockNearby, BounceNearby, Dagger, BarrierOnOverHeal, Knurl, SprintWisp, LightningStrikeOnHit, FireballsOnHit, BleedOnHitAndExplode" },
-            { "CommandoBody", "CritGlasses, BossDamageBonus, StickyBomb, ChainLightning, Missile, Behemoth, BounceNearby, LightningStrikeOnHit" },
-            { "HuntressBody", "CritGlasses, Hoof, Missile, ChainLightning, Dagger, BounceNearby, HeadHunter, LightningStrikeOnHit" },
-            { "Bandit2Body", "CritGlasses, Crowbar, BleedOnHit, SecondarySkillMagazine, ExecuteLowHealthElite, Behemoth, Dagger, BleedOnHitAndExplode" },
-            { "MercBody", "Hoof, BleedOnHit, Bear, Seed, ChainLightning, ShockNearby, BleedOnHitAndExplode, SprintWisp" },
-            { "LoaderBody", "ArmorPlate, Bear, Crowbar, FlatHealth, Infusion, SprintArmor, Thorns, BarrierOnOverHeal, ShockNearby, Knurl" },
-            { "CrocoBody", "Hoof, Bear, Tooth, Seed, Infusion, ChainLightning, Behemoth, ShockNearby, Knurl" },
-            { "MageBody", "CritGlasses, IgniteOnKill, FireRing, IceRing, ChainLightning, Missile, Behemoth, Icicle, FireballsOnHit" },
-            { "EngiBody", "ArmorPlate, Bear, ChainLightning, Missile, Thorns, ShockNearby, Knurl" },
-            { "ToolbotBody", "CritGlasses, StickyBomb, ChainLightning, Missile, Behemoth, BounceNearby, Knurl" },
-            { "TreebotBody", "FlatHealth, Tooth, Seed, Infusion, IceRing, Behemoth, BarrierOnOverHeal, Knurl" },
-            { "CaptainBody", "CritGlasses, StickyBomb, ChainLightning, Missile, Behemoth, ShockNearby, LightningStrikeOnHit" },
-            { "RailgunnerBody", "CritGlasses, BossDamageBonus, Crowbar, Missile, Behemoth, Dagger, LightningStrikeOnHit" },
-            { "VoidSurvivorBody", "CritGlasses, ChainLightning, Behemoth, ShockNearby, Knurl" },
-            { "SeekerBody", "Hoof, Bear, ChainLightning, Seed, BarrierOnOverHeal, ShockNearby, SprintWisp" },
-            { "FalseSonBody", "ArmorPlate, FlatHealth, Bear, Infusion, Thorns, BarrierOnOverHeal, Knurl" },
-            { "ChefBody", "IgniteOnKill, StickyBomb, FireRing, ChainLightning, Behemoth, FireballsOnHit" },
-        };
+        // Items that suit every survivor: tough and self-healing, so they help whatever the hunter's attacks are. A
+        // hunter gets a kit with half as many items of each tier as the player it hunts has (setting Item Multiplier),
+        // picked from this list, or from all safe items of the tier if it has none of the tier. Only safe items go into
+        // the kit, see the setting Unsafe Items.
+        private const string DefaultHunterItems = "FlatHealth, PersonalShield, OutOfCombatArmor, HealWhileSafe, Seed, SlowOnHit, Phasing, BarrierOnOverHeal, IncreaseHealing, Knurl, ParentEgg, Pearl";
         // the tiers whose item counts measure a player's power; void items count as their normal tier
         private static readonly Dictionary<ItemTier, ItemTier> TierOfCount = new Dictionary<ItemTier, ItemTier>
         {
@@ -48,7 +29,7 @@ namespace RandomEvents
         private ConfigEntry<float> DamageMultiplier;
         private ConfigEntry<float> AttackSpeedMultiplier;
         private ConfigEntry<float> MoveSpeedMultiplier;
-        private readonly Dictionary<string, ConfigEntry<string>> survivorItems = new Dictionary<string, ConfigEntry<string>>();
+        private ConfigEntry<string> HunterItems;
         private readonly List<CharacterMaster> hunters = new List<CharacterMaster>();
 
         public override bool LoadCondition()
@@ -87,12 +68,7 @@ namespace RandomEvents
             AttackSpeedMultiplier = config.Bind(GetEventConfigName(), "Attack Speed Multiplier", 0.25f, "How often the hunters attack, relative to normal: it multiplies their attack speed and divides their cooldowns.");
             MoveSpeedMultiplier = config.Bind(GetEventConfigName(), "Move Speed Multiplier", 0.5f, "The hunters' movement speed, relative to normal.");
             ItemMultiplier = config.Bind(GetEventConfigName(), "Item Multiplier", 0.5f, "The number of items per tier in a hunter's kit, relative to the player it hunts.");
-            foreach (var (survivor, items) in DefaultSurvivorItems)
-            {
-                survivorItems[survivor] = config.Bind(GetEventConfigName(), $"Hunter Items {survivor}", items, survivor == "Default"
-                    ? "Comma-separated internal item names for the hunters of survivors without their own list, and for tiers that a survivor's list lacks. Unsafe items are left out."
-                    : $"Comma-separated internal item names that suit a hunter of {survivor}. Unsafe items are left out.");
-            }
+            HunterItems = config.Bind(GetEventConfigName(), "Hunter Items", DefaultHunterItems, "Comma-separated internal item names that the hunters' kits are picked from. For a tier without any, the kit gets random items. Unsafe items are left out.");
         }
         public override void Preload()
         {
@@ -119,14 +95,10 @@ namespace RandomEvents
             }).ToList();
         }
 
-        private List<ItemIndex> ParseItems(string survivor)
+        private List<ItemIndex> ParseItems()
         {
             var result = new List<ItemIndex>();
-            if (!survivorItems.TryGetValue(survivor, out var items))
-            {
-                return result;
-            }
-            foreach (var name in items.Value.Split(','))
+            foreach (var name in HunterItems.Value.Split(','))
             {
                 var itemIndex = ItemCatalog.FindItemIndex(name.Trim());
                 if (itemIndex != ItemIndex.None && !Run.instance.IsItemExpansionLocked(itemIndex))
@@ -154,19 +126,14 @@ namespace RandomEvents
             return counts;
         }
 
-        private void GiveItems(Inventory hunterInventory, string survivor, Dictionary<ItemTier, int> counts)
+        private void GiveItems(Inventory hunterInventory, Dictionary<ItemTier, int> counts)
         {
             var safeItems = new HashSet<ItemIndex>(SafeItems.Get());
             safeItems.ExceptWith(FasterAttackItems.Select(ItemCatalog.FindItemIndex));
-            var survivorList = ParseItems(survivor).Where(safeItems.Contains).ToList();
-            var defaultList = ParseItems("Default").Where(safeItems.Contains).ToList();
+            var hunterItems = ParseItems().Where(safeItems.Contains).ToList();
             foreach (var (tier, count) in counts)
             {
-                var candidates = survivorList.Where(itemIndex => ItemCatalog.GetItemDef(itemIndex).tier == tier).ToList();
-                if (candidates.Count == 0)
-                {
-                    candidates = defaultList.Where(itemIndex => ItemCatalog.GetItemDef(itemIndex).tier == tier).ToList();
-                }
+                var candidates = hunterItems.Where(itemIndex => ItemCatalog.GetItemDef(itemIndex).tier == tier).ToList();
                 if (candidates.Count == 0)
                 {
                     candidates = safeItems.Where(itemIndex => ItemCatalog.GetItemDef(itemIndex).tier == tier).ToList();
@@ -226,7 +193,7 @@ namespace RandomEvents
                 {
                     hunter.inventory.GiveItemPermanent(DLC4Content.Items.ReduceDamage, reduceDamage);
                 }
-                GiveItems(hunter.inventory, body.name, CountItemsPerTier(target.inventory));
+                GiveItems(hunter.inventory, CountItemsPerTier(target.inventory));
                 var hunterBody = hunter.GetBody();
                 if (hunterBody != null)
                 {
