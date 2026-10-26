@@ -14,7 +14,6 @@ namespace RandomEvents
         // the shares of a hit are damage too, which must not be split again
         // while a player's damage is passed on to the others, as hits that keep its attacker
         public static bool Sharing { get; private set; }
-        private ConfigEntry<float> DamageTakenMultiplier;
         // Shared Suffering's tethers link the players, along the shortest tree that connects them all, rebuilt as they
         // move. A new tree replaces the current one only if it is this much shorter, so that links don't flicker
         // between two about as long.
@@ -53,11 +52,11 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Damage a player takes is split among all living players, but players take 25% less damage. Tethers link the players.";
+            return "Damage a player takes is split among all living players. Tethers link the players.";
         }
         public override string GetPopupDescription()
         {
-            return "Your souls are linked: damage you take is split among all living players, but you take 25% less.";
+            return "Your souls are linked: damage you take is split among all living players.";
         }
         public override string GetConditionDescription()
         {
@@ -65,7 +64,6 @@ namespace RandomEvents
         }
         protected override void AddConfig(ConfigFile config)
         {
-            DamageTakenMultiplier = config.Bind(GetEventConfigName(), "Damage Taken Multiplier", 0.75f, "The damage players take during the event, relative to normal, before it is split.");
         }
         public override void Preload()
         {
@@ -224,10 +222,6 @@ namespace RandomEvents
                 return;
             }
             var victim = self.body;
-            if (victim != null && victim.isPlayerControlled)
-            {
-                damageInfo.damage *= Mathf.Max(0f, DamageTakenMultiplier.Value);
-            }
             // nothing to share while invincible, and players don't pass on what they do to themselves
             if (victim == null || !victim.isPlayerControlled || !self.alive || damageInfo.attacker == victim.gameObject || IsInvincible(self))
             {
