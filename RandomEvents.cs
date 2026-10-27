@@ -123,6 +123,7 @@ namespace RandomEvents
                     new EventUnitedWeStand(),
                     new EventVampires(),
                     new EventVengefulSpirits(),
+                    new EventVoidCore(),
                     new EventVoidInfection(),
                     new EventWeakEnemies(),
                     new EventZombies(),

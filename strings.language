@@ -118,6 +118,7 @@
         "ANNOUNCE_EVENT_VAMPIRES": "A thirst for blood",
         "ANNOUNCE_EVENT_TAG_KING": "Tag, I'm King",
         "ANNOUNCE_EVENT_TAG_YOURE_IT": "Tag, you're it",
+        "ANNOUNCE_EVENT_VOID_CORE": "The center cannot hold",
         "ANNOUNCE_EVENT_VOID_INFECTION": "The Void spreads",
         "ANNOUNCE_EVENT_INDIRECT_DAMAGE": "Let the items do the work",
         "ANNOUNCE_EVENT_SWARM_QUEEN": "Nobody comes alone",
