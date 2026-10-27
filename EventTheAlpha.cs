@@ -31,6 +31,7 @@ namespace RandomEvents
         private int addedScale;
         public enum AlphaDrop { None, White, Green, Red }
         private ConfigEntry<AlphaDrop> Drop;
+        private ConfigEntry<float> SpawnRate;
         private GameObject squad;
         private bool alphaFallen;
         private float updateTimer;
@@ -53,11 +54,11 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "A random monster becomes a big alpha with ten times its health. While it lives, all other monsters are in a frenzy. It drops an item when killed.";
+            return "A random monster becomes a big alpha with ten times its health. While it lives, all other monsters are in a frenzy and have an Alien Head. It drops an item when killed. A quarter fewer monsters spawn.";
         }
         public override string GetPopupDescription()
         {
-            return "A big alpha with ten times its health drives the other monsters into a frenzy. Kill it for an item!";
+            return "A big alpha with ten times its health drives the other monsters into a frenzy and gives them an Alien Head. Kill it for an item!";
         }
         public override string GetConditionDescription()
         {
@@ -66,6 +67,7 @@ namespace RandomEvents
         protected override void AddConfig(ConfigFile config)
         {
             Drop = config.Bind(GetEventConfigName(), "Alpha Drop", AlphaDrop.White, "The item of this tier the alpha drops when killed, which players keep. None for no item.");
+            SpawnRate = config.Bind(GetEventConfigName(), "Spawn Rate", 0.75f, "How many monsters spawn during the event, relative to normal.");
         }
         public override void Preload()
         {
@@ -75,6 +77,14 @@ namespace RandomEvents
         {
             RoR2Application.onFixedUpdate += RoR2Application_onFixedUpdate;
             GlobalEventManager.onCharacterDeathServer += GlobalEventManager_onCharacterDeathServer;
+            On.RoR2.CombatDirector.DirectorMoneyWave.Update += DirectorMoneyWave_Update;
+        }
+
+        // fewer monsters, since the alpha makes them stronger
+        private float DirectorMoneyWave_Update(On.RoR2.CombatDirector.DirectorMoneyWave.orig_Update orig, CombatDirector.DirectorMoneyWave self, float deltaTime, float difficultyCoefficient)
+        {
+            var credits = orig(self, deltaTime, difficultyCoefficient);
+            return NetworkServer.active && IsActive() ? credits * Mathf.Max(0f, SpawnRate.Value) : credits;
         }
 
         // a killed alpha drops a normal item, not one of the event's
@@ -128,9 +138,21 @@ namespace RandomEvents
             }
             foreach (var body in CharacterBody.instancesList)
             {
-                if (body != null && body != alphaBody && body.teamComponent.teamIndex == alphaBody.teamComponent.teamIndex && body.healthComponent.alive && !buffs.Has(body, RoR2Content.Buffs.TeamWarCry))
+                if (body == null || body == alphaBody || body.teamComponent.teamIndex != alphaBody.teamComponent.teamIndex || !body.healthComponent.alive)
+                {
+                    continue;
+                }
+                if (!buffs.Has(body, RoR2Content.Buffs.TeamWarCry))
                 {
                     buffs.Add(body, RoR2Content.Buffs.TeamWarCry);
+                }
+                if (body.inventory != null)
+                {
+                    var inventory = EventLoot.GetInventory(this, body);
+                    if (!inventory.temporaryItems.ContainsKey(RoR2Content.Items.AlienHead.itemIndex))
+                    {
+                        inventory.GiveTemporaryItem(RoR2Content.Items.AlienHead.itemIndex);
+                    }
                 }
             }
         }
@@ -166,6 +188,7 @@ namespace RandomEvents
             // a zombie that comes back from it would keep them
             RemoveBoosts();
             buffs.RemoveAll();
+            EventLoot.Clear(this);
             if (squad != null)
             {
                 GameObject.Destroy(squad);
@@ -195,11 +218,19 @@ namespace RandomEvents
             alpha = null;
             alphaFallen = false;
             updateTimer = 0f;
+            // Simulacrum's waves get their credits from the wave instead
+            if (Run.instance is InfiniteTowerRun infiniteTowerRun && infiniteTowerRun.waveController != null)
+            {
+                var spawnRate = Mathf.Max(0f, SpawnRate.Value);
+                infiniteTowerRun.waveController.totalWaveCredits *= spawnRate;
+                infiniteTowerRun.waveController.creditsPerSecond *= spawnRate;
+            }
         }
 
         public override void Stop()
         {
             buffs.RemoveAll();
+            EventLoot.Clear(this);
             RemoveBoosts();
             // destroying the squad also removes the health bar and the alpha's boss status
             if (squad != null)
