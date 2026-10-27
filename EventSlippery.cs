@@ -36,7 +36,7 @@ namespace RandomEvents
         }
         public override string GetPopupDescription()
         {
-            return "You and the monsters get 3 Hexes of Acceleration: everything is slippery!";
+            return "Everything is slippery, for you and the monsters!";
         }
         public override string GetConditionDescription()
         {

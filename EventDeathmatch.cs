@@ -121,7 +121,7 @@ namespace RandomEvents
         }
         public override string GetPopupDescription()
         {
-            return "Fight the other players! You revive when you die, and each kill scores a point. The winner gets a green item.";
+            return "Fight the other players! You revive when you die, and each kill scores a point. The winner gets an item.";
         }
         public override string GetConditionDescription()
         {

@@ -51,6 +51,10 @@ namespace RandomEvents
         {
             return "Halves the safe zone, but the wave is easier.";
         }
+        public override string GetPopupDescription()
+        {
+            return "The safe zone shrinks, but the wave is easier.";
+        }
         public override string GetConditionDescription()
         {
             return "Simulacrum mode only";

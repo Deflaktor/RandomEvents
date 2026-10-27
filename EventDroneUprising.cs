@@ -55,7 +55,7 @@ namespace RandomEvents
         }
         public override string GetPopupDescription()
         {
-            return "The drones have turned on you! They're weaker and slower than usual, though.";
+            return "The drones have turned on you!";
         }
         public override string GetConditionDescription()
         {

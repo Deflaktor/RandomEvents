@@ -55,7 +55,7 @@ namespace RandomEvents
         }
         public override string GetPopupDescription()
         {
-            return "A tough enemy survivor with items hunts each of you. It moves and attacks slowly.";
+            return "A tough enemy survivor with items hunts each of you.";
         }
         public override string GetConditionDescription()
         {

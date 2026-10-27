@@ -38,7 +38,7 @@ namespace RandomEvents
         }
         public override string GetPopupDescription()
         {
-            return "Your kills give nearby monsters barrier, but you get Topaz Brooches to fill your own.";
+            return "Kills give barrier to you and nearby monsters alike.";
         }
         public override string GetConditionDescription()
         {

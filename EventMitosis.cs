@@ -57,7 +57,7 @@ namespace RandomEvents
         }
         public override string GetPopupDescription()
         {
-            return "Only monsters with a weaker relative spawn, and they split into several of them when they die.";
+            return "Monsters split into weaker ones when they die.";
         }
         public override string GetConditionDescription()
         {

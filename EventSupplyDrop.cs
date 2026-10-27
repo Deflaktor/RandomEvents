@@ -46,7 +46,7 @@ namespace RandomEvents
         }
         public override string GetPopupDescription()
         {
-            return "You get a random Captain beacon, which stays for the rest of the stage.";
+            return "You get a random Captain beacon.";
         }
         public override string GetConditionDescription()
         {

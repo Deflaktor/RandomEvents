@@ -24,7 +24,7 @@ namespace RandomEvents
         }
         public override string GetPopupDescription()
         {
-            return "The king is invincible and deals the whole team's damage, and the monsters ignore them. Touch the king to take the crown!";
+            return "The king is invincible and deals extra damage, and the monsters ignore them. Touch the king to take the crown!";
         }
         protected override void AddConfig(ConfigFile config)
         {

@@ -45,7 +45,7 @@ namespace RandomEvents
         }
         public override string GetPopupDescription()
         {
-            return "You get another player's items and 60 armor for a while.";
+            return "You get another player's items and extra armor for a while.";
         }
         public override string GetConditionDescription()
         {

@@ -41,7 +41,7 @@ namespace RandomEvents
         }
         public override string GetPopupDescription()
         {
-            return "Every monster brings 3 Beetles along, or 3 Lesser Wisps if it flies.";
+            return "Every monster brings a swarm of Beetles or Lesser Wisps along.";
         }
         public override string GetConditionDescription()
         {

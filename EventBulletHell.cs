@@ -39,7 +39,7 @@ namespace RandomEvents
         }
         public override string GetPopupDescription()
         {
-            return "Only monsters that shoot projectiles spawn. They fire much faster, but each shot hurts less.";
+            return "Monsters fire much faster, but each shot hurts less.";
         }
         public override string GetConditionDescription()
         {

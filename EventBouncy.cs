@@ -50,7 +50,7 @@ namespace RandomEvents
         }
         public override string GetPopupDescription()
         {
-            return "Boing! You get Earthbound Vessels and a Breaching Fin without cooldown. Monsters jump around at random.";
+            return "Boing! You and the monsters bounce around.";
         }
         public override string GetConditionDescription()
         {

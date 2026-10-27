@@ -49,7 +49,7 @@ namespace RandomEvents
         }
         public override string GetPopupDescription()
         {
-            return "Your hits deal no damage, but your item effects and damage over time still do. You get extra on-hit items.";
+            return "Your hits deal no damage, but your item effects still do. You get extra on-hit items.";
         }
         public override string GetConditionDescription()
         {

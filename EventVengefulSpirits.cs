@@ -35,6 +35,10 @@ namespace RandomEvents
         {
             return "All monsters get a Vengeful Spirit, but half as many spawn.";
         }
+        public override string GetPopupDescription()
+        {
+            return "All monsters get a Vengeful Spirit, but fewer spawn.";
+        }
         public override string GetConditionDescription()
         {
             return "Hallowed Concepts is enabled, and not a Simulacrum boss wave.";
