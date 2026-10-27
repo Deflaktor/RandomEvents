@@ -45,11 +45,11 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Players burn while on the ground for more than half a second, which sets the ground beneath them on fire, burning the players in it. All players get 2 Hopoo Feathers.";
+            return "Players burn while on the ground for more than half a second, which sets the ground beneath them on fire, burning the players in it. All players get a Hopoo Feather.";
         }
         public override string GetPopupDescription()
         {
-            return "The floor is lava! Don't stay on the ground. You get 2 Hopoo Feathers.";
+            return "The floor is lava! Don't stay on the ground. You get a Hopoo Feather.";
         }
         public override string GetConditionDescription()
         {
@@ -59,7 +59,7 @@ namespace RandomEvents
         {
             GraceTime = config.Bind(GetEventConfigName(), "Grace Time", 0.5f, "Seconds players can be on the ground before they burn.");
             DamagePerSecond = config.Bind(GetEventConfigName(), "Damage Per Second", 0.05f, "The share of their maximum health players lose per second while burning.");
-            Feathers = config.Bind(GetEventConfigName(), "Hopoo Feathers", 2, "How many Hopoo Feathers players get during the event.");
+            Feathers = config.Bind(GetEventConfigName(), "Hopoo Feathers", 1, "How many Hopoo Feathers players get during the event.");
         }
         public override void Preload()
         {
