@@ -13,6 +13,8 @@ namespace RandomEvents
         // whether the event can pick it this time, e.g. only with more than one player
         public virtual bool IsAvailable => true;
         public abstract string PopupDescription { get; }
+        // whether players can fight with it alone, when Equipment-exclusive combat hands it out
+        public virtual bool CanFight => true;
 
         public virtual void Preload()
         {

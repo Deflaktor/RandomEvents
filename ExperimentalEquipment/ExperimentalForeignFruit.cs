@@ -9,6 +9,7 @@ namespace RandomEvents
         private const float Duration = 15f;
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.Fruit;
+        public override bool CanFight => false;
         public override string PopupDescription => "Fully heals you and makes you much stronger and bigger for a while. Eat more to stack it!";
 
         public override bool Fire(EquipmentSlot slot)

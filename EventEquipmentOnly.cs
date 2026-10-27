@@ -31,7 +31,22 @@ namespace RandomEvents
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            return !RunArtifactManager.enabledArtifactsEnumerable.Any(e => e == RoR2Content.Artifacts.Enigma);
+            // the experimental equipment is all the players fight with
+            var experimental = activeOtherEvents.OfType<EventExperimentalEquipment>().FirstOrDefault();
+            return !RunArtifactManager.enabledArtifactsEnumerable.Any(e => e == RoR2Content.Artifacts.Enigma)
+                && (experimental == null || experimental.Current == null || experimental.Current.CanFight);
+        }
+
+        public static EventEquipmentOnly Find(IEnumerable<AbstractEvent> events)
+        {
+            return events.OfType<EventEquipmentOnly>().FirstOrDefault();
+        }
+
+        // ExperimentalEquipment's equipment instead of the event's own
+        private EquipmentDef PickEquipment()
+        {
+            var experimental = RandomEvents.instance.m_activeEvents.OfType<EventExperimentalEquipment>().FirstOrDefault(e => e.Current != null);
+            return experimental != null ? experimental.Current.EquipmentDef : commonEquipment;
         }
         public override string GetEventConfigName()
         {
@@ -43,7 +58,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Disables all skills, but gives all players a random equipment with a short cooldown. Molotovs burst in the air next to flying monsters, dealing 800% damage to all monsters within 6 m.";
+            return "Disables all skills, but gives all players a random equipment with a short cooldown. Molotovs burst in the air next to flying monsters, dealing 800% damage to all monsters within 6 m. With an experimental equipment, the players get that one.";
         }
         public override string GetPopupDescription()
         {
@@ -51,7 +66,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Artifact of Enigma inactive.";
+            return "Artifact of Enigma inactive, and the experimental equipment is not Foreign Fruit or Gnarled Woodsprite.";
         }
         protected override void AddConfig(ConfigFile config)
         {
@@ -153,7 +168,7 @@ namespace RandomEvents
             if (ModConfig.Enabled.Value && NetworkServer.active && IsActive() && body.isPlayerControlled)
             {
                 var equipment = body.gameObject.EnsureComponent<EquipmentOnlyComponent>();
-                equipment.Setup(commonEquipment);
+                equipment.Setup(PickEquipment());
             }
         }
 
@@ -180,7 +195,7 @@ namespace RandomEvents
                 if (teamMember.body != null && teamMember.body.isPlayerControlled)
                 {
                     var equipment = teamMember.body.gameObject.EnsureComponent<EquipmentOnlyComponent>();
-                    equipment.Setup(commonEquipment);
+                    equipment.Setup(PickEquipment());
                 }
             }
         }

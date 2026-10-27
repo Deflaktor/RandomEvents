@@ -22,7 +22,7 @@ namespace RandomEvents
     {
 
         public override EventTags Tags => EventTags.Equipment | EventTags.PlayerSkills;
-        public override EventTags ExcludedTags => EventTags.Equipment | EventTags.PlayerSkills;
+        public override EventTags ExcludedTags => EventTags.Equipment | EventTags.EquipmentPick | EventTags.PlayerSkills;
         public override bool LoadCondition()
         {
             return true;

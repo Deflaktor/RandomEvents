@@ -57,6 +57,8 @@ namespace RandomEvents
         PlayerMovement = 1 << 19,
         // decides whom the monsters attack
         MonsterTargets = 1 << 20,
+        // picks the equipment the players get, which Equipment-exclusive combat hands out instead of its own
+        EquipmentPick = 1 << 21,
     }
 
     public abstract class AbstractEvent

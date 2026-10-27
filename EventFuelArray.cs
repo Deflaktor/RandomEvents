@@ -16,7 +16,7 @@ namespace RandomEvents
     public class EventFuelArray : AbstractEvent
     {
         public override EventTags Tags => EventTags.Equipment | EventTags.PlayerHealth;
-        public override EventTags ExcludedTags => EventTags.Equipment | EventTags.PlayerHealth;
+        public override EventTags ExcludedTags => EventTags.Equipment | EventTags.EquipmentPick | EventTags.PlayerHealth;
         public override bool LoadCondition()
         {
             return true;

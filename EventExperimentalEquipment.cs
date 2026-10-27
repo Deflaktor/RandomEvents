@@ -21,8 +21,8 @@ namespace RandomEvents
         // the equipment the event gives this time
         public ExperimentalEquipment Current { get; private set; }
 
-        public override EventTags Tags => EventTags.Equipment;
-        public override EventTags ExcludedTags => EventTags.Equipment | EventTags.EquipmentSwaps;
+        public override EventTags Tags => EventTags.EquipmentPick;
+        public override EventTags ExcludedTags => EventTags.EquipmentPick | EventTags.EquipmentSwaps;
         public override bool LoadCondition()
         {
             return true;
@@ -90,7 +90,7 @@ namespace RandomEvents
             {
                 return;
             }
-            body.gameObject.AddComponent<ExperimentalComponent>().Setup(Current);
+            body.gameObject.AddComponent<ExperimentalComponent>().Setup(Current, EventEquipmentOnly.Find(RandomEvents.instance.m_activeEvents) == null);
         }
 
         private bool IsExperimental(EquipmentSlot slot, EquipmentDef def)
@@ -111,9 +111,12 @@ namespace RandomEvents
 
         public override void Prepare()
         {
-            // only those of the run's expansions, e.g. the Molotov (6-Pack) with Survivors of the Void
+            // only those of the run's expansions, e.g. the Molotov (6-Pack) with Survivors of the Void; with no skills, only
+            // those to fight with
+            var withoutSkills = EventEquipmentOnly.Find(RandomEvents.instance.m_upcomingEvents.Concat(RandomEvents.instance.m_activeEvents)) != null;
             var available = equipments.Where(experimental => experimental.EquipmentDef != null && experimental.IsAvailable && (experimental.EquipmentDef.requiredExpansion == null
-                || Run.instance == null || Run.instance.IsExpansionEnabled(experimental.EquipmentDef.requiredExpansion))).ToList();
+                || Run.instance == null || Run.instance.IsExpansionEnabled(experimental.EquipmentDef.requiredExpansion))
+                && (!withoutSkills || experimental.CanFight)).ToList();
             Current = available[RoR2Application.rng.RangeInt(0, available.Count)];
         }
 
@@ -150,9 +153,14 @@ namespace RandomEvents
             private TemporaryEquipment equipment;
             private ExperimentalEquipment experimental;
 
-            public void Setup(ExperimentalEquipment experimentalEquipment)
+            // Equipment-exclusive combat hands out the equipment itself, like its own
+            public void Setup(ExperimentalEquipment experimentalEquipment, bool giveEquipment)
             {
                 experimental = experimentalEquipment;
+                if (!giveEquipment)
+                {
+                    return;
+                }
                 equipment = gameObject.AddComponent<TemporaryEquipment>();
                 equipment.cooldownScale = experimental.CooldownScale;
                 equipment.SetTemporaryEquipment(experimental.EquipmentDef.equipmentIndex);
