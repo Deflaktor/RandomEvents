@@ -36,6 +36,10 @@ namespace RandomEvents
         {
             return "Only strong enemies spawn.";
         }
+        public override string GetPopupDescription()
+        {
+            return "Only strong monsters spawn.";
+        }
         public override string GetConditionDescription()
         {
             return "Not a Simulacrum boss wave.";

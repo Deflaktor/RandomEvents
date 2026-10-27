@@ -36,6 +36,10 @@ namespace RandomEvents
         {
             return "All monsters chase one random player.";
         }
+        public override string GetPopupDescription()
+        {
+            return "Every monster is after one of you!";
+        }
         public override string GetConditionDescription()
         {
             return "At least two players are alive.";

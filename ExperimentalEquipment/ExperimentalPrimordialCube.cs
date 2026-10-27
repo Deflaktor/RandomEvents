@@ -29,7 +29,7 @@ namespace RandomEvents
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.Blackhole;
         // its size items come with Hallowed Concepts, and without it nobody's inventory takes them
         public override bool IsAvailable => DLC4Content.DLC4 != null && Run.instance != null && Run.instance.IsExpansionEnabled(DLC4Content.DLC4);
-        public override string PopupDescription => "Opens a rift where you aim that swallows monsters, then bursts. The more it swallowed, the bigger the burst.";
+        public override string PopupDescription => "Opens a rift that swallows monsters, then bursts.";
 
         public override void Preload()
         {

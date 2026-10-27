@@ -53,7 +53,7 @@ namespace RandomEvents
         }
         public override string GetPopupDescription()
         {
-            return "Knockback sends whoever is hit flying to the attacker, and every other hit pulls them closer.";
+            return "Knockback pulls whoever is hit to the attacker!";
         }
         public override string GetConditionDescription()
         {

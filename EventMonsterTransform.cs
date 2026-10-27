@@ -107,6 +107,10 @@ namespace RandomEvents
         {
             return "Players transform into monsters.";
         }
+        public override string GetPopupDescription()
+        {
+            return "You become a monster!";
+        }
         public override string GetConditionDescription()
         {
             return "Currently not a boss wave.";

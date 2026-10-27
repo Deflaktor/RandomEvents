@@ -33,6 +33,10 @@ namespace RandomEvents
         {
             return "All beings become faster.";
         }
+        public override string GetPopupDescription()
+        {
+            return "Everyone is faster!";
+        }
         public override string GetConditionDescription()
         {
             return "";

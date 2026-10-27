@@ -39,6 +39,10 @@ namespace RandomEvents
         {
             return "Every player, ally and monster gets a Neutronium Weight until the event ends.";
         }
+        public override string GetPopupDescription()
+        {
+            return "Everyone carries a Neutronium Weight!";
+        }
         public override string GetConditionDescription()
         {
             return "Alloyed Collective is enabled.";

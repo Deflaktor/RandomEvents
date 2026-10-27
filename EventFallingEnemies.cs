@@ -35,6 +35,10 @@ namespace RandomEvents
         {
             return "Enemies fall from the sky. Only walking enemies spawn.";
         }
+        public override string GetPopupDescription()
+        {
+            return "Monsters drop from the sky!";
+        }
         public override string GetConditionDescription()
         {
             return "Not a Simulacrum boss wave.";

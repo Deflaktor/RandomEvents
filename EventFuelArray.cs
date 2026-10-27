@@ -39,7 +39,7 @@ namespace RandomEvents
         }
         public override string GetPopupDescription()
         {
-            return "You're healed and carry a Fuel Array, which explodes if your health drops below half. You're much tougher meanwhile.";
+            return "You carry a Fuel Array: don't drop below half health! You're much tougher meanwhile.";
         }
         public override string GetConditionDescription()
         {

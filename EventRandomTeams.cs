@@ -36,6 +36,10 @@ namespace RandomEvents
         {
             return "Makes some enemies fight each other as well as the players.";
         }
+        public override string GetPopupDescription()
+        {
+            return "Some monsters fight each other too.";
+        }
         public override string GetConditionDescription()
         {
             return "";

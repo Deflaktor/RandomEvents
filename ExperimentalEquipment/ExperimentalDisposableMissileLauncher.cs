@@ -27,7 +27,7 @@ namespace RandomEvents
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.CommandMissile;
         public override float CooldownScale => 0.25f;
-        public override string PopupDescription => "Sends an electric orb at each monster nearby, which zaps chain lightning and calls down a lightning strike.";
+        public override string PopupDescription => "Zaps every monster nearby with chain lightning and a lightning strike.";
 
         public override void Preload()
         {

@@ -48,6 +48,10 @@ namespace RandomEvents
         {
             return "Item zones appear that give players standing in them temporary items.";
         }
+        public override string GetPopupDescription()
+        {
+            return "Stand in the item zones for temporary items!";
+        }
         public override string GetConditionDescription()
         {
             return "Simulacrum mode only";

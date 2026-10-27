@@ -15,7 +15,7 @@ namespace RandomEvents
         private static AsyncOperationHandle<GameObject> Doll;
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.DeathProjectile;
-        public override string PopupDescription => "The doll walks straight ahead and explodes like a mini nuke after 10 seconds.";
+        public override string PopupDescription => "The doll walks straight ahead, then explodes like a mini nuke.";
 
         public override void Preload()
         {

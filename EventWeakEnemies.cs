@@ -47,6 +47,10 @@ namespace RandomEvents
         {
             return "Only weak enemies spawn.";
         }
+        public override string GetPopupDescription()
+        {
+            return "Only weak monsters spawn.";
+        }
         public override string GetConditionDescription()
         {
             return "";

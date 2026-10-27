@@ -96,6 +96,10 @@ namespace RandomEvents
         {
             return "All enemies explode upon death.";
         }
+        public override string GetPopupDescription()
+        {
+            return "Monsters explode when they die!";
+        }
         public override string GetConditionDescription()
         {
             return "Players have sufficient means to do ranged damage.";

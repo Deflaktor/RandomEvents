@@ -37,7 +37,7 @@ namespace RandomEvents
         }
         public override string GetPopupDescription()
         {
-            return "Everyone is cloaked. Both sides shoot where they last saw each other, and attacking reveals you.";
+            return "Everyone is cloaked until they attack.";
         }
         public override string GetConditionDescription()
         {

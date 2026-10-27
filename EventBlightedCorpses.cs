@@ -64,7 +64,7 @@ namespace RandomEvents
         }
         public override string GetPopupDescription()
         {
-            return "Only monsters that leave a corpse spawn. Their corpses lie in pools of acid, and being near them blights you.";
+            return "Monster corpses lie in pools of acid. Keep away from them!";
         }
         public override string GetConditionDescription()
         {

@@ -40,7 +40,7 @@ namespace RandomEvents
         }
         public override string GetPopupDescription()
         {
-            return "Every kill gives you a temporary item, but monster hits curse you with hexes that disable items.";
+            return "Kills give you temporary items, but monster hits curse you with hexes.";
         }
         public override string GetConditionDescription()
         {

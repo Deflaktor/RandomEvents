@@ -38,6 +38,10 @@ namespace RandomEvents
         {
             return "Players close to each other share all their items.";
         }
+        public override string GetPopupDescription()
+        {
+            return "Stay close to share all your items!";
+        }
         public override string GetConditionDescription()
         {
             return "At least two players are alive.";

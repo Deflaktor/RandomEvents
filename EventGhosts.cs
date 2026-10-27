@@ -45,6 +45,10 @@ namespace RandomEvents
         {
             return "Some monsters spawn as ghosts that fade after a while.";
         }
+        public override string GetPopupDescription()
+        {
+            return "Some monsters are ghosts that fade after a while.";
+        }
         public override string GetConditionDescription()
         {
             return "Currently not a boss wave.";

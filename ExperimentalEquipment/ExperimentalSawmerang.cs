@@ -13,7 +13,7 @@ namespace RandomEvents
         private static AsyncOperationHandle<GameObject> Sawmerang;
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.Saw;
-        public override string PopupDescription => "The blades hunt monsters for 20 seconds.";
+        public override string PopupDescription => "The blades hunt monsters.";
 
         public override void Preload()
         {
