@@ -92,6 +92,7 @@ namespace RandomEvents
                     new EventItemRush(),
                     new EventItemZone(),
                     new EventLavaFloor(),
+                    new EventLeashed(),
                     new EventLinkedSouls(),
                     new EventLynxPups(),
                     new EventMirroredEnemies(),
