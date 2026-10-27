@@ -64,9 +64,9 @@ namespace RandomEvents
         protected override void AddConfig(ConfigFile config)
         {
             VesselCount = config.Bind(GetEventConfigName(), "Vessel Count", 3, "How many Earthbound Vessels each player gets.");
-            MonsterFeathers = config.Bind(GetEventConfigName(), "Monster Feathers", 1, "How many Hopoo Feathers each monster gets, each an extra jump in mid-air.");
-            MinHopInterval = config.Bind(GetEventConfigName(), "Min Jump Interval", 1f, "The shortest time between two jumps of a monster, in seconds.");
-            MaxHopInterval = config.Bind(GetEventConfigName(), "Max Jump Interval", 4f, "The longest time between two jumps of a monster, in seconds.");
+            MonsterFeathers = config.Bind(GetEventConfigName(), "Monster Feathers", 3, "How many Hopoo Feathers each monster gets, each an extra jump in mid-air.");
+            MinHopInterval = config.Bind(GetEventConfigName(), "Min Jump Interval", 0.5f, "The shortest time between two jumps of a monster, in seconds.");
+            MaxHopInterval = config.Bind(GetEventConfigName(), "Max Jump Interval", 3f, "The longest time between two jumps of a monster, in seconds.");
             LeashLength = config.Bind(GetEventConfigName(), "Leash Length", 10f, "How far a launched monster gets from where it last stood before its leash pulls it back, in meters.");
         }
         public override void Preload()
