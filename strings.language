@@ -57,7 +57,6 @@
         "EVENT_RED_LIGHT": "<color=#ed4c40>Red light!</color> Don't move!",
         "EVENT_GREEN_LIGHT": "<color=#7ed957>Green light!</color> Move!",
         "EVENT_RED_LIGHT_CAUGHT": "{0} moved during red light!",
-        "EVENT_CHEST_MIMICS_REVEALED": "The chest was a mimic!",
         "EVENT_INVENTORY_ROULETTE_LENT": "{0} has the items of {1}.",
         "EVENT_SURVIVOR_SWAP_TAKES": "{0} plays the {1} of {2}.",
         "EVENT_SURVIVOR_SWAP_RANDOM": "{0} plays {1} for a while.",

@@ -1,5 +1,6 @@
 ﻿using BepInEx.Configuration;
 using RoR2;
+using RoR2.Navigation;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -9,8 +10,9 @@ namespace RandomEvents
 {
     public class EventChestMimics : AbstractEvent
     {
-        public override EventTags Tags => EventTags.Monsters;
-        private ConfigEntry<float> MimicChance;
+        public override EventTags Tags => EventTags.Monsters | EventTags.MonsterPool;
+        private ConfigEntry<float> MimicShare;
+        private CharacterSpawnCard spawnCard;
 
         public override bool LoadCondition()
         {
@@ -18,8 +20,9 @@ namespace RandomEvents
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            // not in Simulacrum
-            return !(Run.instance is InfiniteTowerRun) && InstanceTracker.GetInstancesList<ChestBehavior>().Any(chest => chest != null && IsMimicCandidate(chest) && chest.TryGetComponent(out PurchaseInteraction purchaseInteraction) && purchaseInteraction.available);
+            // the Mimic comes with that expansion
+            return !Helper.IsSimulacrumBossWaveNext() && DLC4Content.DLC4 != null && Run.instance != null && Run.instance.IsExpansionEnabled(DLC4Content.DLC4)
+                && MonsterPool.GetChoices().Count > 0 && GetSpawnCard() != null;
         }
         public override string GetEventConfigName()
         {
@@ -31,79 +34,61 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Chests bought with gold may turn into a monster instead of giving their item.";
+            return "Mimics join the monsters that spawn, about a quarter of them, and hunt the players right away instead of waiting as a chest.";
         }
         public override string GetPopupDescription()
         {
-            return "Careful: chests bought with gold may turn out to be monsters!";
+            return "Mimics are on the hunt! Don't let them swallow you.";
         }
         public override string GetConditionDescription()
         {
-            return "Not in Simulacrum, and the stage has an unopened chest bought with gold.";
+            return "Hallowed Concepts is enabled, and not a Simulacrum boss wave.";
         }
         protected override void AddConfig(ConfigFile config)
         {
-            MimicChance = config.Bind(GetEventConfigName(), "Mimic Chance", 0.5f, "Probability for a chest opened during the event to be a mimic.");
+            MimicShare = config.Bind(GetEventConfigName(), "Mimic Share", 0.25f, "The share of the spawned monsters that are Mimics, between 0 and 1.");
         }
         public override void Preload()
         {
         }
         public override void Hook()
         {
-            On.RoR2.ChestBehavior.ItemDrop += ChestBehavior_ItemDrop;
+            On.EntityStates.Mimic.Chest.Idle.OnEnter += Idle_OnEnter;
         }
 
-        private void ChestBehavior_ItemDrop(On.RoR2.ChestBehavior.orig_ItemDrop orig, ChestBehavior self)
+        // the game only summons Mimics, so the event makes its own card for them
+        private CharacterSpawnCard GetSpawnCard()
         {
-            if (ModConfig.Enabled.Value && NetworkServer.active && IsActive() && IsMimicCandidate(self) && RoR2Application.rng.nextNormalizedFloat < MimicChance.Value && SpawnMimic(self))
+            if (spawnCard == null)
             {
-                // the mimic takes the items' place
-                return;
-            }
-            orig(self);
-        }
-
-        // chests bought with gold, which hold an item; not Lunar Pods, lockboxes or the Artifact of Delusion's chests
-        private static bool IsMimicCandidate(ChestBehavior chest)
-        {
-            if (!chest.TryGetComponent(out PurchaseInteraction purchaseInteraction) || purchaseInteraction.costType != CostTypeIndex.Money)
-            {
-                return false;
-            }
-            return !(DelusionChestController.isDelusionEnable && chest.GetComponent<DelusionChestController>() != null);
-        }
-
-        private bool SpawnMimic(ChestBehavior chest)
-        {
-            if (!chest.currentPickup.isValid || chest.dropCount < 1)
-            {
-                return false;
-            }
-            var pickupDef = PickupCatalog.GetPickupDef(chest.currentPickup.pickupIndex);
-            var itemTier = pickupDef != null && pickupDef.itemIndex != ItemIndex.None ? ItemCatalog.GetItemDef(pickupDef.itemIndex).tier : ItemTier.NoTier;
-            bool allowChampions = itemTier == ItemTier.Tier3 || itemTier == ItemTier.Boss;
-            var selection = new WeightedSelection<DirectorCard>();
-            foreach (var choice in MonsterPool.GetChoices())
-            {
-                var master = choice.value?.spawnCard?.prefab != null ? choice.value.spawnCard.prefab.GetComponent<CharacterMaster>() : null;
-                var body = master != null && master.bodyPrefab != null ? master.bodyPrefab.GetComponent<CharacterBody>() : null;
-                if (choice.weight > 0f && body != null && (allowChampions || !body.isChampion))
+                var master = MasterCatalog.FindMasterPrefab("MimicMaster");
+                if (master == null)
                 {
-                    selection.AddChoice(choice);
+                    return null;
                 }
+                spawnCard = ScriptableObject.CreateInstance<CharacterSpawnCard>();
+                spawnCard.name = "cscMimic";
+                spawnCard.prefab = master;
+                spawnCard.sendOverNetwork = true;
+                spawnCard.hullSize = HullClassification.Golem;
+                spawnCard.nodeGraphType = MapNodeGroup.GraphType.Ground;
+                spawnCard.forbiddenFlags = NodeFlags.NoCharacterSpawn;
+                // about twice a Stone Golem's health
+                spawnCard.directorCreditCost = 60;
             }
-            if (selection.Count == 0)
+            return spawnCard;
+        }
+
+        // A monster Mimic turns into a chest once it spawned; during the event it opens up right away, as when a
+        // player touches it, and goes after the players.
+        private void Idle_OnEnter(On.EntityStates.Mimic.Chest.Idle.orig_OnEnter orig, EntityStates.Mimic.Chest.Idle self)
+        {
+            orig(self);
+            if (NetworkServer.active && IsActive() && self.characterBody != null && self.characterBody.teamComponent.teamIndex != TeamIndex.Player
+                && self.characterBody.TryGetComponent(out MimicController mimic))
             {
-                return false;
+                mimic.ForceUndisguiseStateServer();
             }
-            var card = selection.Evaluate(RoR2Application.rng.nextNormalizedFloat);
-            var mimic = Helper.SpawnMonster(card.spawnCard, chest.transform.position + Vector3.up);
-            if (mimic == null)
-            {
-                return false;
-            }
-            ChatHelper.SendEventMessage("EVENT_CHEST_MIMICS_REVEALED");
-            return true;
         }
 
         public override void Prepare()
@@ -112,10 +97,35 @@ namespace RandomEvents
 
         public override void Start(List<AbstractEvent> activeOtherEvents)
         {
+            // the Artifact of Kin, e.g. on its Simulacrum wave, keeps to one kind of monster
+            if (RunArtifactManager.instance != null && RunArtifactManager.instance.IsArtifactEnabled(RoR2Content.Artifacts.SingleMonsterType))
+            {
+                return;
+            }
+            var choices = MonsterPool.GetChoices();
+            var share = Mathf.Clamp(MimicShare.Value, 0f, 0.95f);
+            var otherWeight = choices.Sum(choice => choice.weight);
+            if (otherWeight <= 0f || share <= 0f || GetSpawnCard() == null)
+            {
+                return;
+            }
+            var selection = new WeightedSelection<DirectorCard>();
+            foreach (var choice in choices)
+            {
+                selection.AddChoice(choice);
+            }
+            selection.AddChoice(new DirectorCard
+            {
+                spawnCard = GetSpawnCard(),
+                selectionWeight = 1,
+                spawnDistance = DirectorCore.MonsterSpawnDistance.Standard
+            }, otherWeight * share / (1f - share));
+            MonsterPool.Replace(this, selection);
         }
 
         public override void Stop()
         {
+            MonsterPool.Restore(this);
         }
     }
 }
