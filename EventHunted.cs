@@ -10,8 +10,8 @@ namespace RandomEvents
 {
     public class EventHunted : AbstractEvent
     {
-        public override EventTags Tags => EventTags.Monsters;
-        public override EventTags ExcludedTags => EventTags.HiddenPlayers;
+        public override EventTags Tags => EventTags.Monsters | EventTags.MonsterTargets;
+        public override EventTags ExcludedTags => EventTags.MonsterTargets | EventTags.HiddenPlayers;
         private const float RetargetInterval = 0.5f;
         private CharacterBody hunted;
         private float retargetTimer;

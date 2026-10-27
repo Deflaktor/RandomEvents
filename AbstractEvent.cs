@@ -46,7 +46,7 @@ namespace RandomEvents
         PlayerBody = 1 << 13,
         // changes the players' skills
         PlayerSkills = 1 << 14,
-        // marks players with the soul brand of Caustic Pheromones
+        // marks players, e.g. with Essence of Heresy's marks or the soul brand of Caustic Pheromones
         PlayerMarker = 1 << 15,
         Revives = 1 << 16,
         // changes how players get hurt, or lets them hurt each other
@@ -55,6 +55,8 @@ namespace RandomEvents
         HiddenPlayers = 1 << 18,
         // moves the players or punishes them for moving
         PlayerMovement = 1 << 19,
+        // decides whom the monsters attack
+        MonsterTargets = 1 << 20,
     }
 
     public abstract class AbstractEvent
