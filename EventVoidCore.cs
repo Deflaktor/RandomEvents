@@ -30,7 +30,7 @@ namespace RandomEvents
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
             // the sphere that shows the fog comes with that expansion
-            return DLC4Content.DLC4 != null && Run.instance != null && Run.instance.IsExpansionEnabled(DLC4Content.DLC4) && TryGetArena(out _, out _);
+            return DLC4Content.DLC4 != null && Run.instance != null && Run.instance.IsExpansionEnabled(DLC4Content.DLC4) && Helper.TryGetArena(out _, out _);
         }
         public override string GetEventConfigName()
         {
@@ -68,35 +68,13 @@ namespace RandomEvents
             RoR2Application.onFixedUpdate += RoR2Application_onFixedUpdate;
         }
 
-        // the Simulacrum's safe zone, or the zone of the teleporter while it charges
-        private static bool TryGetArena(out Vector3 center, out float radius)
-        {
-            if (Run.instance is InfiniteTowerRun infiniteTowerRun && infiniteTowerRun.safeWardController != null
-                && infiniteTowerRun.safeWardController.safeZone is VerticalTubeZone safeZone)
-            {
-                center = infiniteTowerRun.safeWardController.transform.position;
-                radius = safeZone.radius;
-                return radius > 0f;
-            }
-            var teleporter = TeleporterInteraction.instance;
-            if (teleporter != null && teleporter.isCharging && teleporter.holdoutZoneController != null)
-            {
-                center = teleporter.transform.position;
-                radius = teleporter.holdoutZoneController.currentRadius;
-                return radius > 0f;
-            }
-            center = default;
-            radius = 0f;
-            return false;
-        }
-
         private void RoR2Application_onFixedUpdate()
         {
             if (!ModConfig.Enabled.Value || !NetworkServer.active || !IsActive())
             {
                 return;
             }
-            if (!TryGetArena(out var center, out var arenaRadius))
+            if (!Helper.TryGetArena(out var center, out var arenaRadius))
             {
                 RemoveZone();
                 return;

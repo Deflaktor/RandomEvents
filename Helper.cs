@@ -173,6 +173,28 @@ namespace RandomEvents
             }
         }
 
+        // the Simulacrum's safe zone, or the zone of the teleporter while it charges
+        public static bool TryGetArena(out Vector3 center, out float radius)
+        {
+            if (Run.instance is InfiniteTowerRun infiniteTowerRun && infiniteTowerRun.safeWardController != null
+                && infiniteTowerRun.safeWardController.safeZone is VerticalTubeZone safeZone)
+            {
+                center = infiniteTowerRun.safeWardController.transform.position;
+                radius = safeZone.radius;
+                return radius > 0f;
+            }
+            var teleporter = TeleporterInteraction.instance;
+            if (teleporter != null && teleporter.isCharging && teleporter.holdoutZoneController != null)
+            {
+                center = teleporter.transform.position;
+                radius = teleporter.holdoutZoneController.currentRadius;
+                return radius > 0f;
+            }
+            center = default;
+            radius = 0f;
+            return false;
+        }
+
         // a random ground node in the distance range, or the floor below the center if there is none
         public static Vector3? FindGroundPositionNear(Vector3 center, float minDistance, float maxDistance)
         {
