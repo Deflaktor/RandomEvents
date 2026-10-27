@@ -105,7 +105,7 @@ namespace RandomEvents
                     new EventRedLightGreenLight(),
                     new EventReducedGravity(),
                     new EventRitualHelmets(),
-                    new EventSecondWind(),
+                    new EventFromTheBrink(),
                     new EventShielded(),
                     new EventSkillsOnly(),
                     new EventSlippery(),

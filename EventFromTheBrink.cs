@@ -7,7 +7,7 @@ using UnityEngine.Networking;
 
 namespace RandomEvents
 {
-    public class EventSecondWind : AbstractEvent
+    public class EventFromTheBrink : AbstractEvent
     {
         private const float UpdateInterval = 0.5f;
         private ConfigEntry<float> StartMaxHealth;
@@ -31,11 +31,11 @@ namespace RandomEvents
         }
         public override string GetEventConfigName()
         {
-            return "SecondWind";
+            return "FromTheBrink";
         }
         public override string GetAnnouncement()
         {
-            return Language.GetStringFormatted("ANNOUNCE_EVENT_SECOND_WIND");
+            return Language.GetStringFormatted("ANNOUNCE_EVENT_FROM_THE_BRINK");
         }
         public override string GetDescription()
         {
