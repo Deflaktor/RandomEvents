@@ -33,11 +33,11 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Players are cloaked, and monsters only fire at where they last saw them. Attacking reveals them for 2 seconds.";
+            return "Players and monsters are cloaked, and each side only fires at where it last saw the other. Attacking reveals a player or monster for 2 seconds.";
         }
         public override string GetPopupDescription()
         {
-            return "You're cloaked. Monsters shoot where they last saw you, and attacking reveals you.";
+            return "Everyone is cloaked. Both sides shoot where they last saw each other, and attacking reveals you.";
         }
         public override string GetConditionDescription()
         {
@@ -57,8 +57,8 @@ namespace RandomEvents
         }
 
         // A monster keeps a cloaked player as its target and fires at where it last saw them, but the game gives it
-        // their new position every 2 seconds. A stealthed player's stays where they were until they are revealed. The
-        // monsters' AI runs on the host.
+        // their new position every 2 seconds. A stealthed player's stays where they were until they are revealed, and so
+        // does a stealthed monster's for the players' drones and other allies. The AI runs on the host.
         private void Target_GetBullseyePosition(ILContext il)
         {
             var c = new ILCursor(il);
@@ -75,10 +75,17 @@ namespace RandomEvents
 
         private void CharacterBody_onBodyStartGlobal(CharacterBody body)
         {
-            if (ModConfig.Enabled.Value && NetworkServer.active && IsActive() && body.isPlayerControlled)
+            if (ModConfig.Enabled.Value && NetworkServer.active && IsActive() && IsCloaked(body))
             {
                 body.gameObject.EnsureComponent<StealthComponent>();
             }
+        }
+
+        // the players and the monsters, not the players' allies
+        private static bool IsCloaked(CharacterBody body)
+        {
+            return body != null && body.teamComponent != null && body.teamComponent.teamIndex != TeamIndex.Neutral
+                && (body.isPlayerControlled || !Helper.IsPlayersSide(body));
         }
 
         // the host also runs this for the skills of clients' bodies
@@ -97,9 +104,10 @@ namespace RandomEvents
 
         public override void Start(List<AbstractEvent> activeOtherEvents)
         {
-            foreach (var body in Helper.GetLivingPlayerBodies())
+            foreach (var body in CharacterBody.readOnlyInstancesList.ToList())
             {
-                body.gameObject.EnsureComponent<StealthComponent>();
+                if (body.healthComponent != null && body.healthComponent.alive && IsCloaked(body))
+                    body.gameObject.EnsureComponent<StealthComponent>();
             }
         }
 
