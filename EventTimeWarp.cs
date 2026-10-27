@@ -33,6 +33,10 @@ namespace RandomEvents
         {
             return "Slows all monsters to about a third of their speed.";
         }
+        public override string GetPopupDescription()
+        {
+            return "Time slows down for the monsters!";
+        }
         public override string GetConditionDescription()
         {
             return "";

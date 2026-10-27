@@ -39,6 +39,10 @@ namespace RandomEvents
         {
             return "Everyone falls at half the gravity until the event ends.";
         }
+        public override string GetPopupDescription()
+        {
+            return "Gravity is low: everyone falls slowly!";
+        }
         public override string GetConditionDescription()
         {
             return "";

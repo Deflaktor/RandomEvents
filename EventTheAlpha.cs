@@ -58,7 +58,7 @@ namespace RandomEvents
         }
         public override string GetPopupDescription()
         {
-            return "A big alpha with ten times its health drives the other monsters into a frenzy and gives them an Alien Head. Kill it for an item!";
+            return "A big, tough alpha drives the other monsters into a frenzy and gives them an Alien Head. Kill it for an item!";
         }
         public override string GetConditionDescription()
         {

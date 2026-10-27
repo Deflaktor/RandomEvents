@@ -63,7 +63,7 @@ namespace RandomEvents
         }
         public override string GetPopupDescription()
         {
-            return "All monsters wear a Ritual Helmet. You take 66% less damage.";
+            return "All monsters wear a Ritual Helmet. You take much less damage.";
         }
         public override string GetConditionDescription()
         {

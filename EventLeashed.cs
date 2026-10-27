@@ -53,7 +53,7 @@ namespace RandomEvents
         }
         public override string GetPopupDescription()
         {
-            return "You're leashed together: stray more than 20 m from the others and you get thrown back. You take half damage.";
+            return "You're leashed together: stray too far from the others and you get thrown back. You take less damage.";
         }
         public override string GetConditionDescription()
         {
