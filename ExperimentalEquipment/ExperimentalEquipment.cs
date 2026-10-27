@@ -12,8 +12,6 @@ namespace RandomEvents
         public virtual float CooldownScale => 0.5f;
         // whether the event can pick it this time, e.g. only with more than one player
         public virtual bool IsAvailable => true;
-        // for the event's description, e.g. "Royal Capacitor inflates a monster until it explodes"
-        public abstract string Description { get; }
         public abstract string PopupDescription { get; }
 
         public virtual void Preload()

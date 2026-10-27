@@ -18,7 +18,6 @@ namespace RandomEvents
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.Lightning;
         // its size items come with Hallowed Concepts, and without it nobody's inventory takes them
         public override bool IsAvailable => DLC4Content.DLC4 != null && Run.instance != null && Run.instance.IsExpansionEnabled(DLC4Content.DLC4);
-        public override string Description => "Royal Capacitor inflates a monster until it explodes";
         public override string PopupDescription => "Inflates the targeted monster until it explodes. Bosses too.";
 
         public override void Preload()

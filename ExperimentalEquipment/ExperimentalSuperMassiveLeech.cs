@@ -11,7 +11,6 @@ namespace RandomEvents
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.LifestealOnHit;
         public override float CooldownScale => 0.25f;
-        public override string Description => "Super Massive Leech also causes hemorrhage, the more the harder the hit";
         public override string PopupDescription => "Your hits heal you and cause hemorrhage.";
 
         public override void Hook()

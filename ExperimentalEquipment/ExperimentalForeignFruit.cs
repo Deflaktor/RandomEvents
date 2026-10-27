@@ -9,7 +9,6 @@ namespace RandomEvents
         private const float Duration = 15f;
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.Fruit;
-        public override string Description => "Foreign Fruit fully heals you and for 15 seconds doubles your damage and health, and makes you faster, tougher, bigger and regenerate, with a Hunter's Harpoon, each one eaten meanwhile adding more and doubling the damage again";
         public override string PopupDescription => "Fully heals you and makes you much stronger for 15 seconds. Eat more to stack it!";
 
         public override bool Fire(EquipmentSlot slot)

@@ -36,7 +36,6 @@ namespace RandomEvents
         private static AsyncOperationHandle<GameObject> Implosion;
 
         public override EquipmentDef EquipmentDef => RoR2Content.Equipment.BFG;
-        public override string Description => "the Preon Accumulator fires a poison orb that bursts on the ground into void bombs, each hunting down a monster, the strongest first";
         public override string PopupDescription => "Fires a poison orb that bursts into void bombs, each hunting down a monster, the strongest first.";
 
         // it charges as usual, which every player's game shows
