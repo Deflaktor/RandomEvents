@@ -64,7 +64,6 @@ namespace RandomEvents
                 // all of them exist before their configs, whose descriptions name the events they rule out
                 var events = new List<AbstractEvent>
                 {
-                    new EventBehemoths(),
                     new EventBlightedCorpses(),
                     new EventBouncy(),
                     new EventBulletHell(),

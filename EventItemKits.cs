@@ -21,6 +21,7 @@ namespace RandomEvents
             ("Speedster", "5xHoof & 5xSprintBonus & 5xSyringe", 0.7f),
             ("Tank", "5xBear & 10xArmorPlate & 10xFlatHealth & 2xKnurl", 1f),
             ("Elemental", "2xFireRing & 2xIceRing & FireballsOnHit & LightningStrikeOnHit", 0.5f),
+            ("Behemoths", "3xBehemoth & ExplodeOnDeath & ExplodeOnDeathVoid", 0.5f),
         };
         private readonly List<Kit> kits = new List<Kit>();
         private Kit kit;
