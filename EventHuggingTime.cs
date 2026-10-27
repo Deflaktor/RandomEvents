@@ -150,18 +150,7 @@ namespace RandomEvents
             {
                 return;
             }
-            float time = Mathf.Clamp(distance / FlightSpeed, MinFlightTime, MaxFlightTime);
-            Vector3 velocity = path / time;
-            // so that gravity bends the flight to end at the target
-            velocity.y -= 0.5f * Gravity(victim) * time;
-            var forceInfo = PhysForceInfo.Create();
-            forceInfo.force = velocity;
-            forceInfo.massIsOne = true;
-            forceInfo.resetVelocity = true;
-            forceInfo.ignoreGroundStick = true;
-            forceInfo.disableAirControlUntilCollision = true;
-            forceInfo.respectKnockupImmune = true;
-            victim.TakeDamageForce(forceInfo);
+            Throw.ToPoint(victim, body.footPosition + path, FlightSpeed, MinFlightTime, MaxFlightTime);
         }
 
         // a tether from the attacker to the victim, which fades within about half a second
@@ -187,20 +176,6 @@ namespace RandomEvents
                 effectData.SetNetworkedObjectReference(victim.gameObject);
             }
             EffectManager.SpawnEffect(TetherEffect.WaitForCompletion(), effectData, transmit: true);
-        }
-
-        // the downward pull on the victim, negative
-        private static float Gravity(HealthComponent victim)
-        {
-            if (victim.TryGetComponent(out CharacterMotor characterMotor))
-            {
-                return characterMotor.useGravity && !characterMotor.isFlying ? Physics.gravity.y * characterMotor.gravityScale : 0f;
-            }
-            if (victim.TryGetComponent(out Rigidbody rigidbody))
-            {
-                return rigidbody.useGravity ? Physics.gravity.y : 0f;
-            }
-            return 0f;
         }
 
         public override void Prepare()
