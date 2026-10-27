@@ -107,6 +107,7 @@ namespace RandomEvents
                     new EventReducedGravity(),
                     new EventRitualHelmets(),
                     new EventFromTheBrink(),
+                    new EventSafeZone(),
                     new EventShielded(),
                     new EventSkillsOnly(),
                     new EventSlippery(),
