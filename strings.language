@@ -128,7 +128,8 @@
         "ANNOUNCE_EVENT_SHIELDED": "Picking off the unshielded",
         "ANNOUNCE_EVENT_BLIGHTED_CORPSES": "The dead linger",
         "ANNOUNCE_EVENT_DEATHMATCH": "Deathmatch",
-        "ANNOUNCE_EVENT_TEAM_DEATHMATCH": "Team deathmatch"
+        "ANNOUNCE_EVENT_TEAM_DEATHMATCH": "Team deathmatch",
+        "ANNOUNCE_EVENT_RANDOM_PROJECTILES": "Mixed-up projectiles"
         
     }
 }

@@ -51,6 +51,7 @@ Makes random events happen. In a normal run, every minute brings a chance of one
 | A heavy burden | Every player, ally and monster gets a Neutronium Weight until the event ends. | Alloyed Collective is enabled. | NeutroniumWeights |
 | Double Ossification | All players get 3 Hexes of Ossification, so their kills give nearby monsters barrier, but also enough Topaz Brooches for each kill to fill their own barrier. | Hallowed Concepts is enabled, and events "CursedSpoils" and "Ghosts" inactive. | Ossification |
 |  | Turns on up to three random artifacts until the event ends. | There is at least one artifact which can be enabled and is not blacklisted. | RandomArtifact |
+| Mixed-up projectiles | Each kind of projectile is swapped for another random one, that the monsters fire. The damage stays that of the attack. |  | RandomProjectiles |
 | Enemies turn against each other | Makes some enemies fight each other as well as the players. | Event "Deathmatch" inactive. | RandomTeams |
 | Red light, green light | Red and green light take turns. During red light, monsters freeze, players who stand still can't be hurt, and players who move get Tonic Afflictions until the event ends. Players get an Irradiant Pearl until the event ends for every red light they stay still through. | Events "HuggingTime" and "Leashed" inactive. | RedLightGreenLight |
 | One small step | Everyone falls at half the gravity until the event ends. |  | ReducedGravity |
