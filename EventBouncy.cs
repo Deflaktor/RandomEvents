@@ -17,6 +17,11 @@ namespace RandomEvents
         private ConfigEntry<float> MinHopInterval;
         private ConfigEntry<float> MaxHopInterval;
         private ConfigEntry<float> LeashLength;
+        private ConfigEntry<float> BounceStrength;
+        // too slow a landing, e.g. stepping down a ledge, doesn't bounce
+        private const float MinBounceSpeed = 5f;
+        // those bouncing off the ground, who land the next time without bouncing again
+        private readonly HashSet<CharacterBody> bouncing = new HashSet<CharacterBody>();
         // how strongly a stretched leash pulls a monster back, per meter beyond its length
         private const float LeashSpring = 15f;
         // where each walking monster last stood, which its leash is tied to
@@ -46,7 +51,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "All players get 3 Earthbound Vessels and a Breaching Fin without a cooldown. Only walking monsters spawn, which jump at random, also in mid-air, and are on a leash.";
+            return "All players get 3 Earthbound Vessels and a Breaching Fin without a cooldown. Only walking monsters spawn, which jump at random, also in mid-air, and are on a leash. Everyone who lands bounces off the ground once more.";
         }
         public override string GetPopupDescription()
         {
@@ -63,6 +68,7 @@ namespace RandomEvents
             MinHopInterval = config.Bind(GetEventConfigName(), "Min Jump Interval", 0.5f, "The shortest time between two jumps of a monster, in seconds.");
             MaxHopInterval = config.Bind(GetEventConfigName(), "Max Jump Interval", 3f, "The longest time between two jumps of a monster, in seconds.");
             LeashLength = config.Bind(GetEventConfigName(), "Leash Length", 10f, "How far a launched monster gets from where it last stood before its leash pulls it back, in meters.");
+            BounceStrength = config.Bind(GetEventConfigName(), "Bounce Strength", 0.6f, "How fast players and monsters bounce off the ground when they land, relative to how fast they landed. 0 for no bounce.");
         }
         public override void Preload()
         {
@@ -72,6 +78,38 @@ namespace RandomEvents
             CharacterBody.onBodyStartGlobal += CharacterBody_onBodyStartGlobal;
             On.RoR2.CharacterAI.BaseAI.UpdateBodyInputs += BaseAI_UpdateBodyInputs;
             RoR2Application.onFixedUpdate += RoR2Application_onFixedUpdate;
+            On.RoR2.GlobalEventManager.OnCharacterHitGroundServer += GlobalEventManager_OnCharacterHitGroundServer;
+        }
+
+        // The players' games report their landings to the host, which bounces them back up like the monsters, with the
+        // Breaching Fin's launch effect and sound.
+        private void GlobalEventManager_OnCharacterHitGroundServer(On.RoR2.GlobalEventManager.orig_OnCharacterHitGroundServer orig, GlobalEventManager self, CharacterBody body, CharacterMotor.HitGroundInfo hitGroundInfo)
+        {
+            orig(self, body, hitGroundInfo);
+            if (!NetworkServer.active || !IsActive() || body == null || body.healthComponent == null || !body.healthComponent.alive
+                || body.characterMotor == null || body.characterMotor.isFlying || bouncing.Remove(body)
+                || (body.bodyFlags & (CharacterBody.BodyFlags.Unmovable | CharacterBody.BodyFlags.IgnoreKnockup)) != 0)
+            {
+                return;
+            }
+            var speed = -hitGroundInfo.velocity.y * Mathf.Max(0f, BounceStrength.Value);
+            if (-hitGroundInfo.velocity.y < MinBounceSpeed || speed <= 0f)
+            {
+                return;
+            }
+            var forceInfo = PhysForceInfo.Create();
+            forceInfo.force = Vector3.up * speed;
+            forceInfo.massIsOne = true;
+            forceInfo.ignoreGroundStick = true;
+            forceInfo.respectKnockupImmune = true;
+            body.healthComponent.TakeDamageForce(forceInfo);
+            bouncing.Add(body);
+            EffectManager.SpawnEffect(CharacterBody.CommonAssets.knockbackFinEffect, new EffectData
+            {
+                origin = body.transform.position,
+                scale = body.hullClassification == HullClassification.BeetleQueen ? KnockbackFinUtil.queenLaunchEffectScale
+                    : body.hullClassification == HullClassification.Golem ? KnockbackFinUtil.golemLaunchEffectScale : KnockbackFinUtil.humanLaunchEffectScale
+            }, transmit: true);
         }
 
         // Earthbound Vessel comes with Hallowed Concepts, Breaching Fin with Seekers of the Storm
@@ -235,6 +273,7 @@ namespace RandomEvents
         public override void Start(List<AbstractEvent> activeOtherEvents)
         {
             nextHops.Clear();
+            bouncing.Clear();
             // with the pool of other events that filter it; unless no monster would be left
             MonsterPool.Filter(this, IsWalker);
             foreach (var body in CharacterBody.readOnlyInstancesList)
@@ -251,6 +290,7 @@ namespace RandomEvents
             EventLoot.Clear(this);
             nextHops.Clear();
             anchors.Clear();
+            bouncing.Clear();
         }
     }
 }
