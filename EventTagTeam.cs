@@ -16,15 +16,15 @@ namespace RandomEvents
         private CharacterBody tagged;
         private float tagTimer;
 
+        public override EventTags Tags => EventTags.PlayerMarker;
+        public override EventTags ExcludedTags => EventTags.PlayerMarker;
         public override bool LoadCondition()
         {
             return true;
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            // Hot Potato marks its bomb carrier the same way
-            return Helper.GetLivingPlayerBodies().Count >= 2
-                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("HotPotato", StringComparison.InvariantCultureIgnoreCase));
+            return Helper.GetLivingPlayerBodies().Count >= 2;
         }
         public override string GetEventConfigName()
         {
@@ -44,7 +44,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "At least two players are alive and event \"HotPotato\" inactive.";
+            return "At least two players are alive.";
         }
         protected override void AddConfig(ConfigFile config)
         {

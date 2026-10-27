@@ -11,7 +11,8 @@ namespace RandomEvents
 {
     public class EventGiantBalloons : AbstractEvent
     {
-        public override EventTags Tags => EventTags.Monsters;
+        public override EventTags Tags => EventTags.Monsters | EventTags.MonsterSize;
+        public override EventTags ExcludedTags => EventTags.MonsterSize;
         private const float UpdateInterval = 0.25f;
         private ConfigEntry<float> SpawnRate;
         private ConfigEntry<float> HealthMultiplier;
@@ -24,10 +25,8 @@ namespace RandomEvents
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            // the item that makes them big comes with that expansion; SwarmQueen's swarms, inflated too, would make up for
-            // the fewer monsters
-            return DLC4Content.DLC4 != null && Run.instance != null && Run.instance.IsExpansionEnabled(DLC4Content.DLC4)
-                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("SwarmQueen", StringComparison.InvariantCultureIgnoreCase));
+            // the item that makes them big comes with that expansion
+            return DLC4Content.DLC4 != null && Run.instance != null && Run.instance.IsExpansionEnabled(DLC4Content.DLC4);
         }
         public override string GetEventConfigName()
         {
@@ -47,7 +46,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Hallowed Concepts is enabled, and event \"SwarmQueen\" inactive.";
+            return "Hallowed Concepts is enabled.";
         }
         protected override void AddConfig(ConfigFile config)
         {

@@ -40,6 +40,8 @@ namespace RandomEvents
         // while the bomb takes all of its carrier's health, which LinkedSouls doesn't split
         public static bool KillingCarrier { get; private set; }
 
+        public override EventTags Tags => EventTags.PlayerMarker;
+        public override EventTags ExcludedTags => EventTags.PlayerMarker;
         public override bool LoadCondition()
         {
             return true;
@@ -49,8 +51,7 @@ namespace RandomEvents
         {
             var teleporter = TeleporterInteraction.instance;
             return Helper.GetLivingPlayerBodies().Count >= 1 && !Helper.IsSimulacrumBossWaveNext()
-                && (teleporter == null || !(teleporter.isIdleToCharging || teleporter.isCharging))
-                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("TagTeam", StringComparison.InvariantCultureIgnoreCase));
+                && (teleporter == null || !(teleporter.isIdleToCharging || teleporter.isCharging));
         }
         public override string GetEventConfigName()
         {
@@ -70,7 +71,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Not during the teleporter event or a Simulacrum boss wave, and event \"TagTeam\" inactive.";
+            return "Not during the teleporter event or a Simulacrum boss wave.";
         }
         protected override void AddConfig(ConfigFile config)
         {

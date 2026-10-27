@@ -9,7 +9,9 @@ namespace RandomEvents
 {
     public class EventStrongEnemies : AbstractEvent
     {
-        public override EventTags Tags => EventTags.Monsters;
+        public override EventTags Tags => EventTags.Monsters | EventTags.MonsterPool | EventTags.MonsterKinds;
+        // SwarmQueen brings weak monsters along
+        public override EventTags ExcludedTags => EventTags.MonsterKinds | EventTags.ExtraMonsters;
         private const float WaveCreditsMultiplier = 2f;
         // the Simulacrum wave the event changed; its extra credits also buy more elites
         private InfiniteTowerWaveController changedWave;
@@ -20,14 +22,7 @@ namespace RandomEvents
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            // DroneUprising replaces the stage's monsters, which this event picks from, and SwarmQueen brings weak ones along
-            return !Helper.IsSimulacrumBossWaveNext() && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("WeakEnemies", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("Mitosis", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("DroneUprising", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("LynxPups", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("BlightedCorpses", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("BulletHell", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("SwarmQueen", StringComparison.InvariantCultureIgnoreCase));
+            return !Helper.IsSimulacrumBossWaveNext();
         }
         public override string GetEventConfigName()
         {
@@ -43,7 +38,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Not a Simulacrum boss wave, and events \"WeakEnemies\", \"Mitosis\", \"DroneUprising\", \"LynxPups\", \"BlightedCorpses\", \"BulletHell\" and \"SwarmQueen\" inactive.";
+            return "Not a Simulacrum boss wave.";
         }
         protected override void AddConfig(ConfigFile config)
         {

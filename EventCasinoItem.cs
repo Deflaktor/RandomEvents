@@ -19,14 +19,14 @@ namespace RandomEvents
 {
     public class EventCasinoItem : AbstractEvent
     {
+        public override EventTags Tags => EventTags.EventItems;
         public override bool LoadCondition()
         {
             return true;
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            // Cursed Spoils' hexes would disable the event's items
-            return !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("CursedSpoils", StringComparison.InvariantCultureIgnoreCase));
+            return true;
         }
         public override string GetEventConfigName()
         {
@@ -42,7 +42,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Event \"CursedSpoils\" inactive.";
+            return "";
         }
         protected override void AddConfig(ConfigFile config)
         {

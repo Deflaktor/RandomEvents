@@ -13,7 +13,9 @@ namespace RandomEvents
 {
     public class EventDroneUprising : AbstractEvent
     {
-        public override EventTags Tags => EventTags.Monsters;
+        public override EventTags Tags => EventTags.Monsters | EventTags.MonsterPool;
+        // it replaces the stage's monsters, which the others pick from, and SwarmQueen would bring Beetles and Lesser Wisps along
+        public override EventTags ExcludedTags => EventTags.MonsterPool | EventTags.ExtraMonsters;
         private ConfigEntry<float> DamageMultiplier;
         private ConfigEntry<float> MoveSpeedMultiplier;
         private ConfigEntry<float> HealthMultiplier;
@@ -37,18 +39,7 @@ namespace RandomEvents
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            // they pick from the stage's own monsters, which this event replaces, and SwarmQueen would bring Beetles and
-            // Lesser Wisps along
-            return !Helper.IsSimulacrumBossWaveNext() && GetDroneCandidates().Count > 0 && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("WeakEnemies", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("StrongEnemies", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("Mitosis", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("RitualHelmets", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("FallingEnemies", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("Bouncy", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("LynxPups", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("BlightedCorpses", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("BulletHell", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("SwarmQueen", StringComparison.InvariantCultureIgnoreCase));
+            return !Helper.IsSimulacrumBossWaveNext() && GetDroneCandidates().Count > 0;
         }
         public override string GetEventConfigName()
         {
@@ -68,7 +59,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Not a Simulacrum boss wave, and events \"WeakEnemies\", \"StrongEnemies\", \"Mitosis\", \"RitualHelmets\", \"FallingEnemies\", \"Bouncy\", \"LynxPups\", \"BlightedCorpses\", \"BulletHell\" and \"SwarmQueen\" inactive.";
+            return "Not a Simulacrum boss wave.";
         }
         protected override void AddConfig(ConfigFile config)
         {

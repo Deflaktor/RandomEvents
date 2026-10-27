@@ -16,14 +16,15 @@ namespace RandomEvents
         private ConfigEntry<float> EnemyRadius;
         private float updateTimer;
 
+        public override EventTags Tags => EventTags.PlayerHealth;
+        public override EventTags ExcludedTags => EventTags.PlayerHealth;
         public override bool LoadCondition()
         {
             return true;
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            // losing health would keep setting off the Fuel Array
-            return !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("FuelArray", StringComparison.InvariantCultureIgnoreCase));
+            return true;
         }
         public override string GetEventConfigName()
         {
@@ -43,7 +44,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Event \"FuelArray\" inactive.";
+            return "";
         }
         protected override void AddConfig(ConfigFile config)
         {

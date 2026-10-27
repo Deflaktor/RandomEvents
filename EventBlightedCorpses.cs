@@ -13,7 +13,9 @@ namespace RandomEvents
 {
     public class EventBlightedCorpses : AbstractEvent
     {
-        public override EventTags Tags => EventTags.Monsters;
+        public override EventTags Tags => EventTags.Monsters | EventTags.MonsterPool;
+        // it needs the stage's own monsters
+        public override EventTags ExcludedTags => EventTags.MonsterPool;
         private const float TickInterval = 1f;
         private const float BlightDuration = 5f;
         private ConfigEntry<float> Radius;
@@ -46,7 +48,7 @@ namespace RandomEvents
         // only monsters that leave a corpse spawn, so most of the stage's should
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            return MonsterTraits.WeightShare(MonsterPool.GetChoices(), MonsterTraits.LeavesCorpse) > 0.5f && !MonsterPool.OtherChangingEventActive(this, activeOtherEvents);
+            return MonsterTraits.WeightShare(MonsterPool.GetChoices(), MonsterTraits.LeavesCorpse) > 0.5f;
         }
         public override string GetEventConfigName()
         {
@@ -66,7 +68,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Most of the stage's monsters leave a corpse, and events \"WeakEnemies\", \"StrongEnemies\", \"Mitosis\", \"DroneUprising\", \"FallingEnemies\", \"RitualHelmets\", \"Bouncy\", \"LynxPups\" and \"BulletHell\" inactive.";
+            return "Most of the stage's monsters leave a corpse.";
         }
         protected override void AddConfig(ConfigFile config)
         {

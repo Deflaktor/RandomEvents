@@ -11,6 +11,7 @@ namespace RandomEvents
     public class EventHunted : AbstractEvent
     {
         public override EventTags Tags => EventTags.Monsters;
+        public override EventTags ExcludedTags => EventTags.HiddenPlayers;
         private const float RetargetInterval = 0.5f;
         private CharacterBody hunted;
         private float retargetTimer;
@@ -21,9 +22,7 @@ namespace RandomEvents
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            // StealthMission hides the players from the monsters
-            return Helper.GetLivingPlayerBodies().Count >= 2
-                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("StealthMission", StringComparison.InvariantCultureIgnoreCase));
+            return Helper.GetLivingPlayerBodies().Count >= 2;
         }
         public override string GetEventConfigName()
         {
@@ -39,7 +38,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "At least two players are alive and event \"StealthMission\" inactive.";
+            return "At least two players are alive.";
         }
         protected override void AddConfig(ConfigFile config)
         {

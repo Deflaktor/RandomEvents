@@ -25,15 +25,14 @@ namespace RandomEvents
         private string kitName;
         private string kitItems;
 
+        public override EventTags Tags => EventTags.EventItems;
         public override bool LoadCondition()
         {
             return true;
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            return GetKits().Count > 0
-                // Cursed Spoils' hexes would disable the event's items
-                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("CursedSpoils", StringComparison.InvariantCultureIgnoreCase));
+            return GetKits().Count > 0;
         }
         public override string GetEventConfigName()
         {
@@ -53,7 +52,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "At least one kit has items, and event \"CursedSpoils\" inactive.";
+            return "At least one kit has items.";
         }
         protected override void AddConfig(ConfigFile config)
         {

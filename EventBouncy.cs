@@ -25,21 +25,16 @@ namespace RandomEvents
         private readonly Dictionary<CharacterBody, float> nextHops = new Dictionary<CharacterBody, float>();
         // monsters that walk, and so can jump
 
+        public override EventTags Tags => EventTags.MonsterPool | EventTags.EventItems | EventTags.PlayerMovement;
         public override bool LoadCondition()
         {
             return true;
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            // the players' Earthbound Vessels or Breaching Fins; DroneUprising's drones mostly fly
+            // the players' Earthbound Vessels or Breaching Fins
             return !Helper.IsSimulacrumBossWaveNext() && (VesselsAvailable() || FinsAvailable())
-                && MonsterPool.GetChoices().Any(IsWalker)
-                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("DroneUprising", StringComparison.InvariantCultureIgnoreCase))
-                // Cursed Spoils' hexes would disable the event's items
-                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("CursedSpoils", StringComparison.InvariantCultureIgnoreCase))
-                // they keep only monsters that leave a corpse or fire projectiles
-                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("BlightedCorpses", StringComparison.InvariantCultureIgnoreCase)
-                    || e.GetEventConfigName().Equals("BulletHell", StringComparison.InvariantCultureIgnoreCase));
+                && MonsterPool.GetChoices().Any(IsWalker);
         }
         public override string GetEventConfigName()
         {
@@ -59,7 +54,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Hallowed Concepts or Seekers of the Storm is enabled, not a Simulacrum boss wave, the stage has walking monsters, and events \"DroneUprising\", \"CursedSpoils\", \"BlightedCorpses\" and \"BulletHell\" inactive.";
+            return "Hallowed Concepts or Seekers of the Storm is enabled, not a Simulacrum boss wave, and the stage has walking monsters.";
         }
         protected override void AddConfig(ConfigFile config)
         {

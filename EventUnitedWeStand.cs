@@ -16,16 +16,15 @@ namespace RandomEvents
         private readonly Dictionary<CharacterMaster, int[]> shared = new Dictionary<CharacterMaster, int[]>();
         private float updateTimer;
 
+        public override EventTags Tags => EventTags.PlayerItems;
+        public override EventTags ExcludedTags => EventTags.PlayerItems;
         public override bool LoadCondition()
         {
             return true;
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            // the items that InventoryRoulette and SurvivorSwap lend would add up with the shared ones
-            return Helper.GetLivingPlayerBodies().Count >= 2
-                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("InventoryRoulette", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("SurvivorSwap", StringComparison.InvariantCultureIgnoreCase));
+            return Helper.GetLivingPlayerBodies().Count >= 2;
         }
         public override string GetEventConfigName()
         {
@@ -41,7 +40,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "At least two players are alive and events \"InventoryRoulette\" and \"SurvivorSwap\" inactive.";
+            return "At least two players are alive.";
         }
         protected override void AddConfig(ConfigFile config)
         {

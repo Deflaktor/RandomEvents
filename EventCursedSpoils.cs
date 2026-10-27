@@ -11,11 +11,8 @@ namespace RandomEvents
     public class EventCursedSpoils : AbstractEvent
     {
         public override EventTags Tags => EventTags.Monsters;
+        public override EventTags ExcludedTags => EventTags.EventItems;
         // events that give players items to play with, which Hex of Loss would disable
-        private static readonly HashSet<string> ItemSetEvents = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase)
-        {
-            "Behemoths", "Bouncy", "CasinoItem", "EquipmentOnly", "IndirectDamage", "ItemKits", "LavaFloor", "Ossification", "Slippery"
-        };
         private ConfigEntry<float> HexDamage;
         // damage each player took from monsters since their last hex
         private readonly Dictionary<CharacterBody, float> damageTaken = new Dictionary<CharacterBody, float>();
@@ -26,9 +23,8 @@ namespace RandomEvents
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            // the hex comes with that expansion; the hexes would disable the items of events built around them
-            return DLC4Content.DLC4 != null && Run.instance != null && Run.instance.IsExpansionEnabled(DLC4Content.DLC4)
-                && !activeOtherEvents.Any(e => ItemSetEvents.Contains(e.GetEventConfigName()));
+            // the hex comes with that expansion
+            return DLC4Content.DLC4 != null && Run.instance != null && Run.instance.IsExpansionEnabled(DLC4Content.DLC4);
         }
         public override string GetEventConfigName()
         {
@@ -48,7 +44,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Hallowed Concepts is enabled, and events \"Behemoths\", \"Bouncy\", \"CasinoItem\", \"EquipmentOnly\", \"IndirectDamage\", \"ItemKits\", \"LavaFloor\", \"Ossification\" and \"Slippery\" inactive.";
+            return "Hallowed Concepts is enabled.";
         }
         protected override void AddConfig(ConfigFile config)
         {

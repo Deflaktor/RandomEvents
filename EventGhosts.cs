@@ -13,7 +13,8 @@ namespace RandomEvents
 {
     public class EventGhosts : AbstractEvent
     {
-        public override EventTags Tags => EventTags.Monsters;
+        public override EventTags Tags => EventTags.Monsters | EventTags.MonsterHealth;
+        public override EventTags ExcludedTags => EventTags.MonsterHealth;
         private ConfigEntry<float> GhostProbability;
 
         public override bool LoadCondition()
@@ -30,8 +31,7 @@ namespace RandomEvents
                     return false;
                 }
             }
-            // ghosts' fading health and the monsters' barrier from Ossification don't mix well
-            return !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("Ossification", StringComparison.InvariantCultureIgnoreCase));
+            return true;
         }
         public override string GetEventConfigName()
         {
@@ -47,7 +47,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Currently not a boss wave, and event \"Ossification\" inactive.";
+            return "Currently not a boss wave.";
         }
         protected override void AddConfig(ConfigFile config)
         {

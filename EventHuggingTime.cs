@@ -24,17 +24,13 @@ namespace RandomEvents
         private const float TetherInterval = 0.25f;
         // how long the tether takes to reach the victim
         private const float TetherTravelTime = 0.1f;
-        // Bouncy's launches would end with every hit, and Red Light, Green Light would punish players for being pulled
-        private static readonly string[] IncompatibleEvents = { "Bouncy", "RedLightGreenLight" };
         private ConfigEntry<float> PullDistance;
         private AsyncOperationHandle<GameObject> TetherEffect;
         // when each victim's tether last showed
         private readonly Dictionary<HealthComponent, float> lastTethers = new Dictionary<HealthComponent, float>();
 
-        public override bool IsCompatibleWith(AbstractEvent other)
-        {
-            return !IncompatibleEvents.Any(name => other.GetEventConfigName().Equals(name, System.StringComparison.InvariantCultureIgnoreCase));
-        }
+        // Bouncy's launches would end with every hit, and Red Light, Green Light would punish players for being pulled
+        public override EventTags ExcludedTags => EventTags.PlayerMovement;
         public override bool LoadCondition()
         {
             return true;
@@ -61,7 +57,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Events \"Bouncy\" and \"RedLightGreenLight\" inactive.";
+            return "";
         }
         protected override void AddConfig(ConfigFile config)
         {

@@ -23,23 +23,15 @@ namespace RandomEvents
     public class EventEquipmentOnly : AbstractEvent
     {
         private EquipmentDef commonEquipment;
+        public override EventTags Tags => EventTags.EventItems | EventTags.Equipment;
+        public override EventTags ExcludedTags => EventTags.Equipment | EventTags.EquipmentSwaps;
         public override bool LoadCondition()
         {
             return true;
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            var enigmaArtifactActive = RunArtifactManager.enabledArtifactsEnumerable.Any(e => e == RoR2Content.Artifacts.Enigma)
-                || activeOtherEvents.Any(e => e is EventRandomArtifact randomArtifact && randomArtifact.TurnsOn(RoR2Content.Artifacts.Enigma));
-            if (enigmaArtifactActive)
-            {
-                return false;
-            }
-            return !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("SkillsOnly", StringComparison.InvariantCultureIgnoreCase)
-                                            || e.GetEventConfigName().Equals("FuelArray", StringComparison.InvariantCultureIgnoreCase)
-                                            || e.GetEventConfigName().Equals("ExperimentalEquipment", StringComparison.InvariantCultureIgnoreCase))
-                // Cursed Spoils' hexes would disable the event's items
-                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("CursedSpoils", StringComparison.InvariantCultureIgnoreCase));
+            return !RunArtifactManager.enabledArtifactsEnumerable.Any(e => e == RoR2Content.Artifacts.Enigma);
         }
         public override string GetEventConfigName()
         {
@@ -59,7 +51,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Events \"SkillsOnly\", \"FuelArray\", \"ExperimentalEquipment\", \"CursedSpoils\" inactive. Artifact of Enigma inactive.";
+            return "Artifact of Enigma inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {

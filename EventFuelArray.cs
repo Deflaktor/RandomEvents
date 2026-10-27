@@ -15,16 +15,15 @@ namespace RandomEvents
 {
     public class EventFuelArray : AbstractEvent
     {
+        public override EventTags Tags => EventTags.Equipment | EventTags.PlayerHealth;
+        public override EventTags ExcludedTags => EventTags.Equipment | EventTags.PlayerHealth;
         public override bool LoadCondition()
         {
             return true;
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            // EquipmentOnly and ExperimentalEquipment give equipment of their own
-            return !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("EquipmentOnly", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("ExperimentalEquipment", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("Vampires", StringComparison.InvariantCultureIgnoreCase));
+            return true;
         }
         public override string GetEventConfigName()
         {
@@ -44,7 +43,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Events \"EquipmentOnly\", \"ExperimentalEquipment\" and \"Vampires\" inactive.";
+            return "";
         }
         protected override void AddConfig(ConfigFile config)
         {

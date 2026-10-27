@@ -61,67 +61,75 @@ namespace RandomEvents
                 OpponentMarks.Hook();
 
                 ModConfig.Init();
-                InitAndHookEvent(new EventBehemoths());
-                InitAndHookEvent(new EventBlightedCorpses());
-                InitAndHookEvent(new EventBouncy());
-                InitAndHookEvent(new EventBulletHell());
-                InitAndHookEvent(new EventCasinoItem());
-                InitAndHookEvent(new EventChestMimics());
-                InitAndHookEvent(new EventCursedSpoils());
-                InitAndHookEvent(new EventDeathmatch());
-                InitAndHookEvent(new EventDroneEscort());
-                InitAndHookEvent(new EventDroneUprising());
-                InitAndHookEvent(new EventEliteSurge());
-                InitAndHookEvent(new EventEquipmentOnly());
-                InitAndHookEvent(new EventExperimentalEquipment());
-                InitAndHookEvent(new EventExplodingCorpses());
-                InitAndHookEvent(new EventFallingEnemies());
-                InitAndHookEvent(new EventFocusFire());
-                InitAndHookEvent(new EventFuelArray());
-                InitAndHookEvent(new EventGhosts());
-                InitAndHookEvent(new EventGiantBalloons());
-                InitAndHookEvent(new EventHaste());
-                InitAndHookEvent(new EventHotPotato());
-                InitAndHookEvent(new EventHunted());
-                InitAndHookEvent(new EventHuggingTime());
-                InitAndHookEvent(new EventIndirectDamage());
-                InitAndHookEvent(new EventInventoryRoulette());
-                InitAndHookEvent(new EventItemKits());
-                InitAndHookEvent(new EventItemRush());
-                InitAndHookEvent(new EventItemZone());
-                InitAndHookEvent(new EventLavaFloor());
-                InitAndHookEvent(new EventLinkedSouls());
-                InitAndHookEvent(new EventLynxPups());
-                InitAndHookEvent(new EventMirroredEnemies());
-                InitAndHookEvent(new EventMitosis());
-                InitAndHookEvent(new EventMonsterTransform());
-                InitAndHookEvent(new EventNeutroniumWeights());
-                InitAndHookEvent(new EventOssification());
-                InitAndHookEvent(new EventRandomArtifact());
-                InitAndHookEvent(new EventRandomTeams());
-                InitAndHookEvent(new EventRedLightGreenLight());
-                InitAndHookEvent(new EventReducedGravity());
-                InitAndHookEvent(new EventRitualHelmets());
-                InitAndHookEvent(new EventSecondWind());
-                InitAndHookEvent(new EventShielded());
-                InitAndHookEvent(new EventSkillsOnly());
-                InitAndHookEvent(new EventSlippery());
-                InitAndHookEvent(new EventSmallArena());
-                InitAndHookEvent(new EventStealthMission());
-                InitAndHookEvent(new EventStrongEnemies());
-                InitAndHookEvent(new EventSupplyDrop());
-                InitAndHookEvent(new EventSurvivorSwap());
-                InitAndHookEvent(new EventSwarmQueen());
-                InitAndHookEvent(new EventTagTeam());
-                InitAndHookEvent(new EventTheAlpha());
-                InitAndHookEvent(new EventThieves());
-                InitAndHookEvent(new EventTimeWarp());
-                InitAndHookEvent(new EventUmbraAmbush());
-                InitAndHookEvent(new EventUnitedWeStand());
-                InitAndHookEvent(new EventVampires());
-                InitAndHookEvent(new EventVengefulSpirits());
-                InitAndHookEvent(new EventWeakEnemies());
-                InitAndHookEvent(new EventZombies());
+                // all of them exist before their configs, whose descriptions name the events they rule out
+                var events = new List<AbstractEvent>
+                {
+                    new EventBehemoths(),
+                    new EventBlightedCorpses(),
+                    new EventBouncy(),
+                    new EventBulletHell(),
+                    new EventCasinoItem(),
+                    new EventChestMimics(),
+                    new EventCursedSpoils(),
+                    new EventDeathmatch(),
+                    new EventDroneEscort(),
+                    new EventDroneUprising(),
+                    new EventEliteSurge(),
+                    new EventEquipmentOnly(),
+                    new EventExperimentalEquipment(),
+                    new EventExplodingCorpses(),
+                    new EventFallingEnemies(),
+                    new EventFocusFire(),
+                    new EventFuelArray(),
+                    new EventGhosts(),
+                    new EventGiantBalloons(),
+                    new EventHaste(),
+                    new EventHotPotato(),
+                    new EventHunted(),
+                    new EventHuggingTime(),
+                    new EventIndirectDamage(),
+                    new EventInventoryRoulette(),
+                    new EventItemKits(),
+                    new EventItemRush(),
+                    new EventItemZone(),
+                    new EventLavaFloor(),
+                    new EventLinkedSouls(),
+                    new EventLynxPups(),
+                    new EventMirroredEnemies(),
+                    new EventMitosis(),
+                    new EventMonsterTransform(),
+                    new EventNeutroniumWeights(),
+                    new EventOssification(),
+                    new EventRandomArtifact(),
+                    new EventRandomTeams(),
+                    new EventRedLightGreenLight(),
+                    new EventReducedGravity(),
+                    new EventRitualHelmets(),
+                    new EventSecondWind(),
+                    new EventShielded(),
+                    new EventSkillsOnly(),
+                    new EventSlippery(),
+                    new EventSmallArena(),
+                    new EventStealthMission(),
+                    new EventStrongEnemies(),
+                    new EventSupplyDrop(),
+                    new EventSurvivorSwap(),
+                    new EventSwarmQueen(),
+                    new EventTagTeam(),
+                    new EventTheAlpha(),
+                    new EventThieves(),
+                    new EventTimeWarp(),
+                    new EventUmbraAmbush(),
+                    new EventUnitedWeStand(),
+                    new EventVampires(),
+                    new EventVengefulSpirits(),
+                    new EventWeakEnemies(),
+                    new EventZombies(),
+                };
+                foreach (var ev in events)
+                {
+                    InitAndHookEvent(ev, events);
+                }
                 ModConfig.InLobbyConfig();
                 DebugToolkitAutoComplete.Register(m_loadedEvents);
             });
@@ -129,7 +137,7 @@ namespace RandomEvents
             someMonster = Addressables.LoadAssetAsync<CharacterSpawnCard>("RoR2/DLC1/MajorAndMinorConstruct/cscMinorConstruct.asset");
             someMonster2 = Addressables.LoadAssetAsync<CharacterSpawnCard>("RoR2/Base/Wisp/cscLesserWisp.asset");
         }
-        private AbstractEvent InitAndHookEvent(AbstractEvent ev)
+        private AbstractEvent InitAndHookEvent(AbstractEvent ev, List<AbstractEvent> allEvents)
         {
             ev.Id = m_allEventsIncludingNotLoadedOnes.Count + 1;
             // an event that fails to load leaves out only itself
@@ -137,7 +145,7 @@ namespace RandomEvents
             {
                 if (ev.LoadCondition())
                 {
-                    ev.SetupConfig(instance.Config);
+                    ev.SetupConfig(instance.Config, allEvents);
                     ev.Preload();
                     ev.Hook();
                     m_loadedEvents.Add(ev);
@@ -696,11 +704,11 @@ namespace RandomEvents
             using (System.IO.StreamWriter writer = new System.IO.StreamWriter(filePath))
             {
                 writer.WriteLine("## Random Events");
-                writer.WriteLine("| Event Name | Announcement | Description | Condition |");
-                writer.WriteLine("|------------|--------------|-------------|-----------|");
+                writer.WriteLine("| Announcement | Description | Condition | Internal Name |");
+                writer.WriteLine("|--------------|-------------|-----------|---------------|");
                 foreach (var ev in RandomEvents.instance.m_allEventsIncludingNotLoadedOnes)
                 {
-                    writer.WriteLine($"| {ev.GetEventConfigName()} | {ev.GetAnnouncement()} | {ev.GetDescription()} | {ev.GetConditionDescription()} |");
+                    writer.WriteLine($"| {ev.GetAnnouncement()} | {ev.GetDescription()} | {ev.GetFullConditionDescription(RandomEvents.instance.m_allEventsIncludingNotLoadedOnes)} | {ev.GetEventConfigName()} |");
                 }
             }
 #endif

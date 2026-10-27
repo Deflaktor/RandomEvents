@@ -11,7 +11,8 @@ namespace RandomEvents
 {
     public class EventShielded : AbstractEvent
     {
-        public override EventTags Tags => EventTags.Monsters;
+        public override EventTags Tags => EventTags.Monsters | EventTags.MonsterDamageTaken;
+        public override EventTags ExcludedTags => EventTags.MonsterDamageTaken;
         private ConfigEntry<float> ShieldedShare;
         private ConfigEntry<float> HealthFraction;
         private ConfigEntry<float> ShieldedDamageTaken;
@@ -31,8 +32,7 @@ namespace RandomEvents
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
             var teleporter = TeleporterInteraction.instance;
-            return !Helper.IsSimulacrumBossWaveNext() && (teleporter == null || !(teleporter.isIdleToCharging || teleporter.isCharging))
-                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("MirroredEnemies", StringComparison.InvariantCultureIgnoreCase));
+            return !Helper.IsSimulacrumBossWaveNext() && (teleporter == null || !(teleporter.isIdleToCharging || teleporter.isCharging));
         }
         public override string GetEventConfigName()
         {
@@ -52,7 +52,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Not during the teleporter event or a Simulacrum boss wave, and event \"MirroredEnemies\" inactive.";
+            return "Not during the teleporter event or a Simulacrum boss wave.";
         }
         protected override void AddConfig(ConfigFile config)
         {

@@ -8,7 +8,8 @@ namespace RandomEvents
 {
     public class EventUmbraAmbush : AbstractEvent
     {
-        public override EventTags Tags => EventTags.Monsters;
+        public override EventTags Tags => EventTags.Monsters | EventTags.MonsterAttackSpeed;
+        public override EventTags ExcludedTags => EventTags.MonsterAttackSpeed;
         // Items that suit every survivor: tough and self-healing, so they help whatever the hunter's attacks are. A
         // hunter gets a kit with half as many items of each tier as the player it hunts has (setting Item Multiplier),
         // picked from this list, or from all safe items of the tier if it has none of the tier. Only safe items go into
@@ -38,8 +39,7 @@ namespace RandomEvents
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            // its faster attacks would undo the hunters' slowdown
-            return GetSurvivorCandidates().Count > 0 && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("BulletHell", System.StringComparison.InvariantCultureIgnoreCase));
+            return GetSurvivorCandidates().Count > 0;
         }
         public override string GetEventConfigName()
         {
@@ -59,7 +59,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Event \"BulletHell\" inactive.";
+            return "";
         }
         protected override void AddConfig(ConfigFile config)
         {

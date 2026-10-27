@@ -36,15 +36,17 @@ namespace RandomEvents
                 }
             }
             var artifactCandidates = new List<ArtifactDef>(ArtifactCatalog.artifactDefs);
-            var equipmentOnlyActive = otherEvents.Any(e => e.GetEventConfigName().Equals("EquipmentOnly", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("ExperimentalEquipment", StringComparison.InvariantCultureIgnoreCase));
-            if (atLeastOneCharacterHasAutoCastEquipment || equipmentOnlyActive)
+            if (atLeastOneCharacterHasAutoCastEquipment || otherEvents.Any(e => (e.ExcludedTags & EventTags.EquipmentSwaps) != 0))
             {
                 artifactCandidates.Remove(RoR2Content.Artifacts.Enigma);
             }
+            if (otherEvents.Any(e => (e.ExcludedTags & EventTags.PlayerDamage) != 0))
+            {
+                artifactCandidates.Remove(RoR2Content.Artifacts.FriendlyFire);
+            }
             // Artifact of Kin and Artifact of Dissonance rebuild the stage's monster pool when turned on or off, which drops
             // the changes of the events that change which monsters spawn
-            if (otherEvents.Any(MonsterPool.IsChangingEvent))
+            if (otherEvents.Any(e => (e.Tags & EventTags.MonsterPool) != 0))
             {
                 artifactCandidates.Remove(RoR2Content.Artifacts.SingleMonsterType);
                 artifactCandidates.Remove(RoR2Content.Artifacts.MixEnemy);
@@ -119,11 +121,12 @@ namespace RandomEvents
             return artifacts.Contains(artifactDef);
         }
 
-        // nor is such an event picked after this one turns on one of them
-        public override bool IsCompatibleWith(AbstractEvent other)
-        {
-            return !MonsterPool.IsChangingEvent(other) || !(TurnsOn(RoR2Content.Artifacts.SingleMonsterType) || TurnsOn(RoR2Content.Artifacts.MixEnemy));
-        }
+        // what the artifacts it turns on do; nor is an event that changes which monsters spawn picked after it turns on
+        // Artifact of Kin or Artifact of Dissonance
+        public override EventTags Tags => (TurnsOn(RoR2Content.Artifacts.Enigma) ? EventTags.EquipmentSwaps : EventTags.None)
+            | (TurnsOn(RoR2Content.Artifacts.FriendlyFire) ? EventTags.PlayerDamage : EventTags.None);
+        public override EventTags ExcludedTags => TurnsOn(RoR2Content.Artifacts.SingleMonsterType) || TurnsOn(RoR2Content.Artifacts.MixEnemy)
+            ? EventTags.MonsterPool : EventTags.None;
 
         public override void Start(List<AbstractEvent> activeOtherEvents)
         {

@@ -13,6 +13,8 @@ namespace RandomEvents
         private ConfigEntry<int> HexCount;
         private ConfigEntry<float> HealthPerBrooch;
 
+        public override EventTags Tags => EventTags.EventItems | EventTags.MonsterHealth;
+        public override EventTags ExcludedTags => EventTags.MonsterHealth;
         public override bool LoadCondition()
         {
             return true;
@@ -20,10 +22,7 @@ namespace RandomEvents
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
             // Hex of Ossification comes with that expansion
-            return DLC4Content.DLC4 != null && Run.instance != null && Run.instance.IsExpansionEnabled(DLC4Content.DLC4)
-                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("Ghosts", StringComparison.InvariantCultureIgnoreCase))
-                // Cursed Spoils' hexes would disable the event's items
-                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("CursedSpoils", StringComparison.InvariantCultureIgnoreCase));
+            return DLC4Content.DLC4 != null && Run.instance != null && Run.instance.IsExpansionEnabled(DLC4Content.DLC4);
         }
         public override string GetEventConfigName()
         {
@@ -43,7 +42,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Hallowed Concepts is enabled, and events \"Ghosts\" and \"CursedSpoils\" inactive.";
+            return "Hallowed Concepts is enabled.";
         }
         protected override void AddConfig(ConfigFile config)
         {

@@ -9,7 +9,8 @@ namespace RandomEvents
 {
     public class EventWeakEnemies : AbstractEvent
     {
-        public override EventTags Tags => EventTags.Monsters;
+        public override EventTags Tags => EventTags.Monsters | EventTags.MonsterPool | EventTags.MonsterKinds;
+        public override EventTags ExcludedTags => EventTags.MonsterKinds;
         // the director multiplies an elite tier's cost by the bias when it picks one, so a high bias makes elites too
         // expensive
         private const float NoElitesBias = 1000f;
@@ -32,13 +33,7 @@ namespace RandomEvents
                     return false;
                 }
             }
-            // DroneUprising replaces the stage's monsters, which this event picks from
-            return !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("StrongEnemies", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("Mitosis", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("DroneUprising", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("LynxPups", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("BlightedCorpses", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("BulletHell", StringComparison.InvariantCultureIgnoreCase));
+            return true;
         }
         public override string GetEventConfigName()
         {
@@ -54,7 +49,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Events \"StrongEnemies\", \"Mitosis\", \"DroneUprising\", \"LynxPups\", \"BlightedCorpses\" and \"BulletHell\" inactive.";
+            return "";
         }
 
         protected override void AddConfig(ConfigFile config)

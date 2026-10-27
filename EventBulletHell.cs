@@ -13,18 +13,17 @@ namespace RandomEvents
 {
     public class EventBulletHell : AbstractEvent
     {
-        public override EventTags Tags => EventTags.Monsters;
+        public override EventTags Tags => EventTags.Monsters | EventTags.MonsterPool | EventTags.MonsterAttackSpeed;
+        // it needs the stage's own monsters; SwarmQueen's Beetles fire no projectiles, and the faster attacks would undo UmbraAmbush's slowdown
+        public override EventTags ExcludedTags => EventTags.MonsterPool | EventTags.ExtraMonsters | EventTags.MonsterAttackSpeed;
         public override bool LoadCondition()
         {
             return true;
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            // only monsters whose primary fires projectiles spawn, so most of the stage's should; the faster attacks would
-            // undo UmbraAmbush's hunters' slowdown, and SwarmQueen brings Beetles along, which fire none
-            return MonsterTraits.WeightShare(MonsterPool.GetChoices(), MonsterTraits.PrimaryFiresProjectiles) > 0.5f && !MonsterPool.OtherChangingEventActive(this, activeOtherEvents)
-                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("UmbraAmbush", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("SwarmQueen", StringComparison.InvariantCultureIgnoreCase));
+            // only monsters whose primary fires projectiles spawn, so most of the stage's should
+            return MonsterTraits.WeightShare(MonsterPool.GetChoices(), MonsterTraits.PrimaryFiresProjectiles) > 0.5f;
         }
         public override string GetEventConfigName()
         {
@@ -44,7 +43,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Most of the stage's monsters' primary attacks fire projectiles, and events \"WeakEnemies\", \"StrongEnemies\", \"Mitosis\", \"DroneUprising\", \"FallingEnemies\", \"RitualHelmets\", \"Bouncy\", \"LynxPups\", \"BlightedCorpses\", \"UmbraAmbush\" and \"SwarmQueen\" inactive.";
+            return "Most of the stage's monsters' primary attacks fire projectiles.";
         }
         protected override void AddConfig(ConfigFile config)
         {

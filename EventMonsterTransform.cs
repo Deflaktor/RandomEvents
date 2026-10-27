@@ -77,6 +77,8 @@ namespace RandomEvents
                 { "VultureHunterBody",   " 0xHoof &   0xAlienHead &  10xBoostDamage &  0xBoostAttackSpeed & 10xKnurl" },
             };
 
+        public override EventTags Tags => EventTags.PlayerBody | EventTags.PlayerSkills;
+        public override EventTags ExcludedTags => EventTags.PlayerBody | EventTags.PlayerSkills;
         public override bool LoadCondition()
         {
             return true;
@@ -91,8 +93,7 @@ namespace RandomEvents
                     return false;
                 }
             }
-            return !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("SkillsOnly", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("SurvivorSwap", StringComparison.InvariantCultureIgnoreCase));
+            return true;
         }
         public override string GetEventConfigName()
         {
@@ -108,7 +109,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Events \"SkillsOnly\" and \"SurvivorSwap\" inactive and currently not a boss wave.";
+            return "Currently not a boss wave.";
         }
         private static List<string> CalculateDefaultBodyList()
         {

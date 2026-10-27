@@ -18,6 +18,8 @@ namespace RandomEvents
         // the players who got another's items, who have armor to make up for the unfamiliar items
         private readonly HashSet<CharacterMaster> armored = new HashSet<CharacterMaster>();
 
+        public override EventTags Tags => EventTags.PlayerItems;
+        public override EventTags ExcludedTags => EventTags.PlayerItems;
         public override bool LoadCondition()
         {
             return true;
@@ -26,11 +28,8 @@ namespace RandomEvents
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
             var teleporter = TeleporterInteraction.instance;
-            // SurvivorSwap swaps the items as well, and UnitedWeStand's shared items would add up with the lent ones
             return Helper.GetLivingPlayerBodies().Count >= 2 && !Helper.IsSimulacrumBossWaveNext()
-                && (teleporter == null || !(teleporter.isIdleToCharging || teleporter.isCharging))
-                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("SurvivorSwap", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("UnitedWeStand", StringComparison.InvariantCultureIgnoreCase));
+                && (teleporter == null || !(teleporter.isIdleToCharging || teleporter.isCharging));
         }
         public override string GetEventConfigName()
         {
@@ -50,7 +49,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "At least two players are alive, not during the teleporter event or a Simulacrum boss wave, and events \"SurvivorSwap\" and \"UnitedWeStand\" inactive.";
+            return "At least two players are alive, and not during the teleporter event or a Simulacrum boss wave.";
         }
         protected override void AddConfig(ConfigFile config)
         {

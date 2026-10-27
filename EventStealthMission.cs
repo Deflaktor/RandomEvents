@@ -14,14 +14,14 @@ namespace RandomEvents
 {
     public class EventStealthMission : AbstractEvent
     {
+        public override EventTags Tags => EventTags.HiddenPlayers;
         public override bool LoadCondition()
         {
             return true;
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            // Hunted makes the monsters chase a player, whom they couldn't see
-            return !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("Hunted", StringComparison.InvariantCultureIgnoreCase));
+            return true;
         }
         public override string GetEventConfigName()
         {
@@ -41,7 +41,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Event \"Hunted\" inactive.";
+            return "";
         }
         protected override void AddConfig(ConfigFile config)
         {

@@ -17,6 +17,8 @@ namespace RandomEvents
         private readonly HashSet<CharacterMaster> revived = new HashSet<CharacterMaster>();
         private readonly Dictionary<CharacterBody, int> curses = new Dictionary<CharacterBody, int>();
 
+        public override EventTags Tags => EventTags.Revives;
+        public override EventTags ExcludedTags => EventTags.Revives;
         public override bool LoadCondition()
         {
             return true;

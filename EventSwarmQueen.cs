@@ -12,7 +12,8 @@ namespace RandomEvents
 {
     public class EventSwarmQueen : AbstractEvent
     {
-        public override EventTags Tags => EventTags.Monsters;
+        public override EventTags Tags => EventTags.Monsters | EventTags.ExtraMonsters | EventTags.MonsterSize;
+        public override EventTags ExcludedTags => EventTags.MonsterSize;
         private const float SpreadRadius = 3f;
         private ConfigEntry<int> SwarmSize;
         private AsyncOperationHandle<CharacterSpawnCard> Beetle;
@@ -24,12 +25,7 @@ namespace RandomEvents
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            // DroneUprising, BulletHell and StrongEnemies leave out monsters like the swarm's, and GiantBalloons would
-            // inflate all of them
-            return !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("DroneUprising", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("BulletHell", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("StrongEnemies", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("GiantBalloons", StringComparison.InvariantCultureIgnoreCase));
+            return true;
         }
         public override string GetEventConfigName()
         {
@@ -49,7 +45,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Events \"DroneUprising\", \"BulletHell\", \"StrongEnemies\" and \"GiantBalloons\" inactive.";
+            return "";
         }
         protected override void AddConfig(ConfigFile config)
         {

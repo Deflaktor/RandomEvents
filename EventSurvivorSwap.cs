@@ -18,6 +18,8 @@ namespace RandomEvents
         // the player who is alone and became a random survivor, who has armor to make up for their unknown kit
         private CharacterMaster aloneMaster;
 
+        public override EventTags Tags => EventTags.PlayerItems | EventTags.PlayerBody;
+        public override EventTags ExcludedTags => EventTags.PlayerItems | EventTags.PlayerBody;
         public override bool LoadCondition()
         {
             return true;
@@ -27,13 +29,6 @@ namespace RandomEvents
         {
             var teleporter = TeleporterInteraction.instance;
             if (Helper.IsSimulacrumBossWaveNext() || (teleporter != null && (teleporter.isIdleToCharging || teleporter.isCharging)))
-            {
-                return false;
-            }
-            // they change the players' bodies or items as well, and UnitedWeStand's shared items would add up with the lent ones
-            if (activeOtherEvents.Any(e => e.GetEventConfigName().Equals("MonsterTransform", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("InventoryRoulette", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("UnitedWeStand", StringComparison.InvariantCultureIgnoreCase)))
             {
                 return false;
             }
@@ -58,7 +53,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Not during the teleporter event or a Simulacrum boss wave, and events \"MonsterTransform\", \"InventoryRoulette\" and \"UnitedWeStand\" inactive.";
+            return "Not during the teleporter event or a Simulacrum boss wave.";
         }
         protected override void AddConfig(ConfigFile config)
         {

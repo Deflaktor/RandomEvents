@@ -14,7 +14,8 @@ namespace RandomEvents
 {
     public class EventMirroredEnemies : AbstractEvent
     {
-        public override EventTags Tags => EventTags.Monsters;
+        public override EventTags Tags => EventTags.Monsters | EventTags.MonsterDamageTaken;
+        public override EventTags ExcludedTags => EventTags.MonsterDamageTaken;
         private ConfigEntry<float> MirrorChance;
         private ConfigEntry<float> HealthLossPerHit;
         private ConfigEntry<float> HealMultiplier;
@@ -44,7 +45,7 @@ namespace RandomEvents
         // both change how monsters take damage
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            return !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("Shielded", StringComparison.InvariantCultureIgnoreCase));
+            return true;
         }
         public override string GetEventConfigName()
         {
@@ -64,7 +65,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Event \"Shielded\" inactive.";
+            return "";
         }
         protected override void AddConfig(ConfigFile config)
         {

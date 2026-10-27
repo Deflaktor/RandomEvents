@@ -34,6 +34,7 @@ namespace RandomEvents
             public bool fresh = true;
         }
 
+        public override EventTags Tags => EventTags.PlayerDamage;
         public override bool LoadCondition()
         {
             return true;

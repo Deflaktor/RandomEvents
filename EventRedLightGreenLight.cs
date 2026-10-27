@@ -41,6 +41,7 @@ namespace RandomEvents
         private const float OrbHeight = 10f;
         private float checkTimer;
 
+        public override EventTags Tags => EventTags.PlayerMovement;
         public override bool LoadCondition()
         {
             return true;

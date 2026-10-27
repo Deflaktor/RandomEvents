@@ -26,15 +26,14 @@ namespace RandomEvents
         // only this event's own, other events give temporary items too
         private readonly Dictionary<CharacterBody, TemporaryInventory> inventories = new Dictionary<CharacterBody, TemporaryInventory>();
 
+        public override EventTags Tags => EventTags.EventItems;
         public override bool LoadCondition()
         {
             return true;
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            return GetCandidates(ItemTier.Tier1).Count > 0 || GetCandidates(ItemTier.Tier2).Count > 0
-                // Cursed Spoils' hexes would disable the event's items
-                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("CursedSpoils", StringComparison.InvariantCultureIgnoreCase));
+            return GetCandidates(ItemTier.Tier1).Count > 0 || GetCandidates(ItemTier.Tier2).Count > 0;
         }
         public override string GetEventConfigName()
         {
@@ -54,7 +53,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "At least one common or uncommon item with an on-hit effect is available, and event \"CursedSpoils\" inactive.";
+            return "At least one common or uncommon item with an on-hit effect is available.";
         }
         protected override void AddConfig(ConfigFile config)
         {

@@ -18,12 +18,6 @@ namespace RandomEvents
             public WeightedSelection<DirectorCard> replacement;
         }
 
-        // the events that change which monsters spawn, which don't happen together
-        public static readonly string[] ChangingEvents =
-        {
-            "WeakEnemies", "StrongEnemies", "Mitosis", "DroneUprising", "FallingEnemies", "RitualHelmets", "Bouncy", "LynxPups", "BlightedCorpses", "BulletHell"
-        };
-
         private static ClassicStageInfo stageInfo;
         private static WeightedSelection<DirectorCard> originalSelection;
         private static WeightedSelection<DirectorCard> changedSelection;
@@ -53,18 +47,6 @@ namespace RandomEvents
             {
                 stage.monsterSelection = changedSelection;
             }
-        }
-
-        // whether it's one of the events that change which monsters spawn
-        public static bool IsChangingEvent(AbstractEvent e)
-        {
-            return ChangingEvents.Any(name => e.GetEventConfigName().Equals(name, StringComparison.InvariantCultureIgnoreCase));
-        }
-
-        // whether one of the other events that change which monsters spawn is going on
-        public static bool OtherChangingEventActive(AbstractEvent self, List<AbstractEvent> activeOtherEvents)
-        {
-            return activeOtherEvents.Any(e => e != self && IsChangingEvent(e));
         }
 
         // the cards of the stage's monster pool, without the selection's spare capacity

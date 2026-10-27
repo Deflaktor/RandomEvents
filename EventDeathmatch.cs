@@ -89,17 +89,10 @@ namespace RandomEvents
         private readonly Dictionary<CharacterMaster, TeamIndex> originalTeams = new Dictionary<CharacterMaster, TeamIndex>();
         private readonly Dictionary<TeamIndex, uint> originalTeamLevels = new Dictionary<TeamIndex, uint>();
 
-        // The events about monsters alone do nothing while they are gone. Of the others, these change how players hurt
-        // each other or come back, or are hidden from each other: Hot Potato's bomb would go round the players,
-        // RandomArtifact's Artifact of Chaos would let teammates hurt each other, and Stealth Mission's players can't see
-        // each other.
-        private static readonly string[] IncompatibleEvents = { "HotPotato", "LinkedSouls", "RandomArtifact", "SecondWind", "StealthMission", "TagTeam" };
-
-        public override bool IsCompatibleWith(AbstractEvent other)
-        {
-            return (other.Tags & EventTags.Monsters) == 0
-                && !IncompatibleEvents.Any(name => other.GetEventConfigName().Equals(name, System.StringComparison.InvariantCultureIgnoreCase));
-        }
+        public override EventTags Tags => EventTags.PlayerMarker | EventTags.Revives;
+        // The events about monsters alone do nothing while they are gone, and the others change how players hurt each other
+        // or come back, or hide them from each other
+        public override EventTags ExcludedTags => EventTags.Monsters | EventTags.PlayerMarker | EventTags.Revives | EventTags.PlayerDamage | EventTags.HiddenPlayers;
         public override bool LoadCondition()
         {
             return true;
@@ -132,7 +125,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "At least two players are alive, not during the teleporter event or a Simulacrum boss wave, no event about monsters alone, and events \"HotPotato\", \"LinkedSouls\", \"RandomArtifact\", \"SecondWind\", \"StealthMission\" and \"TagTeam\" inactive.";
+            return "At least two players are alive, and not during the teleporter event or a Simulacrum boss wave.";
         }
         protected override void AddConfig(ConfigFile config)
         {

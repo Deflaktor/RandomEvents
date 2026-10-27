@@ -12,6 +12,7 @@ namespace RandomEvents
     {
         private ConfigEntry<int> Hexes;
 
+        public override EventTags Tags => EventTags.EventItems;
         public override bool LoadCondition()
         {
             return true;
@@ -19,9 +20,7 @@ namespace RandomEvents
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
             // Hex of Acceleration comes with that expansion
-            return DLC4Content.DLC4 != null && Run.instance != null && Run.instance.IsExpansionEnabled(DLC4Content.DLC4)
-                // Cursed Spoils' hexes would disable the event's items
-                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("CursedSpoils", StringComparison.InvariantCultureIgnoreCase));
+            return DLC4Content.DLC4 != null && Run.instance != null && Run.instance.IsExpansionEnabled(DLC4Content.DLC4);
         }
         public override string GetEventConfigName()
         {
@@ -41,7 +40,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Hallowed Concepts is enabled, and event \"CursedSpoils\" inactive.";
+            return "Hallowed Concepts is enabled.";
         }
         protected override void AddConfig(ConfigFile config)
         {

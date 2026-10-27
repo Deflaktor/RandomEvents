@@ -21,20 +21,17 @@ namespace RandomEvents
         // the equipment the event gives this time
         public ExperimentalEquipment Current { get; private set; }
 
+        public override EventTags Tags => EventTags.Equipment;
+        public override EventTags ExcludedTags => EventTags.Equipment | EventTags.EquipmentSwaps;
         public override bool LoadCondition()
         {
             return true;
         }
         public override bool Condition(List<AbstractEvent> activeOtherEvents)
         {
-            // Artifact of Enigma would swap the equipment on every use, EquipmentOnly and FuelArray give their own, and
-            // SkillsOnly takes it away
-            var enigmaArtifactActive = RunArtifactManager.enabledArtifactsEnumerable.Any(e => e == RoR2Content.Artifacts.Enigma)
-                || activeOtherEvents.Any(e => e is EventRandomArtifact randomArtifact && randomArtifact.TurnsOn(RoR2Content.Artifacts.Enigma));
-            return !enigmaArtifactActive && !Helper.IsSimulacrumBossWaveNext()
-                && !activeOtherEvents.Any(e => e.GetEventConfigName().Equals("EquipmentOnly", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("FuelArray", StringComparison.InvariantCultureIgnoreCase)
-                || e.GetEventConfigName().Equals("SkillsOnly", StringComparison.InvariantCultureIgnoreCase));
+            // Artifact of Enigma would swap the equipment on every use
+            var enigmaArtifactActive = RunArtifactManager.enabledArtifactsEnumerable.Any(e => e == RoR2Content.Artifacts.Enigma);
+            return !enigmaArtifactActive && !Helper.IsSimulacrumBossWaveNext();
         }
         protected override float DefaultWeight => 2f;
 
@@ -56,7 +53,7 @@ namespace RandomEvents
         }
         public override string GetConditionDescription()
         {
-            return "Not a Simulacrum boss wave, events \"EquipmentOnly\", \"FuelArray\" and \"SkillsOnly\" inactive and Artifact of Enigma inactive.";
+            return "Not a Simulacrum boss wave, and Artifact of Enigma inactive.";
         }
         protected override void AddConfig(ConfigFile config)
         {
