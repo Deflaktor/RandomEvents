@@ -61,8 +61,6 @@
         "EVENT_INVENTORY_ROULETTE_LENT": "{0} has the items of {1}.",
         "EVENT_SURVIVOR_SWAP_TAKES": "{0} plays the {1} of {2}.",
         "EVENT_SURVIVOR_SWAP_RANDOM": "{0} plays {1} for a while.",
-        "EVENT_SECOND_WIND_RETURNED": "{0} is back on their feet!",
-        "EVENT_SECOND_WIND_REVIVED": "{0} gets a second wind!",
 
         "ANNOUNCE_EVENT_WEAK_ENEMIES": "Horde of the many",
         "ANNOUNCE_EVENT_STRONG_ENEMIES": "Fear the few",
