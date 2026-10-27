@@ -12,6 +12,7 @@ namespace RandomEvents
         private const float UpdateInterval = 0.5f;
         private ConfigEntry<float> StartMaxHealth;
         private ConfigEntry<float> EndMaxHealth;
+        private ConfigEntry<float> FullHealthShare;
         private ConfigEntry<float> SimulacrumGrowDuration;
         // the curse each player got from the event
         private readonly Dictionary<CharacterBody, int> curses = new Dictionary<CharacterBody, int>();
@@ -39,7 +40,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Everyone drops to 1% of their maximum health, which then grows to 1000% by the end of the event, in Simulacrum within 60 seconds, by the same factor every second.";
+            return "Everyone drops to 1% of their maximum health, which then grows back to 100% halfway through the event and to 1000% by its end, in Simulacrum within 60 seconds.";
         }
         public override string GetPopupDescription()
         {
@@ -53,6 +54,7 @@ namespace RandomEvents
         {
             StartMaxHealth = config.Bind(GetEventConfigName(), "Start Max Health", 0.01f, "The players' maximum health at the start of the event, relative to normal.");
             EndMaxHealth = config.Bind(GetEventConfigName(), "End Max Health", 10f, "The players' maximum health at the end of the event, relative to normal.");
+            FullHealthShare = config.Bind(GetEventConfigName(), "Full Health Share", 0.5f, "The share of the growing time after which the maximum health is back to normal, between 0 and 1.");
             SimulacrumGrowDuration = config.Bind(GetEventConfigName(), "Simulacrum Grow Duration", 60f, "In Simulacrum, how many seconds the maximum health takes to grow to its end value. Elsewhere it grows over the whole event.");
         }
         public override void Preload()
@@ -73,7 +75,9 @@ namespace RandomEvents
             // Simulacrum's events last until the wave ends
             var duration = Run.instance is InfiniteTowerRun ? SimulacrumGrowDuration.Value : ModConfig.EventDuration.Value;
             var progress = Mathf.Clamp01((Time.fixedTime - startTime) / Mathf.Max(1f, duration));
-            return start * Mathf.Pow(end / start, progress);
+            // by the same factor every second up to normal, and by another one from there
+            var share = Mathf.Clamp(FullHealthShare.Value, 0.01f, 0.99f);
+            return progress < share ? start * Mathf.Pow(1f / start, progress / share) : Mathf.Pow(end, (progress - share) / (1f - share));
         }
 
         // the Delicate Watch doesn't break while the health is so low that any hit takes the player to low health
