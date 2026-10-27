@@ -48,8 +48,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            var parts = equipments.Select(experimental => experimental.Description).ToList();
-            return "Gives all players an experimental equipment with a shorter cooldown. " + string.Join(", ", parts.Take(parts.Count - 1)) + ", and " + parts.Last() + ".";
+            return "Gives all players an experimental equipment with a shorter cooldown that does something new: Royal Capacitor, Disposable Missile Launcher, Radar Scanner, Super Massive Leech, Forgive Me Please, Crowdfunder, Molotov (6-Pack), Sawmerang, Foreign Fruit, Primordial Cube, Preon Accumulator or, with more than one player, Gnarled Woodsprite.";
         }
         public override string GetPopupDescription()
         {
