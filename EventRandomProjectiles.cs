@@ -27,8 +27,11 @@ namespace RandomEvents
             "ProvidenceMineController", "RolyPolyBoostedProjectileTimer", "SolusWingGravPulseProjectile", "SoulSearchController",
             "ThrownObjectProjectileController", "VehicleSeat", "YesChefProjectileTimer"
         };
+        private ConfigEntry<float> MaxPerSecond;
         private List<GameObject> pool;
         private readonly Dictionary<GameObject, GameObject> swaps = new Dictionary<GameObject, GameObject>();
+        // when each kind of swapped projectile last spawned
+        private readonly Dictionary<GameObject, Queue<float>> spawnTimes = new Dictionary<GameObject, Queue<float>>();
 
         public override bool LoadCondition()
         {
@@ -48,7 +51,7 @@ namespace RandomEvents
         }
         public override string GetDescription()
         {
-            return "Each kind of projectile is swapped for another random one, that the monsters fire. The damage stays that of the attack.";
+            return "Each kind of projectile is swapped for another random one, that the monsters fire. The damage stays that of the attack, and each kind spawns at most twice per second; the shots beyond that spawn nothing.";
         }
         public override string GetPopupDescription()
         {
@@ -60,6 +63,7 @@ namespace RandomEvents
         }
         protected override void AddConfig(ConfigFile config)
         {
+            MaxPerSecond = config.Bind(GetEventConfigName(), "Max Per Second", 2f, "How often each kind of swapped projectile can spawn per second. Monsters' shots beyond that spawn nothing, so that rare, heavy projectiles don't flood the stage in place of frequent ones.");
         }
         public override void Preload()
         {
@@ -75,9 +79,33 @@ namespace RandomEvents
             if (ModConfig.Enabled.Value && NetworkServer.active && IsActive() && fireProjectileInfo.projectilePrefab != null
                 && IsMonster(fireProjectileInfo.owner) && swaps.TryGetValue(fireProjectileInfo.projectilePrefab, out var swapped))
             {
+                if (!CanSpawn(swapped))
+                {
+                    return;
+                }
                 fireProjectileInfo.projectilePrefab = swapped;
             }
             orig(self, fireProjectileInfo, clientAuthorityOwner, predictionId, fastForwardTime);
+        }
+
+        private bool CanSpawn(GameObject prefab)
+        {
+            if (!spawnTimes.TryGetValue(prefab, out var times))
+            {
+                times = new Queue<float>();
+                spawnTimes[prefab] = times;
+            }
+            var now = Time.fixedTime;
+            while (times.Count > 0 && now - times.Peek() >= 1f)
+            {
+                times.Dequeue();
+            }
+            if (times.Count >= Mathf.Max(0f, MaxPerSecond.Value))
+            {
+                return false;
+            }
+            times.Enqueue(now);
+            return true;
         }
 
         // not the players and their allies, nor hazards
@@ -159,6 +187,7 @@ namespace RandomEvents
             // in one shuffled loop, each swaps for the next, so none stays itself
             var shuffled = pool.OrderBy(_ => RoR2Application.rng.nextNormalizedFloat).ToList();
             swaps.Clear();
+            spawnTimes.Clear();
             for (int i = 0; i < shuffled.Count && shuffled.Count > 1; i++)
             {
                 swaps[shuffled[i]] = shuffled[(i + 1) % shuffled.Count];
@@ -167,6 +196,7 @@ namespace RandomEvents
         public override void Stop()
         {
             swaps.Clear();
+            spawnTimes.Clear();
         }
     }
 }
