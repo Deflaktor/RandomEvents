@@ -101,7 +101,6 @@ namespace RandomEvents
                     new EventNeutroniumWeights(),
                     new EventOssification(),
                     new EventRandomArtifact(),
-                    new EventRandomProjectiles(),
                     new EventRandomTeams(),
                     new EventRedLightGreenLight(),
                     new EventReducedGravity(),
